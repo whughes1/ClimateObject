@@ -596,7 +596,7 @@ climate_data$methods(missing_dates_check = function()
 #add_year_month_day_cols simply converts a date column to Year month and day if they don't exist.
 #TO DO Should be adapted for other types of data_time_period currently just for daily
 
-climate_data$methods(add_year_month_day_cols = function(date_format="%d/%m/%Y", YearLabel="Year", MonthLabel="Month", DayLabel="Day")  
+climate_data$methods(add_year_month_day_cols = function(date_format="%d/%m/%Y", YearLabel="Year", MonthLabel="Month", DayLabel="Day")
 {
   if (.self$is_present( date_label)){
     date_col = variables[[date_label]]
