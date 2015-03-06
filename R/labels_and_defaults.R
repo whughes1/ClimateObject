@@ -52,6 +52,7 @@ multiple_element_label="multiple_element"
 merged_from_label="merged_from"
 summarized_from_label="summarized_from"
 complete_dates_label="complete_dates"
+summary_statistics_label="summary_statistics"
 
 #Labels to specify data in function specification list
 station_list_label="station_list"

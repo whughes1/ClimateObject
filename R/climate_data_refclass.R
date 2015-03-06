@@ -239,6 +239,7 @@ climate_data$methods(append_column_to_data = function(column_data, col_name = ""
       if (col_name == "") {
         col_name = paste0("column_",sprintf("%02d", length(names(data))+1))
       }
+      column_data <- unlist(column_data)
       data[[col_name]] <<- column_data
       .self$append_to_changes(list(Added_col, col_name))
       
@@ -674,7 +675,9 @@ climate_data$methods(add_doy_col = function(YearLabel="Year", DOYLabel="DOY", Se
 
 climate_data$methods(summarize_data = function(new_time_period, day_format = "%d", month_format = "%b",
                                                year_format = "%Y", summarize_name = paste(.self$meta_data[[data_name_label]],new_time_period), 
-                                               threshold = 0.85, decimal_places = 2, na.rm = FALSE, start_point = 1)
+                                               threshold = 0.85, na.rm = FALSE, start_point = 1, 
+                                               num_rain_days_col = "Number of Rain Days", total_col = "Total",
+                                               mean_col = "Mean")
 {
   if(missing(new_time_period)) {
     stop("Specify the time period you want the summarized data to be in.")
@@ -712,6 +715,8 @@ climate_data$methods(summarize_data = function(new_time_period, day_format = "%d
 
   summary_obj$append_to_variables(date_label,"Date")
 
+  summary_obj$append_to_meta_data(summary_statistics_label,list())
+  
   summ_date_col_name = summary_obj$getvname(date_label)
 
   if(data_time_period == daily_label && new_time_period == subyearly_label) {
@@ -745,11 +750,16 @@ climate_data$methods(summarize_data = function(new_time_period, day_format = "%d
           curr_col = split_data[[j]][[curr_col_name]]
           curr_month = month(split_data[[j]][[summ_date_col_name]])[[1]]
           curr_year = year(split_data[[j]][[summ_date_col_name]])[[1]]
-          if(na.rm) summary_obj$data[which(month(summary_obj$data[[summ_date_col_name]]) == curr_month & year(summary_obj$data[[summ_date_col_name]]) == curr_year),c("Number of Rain Days")] <- sum(curr_col[!is.na(curr_col)] > threshold)
-          else summary_obj$data[which(month(summary_obj$data[[summ_date_col_name]]) == curr_month & year(summary_obj$data[[summ_date_col_name]]) == curr_year),c("Number of Rain Days")] <- sum(curr_col > threshold)
-          summary_obj$data[which(month(summary_obj$data[[summ_date_col_name]]) == curr_month & year(summary_obj$data[[summ_date_col_name]]) == curr_year),c("Total Rain")] <- sum(curr_col, na.rm = na.rm)
+          if(na.rm) summary_obj$data[which(month(summary_obj$data[[summ_date_col_name]]) == curr_month & year(summary_obj$data[[summ_date_col_name]]) == curr_year),c(num_rain_days_col)] <- sum(curr_col[!is.na(curr_col)] > threshold)
+          else summary_obj$data[which(month(summary_obj$data[[summ_date_col_name]]) == curr_month & year(summary_obj$data[[summ_date_col_name]]) == curr_year),c(num_rain_days_col)] <- sum(curr_col > threshold)
+          summary_obj$data[which(month(summary_obj$data[[summ_date_col_name]]) == curr_month & year(summary_obj$data[[summ_date_col_name]]) == curr_year),c(paste(total_col,var))] <- sum(curr_col, na.rm = na.rm)
         }
-          
+        rain_days_label = summary_obj$get_summary_label(var, number_of_label, list(na.rm=na.rm, threshold=threshold))
+        summary_obj$append_to_variables(rain_days_label,num_rain_days_col)
+        
+        rain_total_label = summary_obj$get_summary_label(var, total_label, list(na.rm=na.rm))
+        summary_obj$append_to_variables(rain_total_label,paste(total_col,var))
+        
       }
       
 #       if(new_time_period == yearly_label) {
@@ -765,8 +775,11 @@ climate_data$methods(summarize_data = function(new_time_period, day_format = "%d
           curr_col = split_data[[j]][[curr_col_name]]
           curr_month = month(split_data[[j]][[summ_date_col_name]])[[1]]
           curr_year = year(split_data[[j]][[summ_date_col_name]])[[1]]
-          summary_obj$data[which(month(summary_obj$data[[summ_date_col_name]]) == curr_month & year(summary_obj$data[[summ_date_col_name]]) == curr_year),c(paste("Mean",curr_col_name))] <- format(round(mean(curr_col, na.rm = na.rm), decimal_places), nsmall = decimal_places)
+          summary_obj$data[which(month(summary_obj$data[[summ_date_col_name]]) == curr_month & year(summary_obj$data[[summ_date_col_name]]) == curr_year),c(paste(mean_col,curr_col_name))] <- mean(curr_col, na.rm = na.rm)
         }
+
+        mean_label = summary_obj$get_summary_label(var, mean_label, list(na.rm=na.rm))
+        summary_obj$append_to_variables(mean_label,paste(mean_col,curr_col_name))
         
       }
         
@@ -802,6 +815,7 @@ climate_data$methods(summarize_data = function(new_time_period, day_format = "%d
 
   summary_obj$append_to_meta_data(summarized_from_label, curr_data_name)
 
+  summary_obj$append_to_meta_data(summarized_from_label, curr_data_name)
 
   summary_obj
 
@@ -809,15 +823,15 @@ climate_data$methods(summarize_data = function(new_time_period, day_format = "%d
 )
 
 climate_data$methods(add_water_balance_col = function(col_name = "Water Balance", capacity_max = 100, evaporation = 5)
-{  
-  
+{
+
   # Complete dates needed for calculations
   missing_dates_check()
-  
+
   # Always use the methods to get value from objects. Never access directly.
   rain_col = getvname(rain_label)
   date_col = getvname(date_label)
-  
+
   # Do all data_object level checks before calling get_data_for_analysis
   evap_present = is_present(evaporation_label)
   if(evap_present) evaporation_col = getvname(evaporation_label)
@@ -891,5 +905,75 @@ climate_data$methods(add_water_balance_col = function(col_name = "Water Balance"
   # and add to variables so that water balance can be recognised.
   append_column_to_data(water_balance_col,col_name)
   append_to_variables(waterbalance_label, col_name)
+}
+)
+
+
+climate_data$methods(get_summary_label = function(element="", statistic="", definition=list()) {
+  
+  if( !is_meta_data(summary_statistics_label)) {
+    append_to_meta_data(summary_statistics_label,list())
+  }
+  
+  if( !(element %in% names(meta_data[[summary_statistics_label]])) ) {
+    meta_data[[summary_statistics_label]][[element]] <<- list()
+  }
+  
+  if( !(statistic %in% names(meta_data[[summary_statistics_label]][[element]])) ) {
+    meta_data[[summary_statistics_label]][[element]][[statistic]] <<- list()    
+  }
+  
+  label = paste(element,statistic,length(meta_data[[summary_statistics_label]][[element]][[statistic]])+1)
+  meta_data[[summary_statistics_label]][[element]][[statistic]][[label]] <<- definition
+  
+  return(label)
+}
+)
+
+climate_data$methods(is_definition = function(element="", statistic="", definition=list()) {
+  
+  found_match = FALSE
+  
+  if( is_meta_data(summary_statistics_label) 
+      && element %in% names(meta_data[[summary_statistics_label]])
+      && statistic %in% names(meta_data[[summary_statistics_label]][[element]]) ) {
+    for(def in meta_data[[summary_statistics_label]][[element]][[statistic]]) {
+      if(length(def) != length(definition)) break
+      match = TRUE
+      for(item in names(def)) {
+        if( !(item %in% names(definition) && def[[item]] == definition[[item]]) ) {
+          match = FALSE
+          break
+        }
+      }
+      if(match) {
+        found_match = TRUE
+        break
+      }
+    }
+  }
+  
+  return(found_match)
+  
+}
+)
+
+climate_data$methods(view_definition = function(col_name) {
+  
+  if (col_name %in% names(data)) {
+    
+    label = names(which(variables==col_name))
+    if(is_meta_data(summary_statistics_label)) {
+      for(element in meta_data[[summary_statistics_label]]) {
+        for(statistic in element) {
+          if(label %in% names(statistic)) {
+            ind = which(names(statistic)==label)
+            return(statistic[[ind]])
+          }
+        }
+      }
+    }
+  }
+  else return(NA)
 }
 )
