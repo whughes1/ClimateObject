@@ -540,9 +540,6 @@ climate_data$methods(date_col_check = function(date_format = "%d/%m/%Y", convert
       else if (create == TRUE && is_present(year_label) && is_present(month_label) && is_present(day_label)) 
       {
         #TO DO fix the issue with importing different types of month
-#        print(sum(is.na(data[[.self$getvname(year_label)]])))
-#        print(sum(is.na(data[[.self$getvname(month_label)]])))
-#        print(sum(is.na(data[[.self$getvname(day_label)]])))
         new_col = as.Date(paste(data[[variables[[year_label]]]], data[[variables[[month_label]]]], data[[variables[[day_label]]]],sep="-"))
 #        print(sum(is.na(new_col)))
         .self$append_column_to_data(new_col, variables[[date_label]])
