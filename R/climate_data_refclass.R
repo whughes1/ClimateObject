@@ -539,14 +539,25 @@ climate_data$methods(date_col_check = function(date_format = "%d/%m/%Y", convert
       # If the year, month, day column are there and create == TRUE create date column
       else if (create == TRUE && is_present(year_label) && is_present(month_label) && is_present(day_label)) 
       {
+        day_col = data[[getvname(day_label)]]
+        month_col = data[[getvname(month_label)]]
+        year_col = data[[getvname(year_label)]]
+
+        if(all(month.abb %in% month_col)) {
+          month_col = match(month_col,month.abb)
+          replace_column_in_data(getvname(month_label),factor(data[[getvname(month_label)]], month.abb, ordered=TRUE))
+        }
+        
+        if(all(month.name %in% month_col)) {
+          month_col = match(month_col,month.abb)
+          replace_column_in_data(getvname(month_label),factor(data[[getvname(month_label)]], month.name, ordered=TRUE))
+        }
+
         #TO DO fix the issue with importing different types of month
-#        print(sum(is.na(data[[.self$getvname(year_label)]])))
-#        print(sum(is.na(data[[.self$getvname(month_label)]])))
-#        print(sum(is.na(data[[.self$getvname(day_label)]])))
-        new_col = as.Date(paste(data[[variables[[year_label]]]], data[[variables[[month_label]]]], data[[variables[[day_label]]]],sep="-"))
+        new_col = as.Date(paste(year_col, month_col, day_col, sep="-"))
 #        print(sum(is.na(new_col)))
         .self$append_column_to_data(new_col, variables[[date_label]])
-      }  
+      }
       # Else if date string column is there and create == TRUE create date column
       else if (create == TRUE && is_present(date_asstring_label)) 
       {
@@ -693,11 +704,12 @@ climate_data$methods(summarize_data = function(new_time_period, day_format = "%d
   monthly_split_list = list(month(data[[date_col_name]]), year(data[[date_col_name]])) 
   yearly_split_list = list(year(data[[date_col_name]]))
   curr_data_name = get_meta(data_name_label)
-  start_date = min(date_col)
-  if(day(start_date) != 1) day(start_date) <- 1
-  end_date = max(date_col)
-  if(day(end_date) != 1) day(end_date) <- 1
-
+  start_date = doy_as_date(get_meta(season_start_day_label),year(min(date_col)))
+  end_date = doy_as_date(get_meta(season_start_day_label),year(max(date_col)))
+  
+  print(start_date)
+  print(end_date)
+  
   if(data_time_period == daily_label && new_time_period == subyearly_label) {
     time_periods_list = seq(start_date,end_date,"month")
     split_list = monthly_split_list
