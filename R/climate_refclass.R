@@ -950,3 +950,8 @@ climate$methods(display_water_balance = function(data_list = list(), print_table
   
 }
 )
+
+climate$methods(new_plot = function() {
+
+}
+)
