@@ -955,3 +955,98 @@ climate$methods(new_plot = function() {
 
 }
 )
+
+
+climate$methods(cumulative_exceedance = function(data_list=list(),interest_col,cumulative_graph=TRUE,
+                                                 exceedance_graph=FALSE,color="blue",
+                                                 main1="Cumulative Graph",main2="Exceedance Graph",
+                                                 xlabel="Length of the season in days",ylabel="Percent of years")
+{    
+  # get_climate_data_objects returns a list of the climate_data objects specified
+  # in the arguements.
+  # If no objects specified then all climate_data objects will be taken by default
+  # TO DO have options such as colours and the rest
+  data_list=add_to_data_info_required_variable_list(data_list, list(rain_label))
+  data_list=add_to_data_info_time_period(data_list, daily_label)
+  climate_data_objs_list = get_climate_data_objects(data_list)
+  #print(climate_data_objs_list)
+  #print(data_list)
+  
+  for(data_obj in climate_data_objs_list) {
+    #curr_threshold = data_obj$get_meta(threshold_label,threshold)
+    
+    
+    
+    
+    # Access data in methods
+    curr_data_list = data_obj$get_data_for_analysis(data_list)
+    #-----------------------------------------------------------------------------------#
+    # interest_col=samrain$Length
+    # data=samrain
+    #print(curr_data_list)
+    for( curr_data in curr_data_list ) {
+      #---------------------------------------------------------------------------------#
+      # sort the data
+      #---------------------------------------------------------------------------------#
+      
+      sort_col=sort(curr_data[[interest_col]])
+      
+      #---------------------------------------------------------------------------------#
+      #calculate the proportions
+      #---------------------------------------------------------------------------------#
+      
+      prop_col=prop.table(sort_col)
+      
+      #--------------------------------------------------------------------------------#
+      #calculate the cumulative proportions
+      #--------------------------------------------------------------------------------#
+      cum_col=cumsum(prop_col)
+      
+      #--------------------------------------------------------------------------------#
+      #calculate the percentage of the cumulative proportions
+      #--------------------------------------------------------------------------------#
+      
+      cum_perc_col= cum_col*100 
+      
+      #--------------------------------------------------------------------------------#
+      #=====Add the values for plotting the exceedance graph==========================
+      #--------------------------------------------------------------------------------#
+      exceedance_col=100-cum_perc_col 
+    }
+  }
+  
+  #====Plotting the cumulative graph when true=====================================
+  #----------------------------------------------------------------------------------#
+  if(cumulative_graph == TRUE){
+    plot(sort_col, cum_perc_col,            # plot the data 
+         main=main1,  # main title 
+         xlab=xlabel,        # x???axis label 
+         ylab=ylabel,type="o", col=color,
+         xlim=range(sort_col),ylim=range(cum_perc_col),col="blue"
+    )
+  }
+  # y???axis label
+  
+  if(exceedance_graph == TRUE){
+    plot(sort_col, exceedance_col,xlim=range(sort_col),ylim=range(exceedance_col),col=color,
+    )
+  }
+}
+)
+#     par(new = TRUE)
+#     plot(sort_col[[2]], cum_perc_col[[2]],type="o",xlab="", ylab="",ylim=range(c(cum_perc_col[[1]],cum_perc_col[[2]])),
+#          xlim=range(c(sort_col[[1]],sort_col[[2]])), axes=FALSE,col=color2)
+#   legend(x,y, c("first plot","second plot"),lty=lty, lwd=lwd,pch=pch,col=c(color,color2),bty=bty)
+#   if(grid==TRUE){
+#     grid(nx, ny, lwd = lwd)
+#   }
+# }
+# }
+# )
+# 
+# ###############################################################################################
+# #sort_col=c()
+# for (i in length(samrain$Length)){
+#   sort_col=sort(samrain$Length)
+#   print(sort_col)
+# }
