@@ -957,17 +957,18 @@ climate$methods(new_plot = function() {
 )
 
 
-climate$methods(cumulative_exceedance = function(data_list=list(),interest_col,cumulative_graph=TRUE,
+climate$methods(cumulative_exceedance = function(data_list=list(),interest_col,cumulative_graph =TRUE,
                                                  exceedance_graph=FALSE,color="blue",
                                                  main1="Cumulative Graph",main2="Exceedance Graph",
-                                                 xlabel="Length of the season in days",ylabel="Percent of years")
+                                                 xlabel="Length of the season in days",ylabel="Percent of years",
+                                                 convert=TRUE)
 {    
   # get_climate_data_objects returns a list of the climate_data objects specified
   # in the arguements.
   # If no objects specified then all climate_data objects will be taken by default
   # TO DO have options such as colours and the rest
-  data_list=add_to_data_info_required_variable_list(data_list, list(rain_label))
-  data_list=add_to_data_info_time_period(data_list, daily_label)
+  data_list=add_to_data_info_time_period(data_list, yearly_label)
+  data_list=c(data_list,convert_data=convert)
   climate_data_objs_list = get_climate_data_objects(data_list)
   #print(climate_data_objs_list)
   #print(data_list)
@@ -1022,7 +1023,7 @@ climate$methods(cumulative_exceedance = function(data_list=list(),interest_col,c
          main=main1,  # main title 
          xlab=xlabel,        # x???axis label 
          ylab=ylabel,type="o", col=color,
-         xlim=range(sort_col),ylim=range(cum_perc_col),col="blue"
+         xlim=range(sort_col),ylim=range(cum_perc_col)
     )
   }
   # y???axis label
