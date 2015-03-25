@@ -1051,3 +1051,60 @@ climate$methods(cumulative_exceedance = function(data_list=list(),interest_col,c
 #   sort_col=sort(samrain$Length)
 #   print(sort_col)
 # }
+
+#===================================================================================================
+
+climate$methods(yearly_vertical_line = function(data_list=list(), col_var1, col_var2, col1 = "blue", col2 = "red", col3 = "green", xlabel = "Year", pch1 = 1, pch2 = 1, pch3 = 1)
+{    
+  # get_climate_data_objects returns a list of the climate_data objects specified
+  # in the arguments.
+  # If no objects specified then all climate_data objects will be taken by default
+  
+  # the col_var1 and col_var2 must be label. e.g col_var1_label
+  data_list = add_to_data_info_required_variable_list(data_list, list(col_var1_label)) 
+  data_list = add_to_data_info_required_variable_list(data_list, list(col_var2_label))
+  # we should be able to specify the time period. we need to fix this. Danny said he will work on it. 
+  data_list = add_to_data_info_time_period(data_list, yearly_label) 
+  
+  #data_list = c(data_list, convert_data = FALSE)
+  
+  climate_data_objs_list = get_climate_data_objects(data_list)
+  
+  #print(climate_data_objs_list)
+  
+  for(data_obj in climate_data_objs_list) {
+    
+    # we need to get the column of interest for the plot.
+    # The columns of interest are required so we don't need to check if there are present
+    col_var1 = data_obj$getvname(col_var1_label)
+    col_var2 = data_obj$getvname(col_var2_label)
+    
+    
+    data_obj$date_col_check(date_format = "%d/%m/%Y", convert = TRUE, create = TRUE, messaging=TRUE)
+    
+    date_col = data_obj$getvname(date_label)
+    
+    #adding year column if not present 
+    if( !(data_obj$is_present(year_label) && data_obj$is_present(month_label) && data_obj$is_present(day_label)) ) {
+      data_obj$add_year_month_day_cols()
+    }
+    year_col = data_obj$getvname(year_label)
+    
+    curr_data_list = data_obj$get_data_for_analysis(data_list)
+    
+    for( curr_data in curr_data_list ) {
+      # plotting the first plot. still need to fix ylim and xlim depending on both variables. 
+      plot(curr_data[[ year_col ]], curr_data[[col_var1]], type = "h", lwd=2, col=col1, xlab=xlabel,
+           ylim = c( range( curr_data[[col_var1]], curr_data[[col_var2]], na.rm = TRUE) ))
+      #Adding points to the plot
+      lines(curr_data[[ year_col ]], curr_data[[col_var1]], type="p", col=col2, pch = pch1)
+      #Adding the second plot
+      points(curr_data[[ year_col ]], curr_data[[col_var2]], type = "h", col=col3, pch = pch2 )
+      
+      #Adding points to the second plot
+      lines(ata[[ year_col ]], data[[col_var2]], type="p", col=col2, pch = pch1)
+    }
+    
+  }
+}
+)
