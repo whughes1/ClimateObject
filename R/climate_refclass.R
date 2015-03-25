@@ -514,7 +514,7 @@ climate$methods(merge_vertical = function(climate_data_objs = climate_data_objec
 }
 )
 
-climate$methods(get_summary_name = function(time_period, data_obj) 
+climate$methods(get_summary_obj = function(time_period, data_obj) 
 {
   if(missing(time_period)) {
     stop("Specify the time period of the summarized data.")
@@ -620,7 +620,7 @@ climate$methods(add_end_rain = function(data_list=list(), earliest_day = 228, wa
 
     end_rain = list()
     
-    summary_obj <- get_summary_name(yearly_label, data_obj)
+    summary_obj <- get_summary_obj(yearly_label, data_obj)
     
     continue = TRUE
     
@@ -635,8 +635,8 @@ climate$methods(add_end_rain = function(data_list=list(), earliest_day = 228, wa
                     in the data."))
     }
     
-    # 3. check if definition already exists, then do not add
-    # need to more carefully define evaporation
+    # Check if definition already exists, then do not add.
+    # Need to more carefully define evaporation
     curr_definition = list(earliest_day = earliest_day, capacity_max = capacity_max, 
                            evaporation = evaporation)
     
@@ -730,12 +730,11 @@ climate$methods(add_start_rain = function(data_list=list(), earliest_day=92, tot
   
   for(data_obj in climate_data_objs) {
     
-    summary_obj <- get_summary_name(yearly_label, data_obj)
+    summary_obj <- get_summary_obj(yearly_label, data_obj)
 
     # use get_meta to determine the correct threshold value to use
     threshold = data_obj$get_meta_new(threshold_label,missing(threshold),threshold)
     
-    # to do
     continue = TRUE
     
     if(col_name %in% names(summary_obj$get_data()) && !replace) {
@@ -749,7 +748,7 @@ climate$methods(add_start_rain = function(data_list=list(), earliest_day=92, tot
                     in the data."))
     }
     
-    # 3. check if definition already exists, then do not add
+    # check if definition already exists, then do not add
     curr_definition = list(earliest_day = earliest_day, total_days = total_days, 
                            rain_total = rain_total, dry_spell_condition = dry_spell_condition, 
                            threshold = threshold)
@@ -782,7 +781,7 @@ climate$methods(add_start_rain = function(data_list=list(), earliest_day=92, tot
       # adding start of rain column
       for(curr_data in curr_data_list ) {
         
-        # split the data by year to do calculations
+        # split the data by season to do calculations
         seasons_split <- split(curr_data[,c(dos_col,rain_col)], list(as.factor(curr_data[[season_col]])))
         
         
@@ -795,7 +794,7 @@ climate$methods(add_start_rain = function(data_list=list(), earliest_day=92, tot
           # initialize current earliest day
           curr_earliest_day = earliest_day
           
-          # if dry spell required use the simple sum_check to get start of the rain
+          # if dry spell not required use the simple sum_check to get start of the rain
           if(!dry_spell_condition) {
             start_of_rain_col[j] = sum_check(single_season, curr_earliest_day, total_days, rain_total)[1]
           }
@@ -815,12 +814,6 @@ climate$methods(add_start_rain = function(data_list=list(), earliest_day=92, tot
             # if the dry_length is greater than the remaining number of rows
             # we will not be able to check for dry spells so we cannot get a start of the rain
             # NA will be returned
-            if(data_obj$meta_data$data_name=="chief") {
-              print(dry_length)
-              print(num_rows)
-              print(curr_earliest_day)
-              
-            }
             while( !found && sum(single_season[[1]]==curr_earliest_day)>0 && dry_length <= num_rows -  which(single_season[[1]]==curr_earliest_day) ) {
               # get the first day after earliest_day which is over rain_total
               day = sum_check(single_season, curr_earliest_day, total_days, rain_total)[1]

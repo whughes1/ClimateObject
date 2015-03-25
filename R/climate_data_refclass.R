@@ -578,7 +578,7 @@ climate_data$methods(date_col_check = function(date_format = "%d/%m/%Y", convert
   }
 )
 
-climate_data$methods(missing_dates_check = function() 
+climate_data$methods(missing_dates_check = function()
 {    
   if(!get_meta(complete_dates_label)) {
     date_col = getvname(date_label)
@@ -718,7 +718,8 @@ climate_data$methods(summarize_data = function(new_time_period, day_format = "%d
                                                year_format = "%Y", summarize_name = paste(.self$meta_data[[data_name_label]],new_time_period), 
                                                threshold = 0.85, na.rm = FALSE, start_point = 1, 
                                                num_rain_days_col = "Number of Rain Days", total_col = "Total",
-                                               mean_col = "Mean", period_col_name = "Period")
+                                               mean_col = "Mean", period_col_name = "Period", 
+                                               mean_rain_name = "Average rain per rain day")
 {
   if(missing(new_time_period)) {
     stop("Specify the time period you want the summarized data to be in.")
@@ -813,22 +814,37 @@ climate_data$methods(summarize_data = function(new_time_period, day_format = "%d
       curr_col_name = .self$getvname(var)
       
       # For rain we will add number of rainy days and total rainfall
+      # and average rain on rainy day
       if(var == rain_label) {
         threshold = get_meta_new(threshold_label,missing(threshold),threshold)
         
-        total_rain_data = by(data[[curr_col_name]],data[[split_col]], sum, na.rm = na.rm)
+        total_rain_data = as.vector(by(data[[curr_col_name]],data[[split_col]], sum, na.rm = na.rm))
         total_rain_name = paste(total_col,curr_col_name)
         summary_obj$append_column_to_data(total_rain_data, total_rain_name)
         rain_total_label = summary_obj$get_summary_label(var, total_label, list(na.rm=na.rm))
         summary_obj$append_to_variables(rain_total_label, total_rain_name)
+        
+        # Can't use by function here as there may be no values > threshold causing by to skip
+        # a time period. causing an error when we try to append the column.
+        mean_rain_data = c()
+        for(period in split_periods) {
+          curr_mean = mean(data[[curr_col_name]][data[[split_col]]==period & data[[curr_col_name]] > threshold])
+          mean_rain_data = c(mean_rain_data, curr_mean)
+        }
+        
+
+        summary_obj$append_column_to_data(mean_rain_data, mean_rain_name)
+        mean_rain_label = summary_obj$get_summary_label(var, mean_label, list(na.rm=na.rm, threshold = threshold))
+        summary_obj$append_to_variables(mean_rain_label, mean_rain_name)
+        
 
         if(na.rm) {
-          num_rain_days_data = by(data[[curr_col_name]][!is.na(data[[curr_col_name]])] > threshold, 
-                                  data[[split_col]][!is.na(data[[split_col]])], sum)
+          num_rain_days_data = as.vector(by(data[[curr_col_name]][!is.na(data[[curr_col_name]])] > threshold, 
+                                  data[[split_col]][!is.na(data[[curr_col_name]])], sum))
         }
         else {
-          num_rain_days_data = by(data[[curr_col_name]] > threshold, 
-                                  data[[split_col]], sum)
+          num_rain_days_data = as.vector(by(data[[curr_col_name]] > threshold, 
+                                  data[[split_col]], sum))
         }
         summary_obj$append_column_to_data(num_rain_days_data, num_rain_days_col)
         rain_days_label = summary_obj$get_summary_label(var, number_of_label, list(na.rm=na.rm, threshold=threshold))
@@ -839,12 +855,12 @@ climate_data$methods(summarize_data = function(new_time_period, day_format = "%d
       
       else {
         
-        mean_var_data = by(data[[curr_col_name]],data[[split_col]], mean, na.rm = na.rm)
+        mean_var_data = as.vector(by(data[[curr_col_name]],data[[split_col]], mean, na.rm = na.rm))
         mean_var_name = paste(mean_col,curr_col_name)
         summary_obj$append_column_to_data(mean_var_data, mean_var_name)
         mean_var_label = summary_obj$get_summary_label(var, mean_label, list(na.rm=na.rm))
         summary_obj$append_to_variables(mean_var_label, mean_var_name)
-        
+      }  
           
       
     }
