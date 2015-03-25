@@ -961,7 +961,7 @@ climate$methods(cumulative_exceedance = function(data_list=list(),interest_var,c
                                                  exceedance_graph=FALSE,color="blue",
                                                  main1="Cumulative Graph",main2="Exceedance Graph",
                                                  xlabel="Length of the season in days",ylabel="Percent of years",
-                                                 convert=TRUE, period_label=yearly_label)
+                                                 convert=T, period_label=yearly_label)
 {    
   # get_climate_data_objects returns a list of the climate_data objects specified
   # in the arguements.
@@ -982,15 +982,14 @@ climate$methods(cumulative_exceedance = function(data_list=list(),interest_var,c
     # Access data in methods
     curr_data_list = data_obj$get_data_for_analysis(data_list)
     #-----------------------------------------------------------------------------------#
-    # interest_col=samrain$Length
-    # data=samrain
-    #print(curr_data_list)
+    
     for( curr_data in curr_data_list ) {
       #---------------------------------------------------------------------------------#
       # sort the data
       #---------------------------------------------------------------------------------#
-      
-      sort_col=sort(curr_data[[interest_var]])
+
+      interest_col=data_obj$getvname(interest_var)
+      sort_col=sort(curr_data[[interest_col]])
       
       #---------------------------------------------------------------------------------#
       #calculate the proportions
@@ -1015,7 +1014,7 @@ climate$methods(cumulative_exceedance = function(data_list=list(),interest_var,c
       exceedance_col=100-cum_perc_col 
     }
   }
-  
+  print(sort_col)
   #====Plotting the cumulative graph when true=====================================
   #----------------------------------------------------------------------------------#
   if(cumulative_graph == TRUE){
@@ -1023,7 +1022,7 @@ climate$methods(cumulative_exceedance = function(data_list=list(),interest_var,c
          main=main1,  # main title 
          xlab=xlabel,        # x???axis label 
          ylab=ylabel,type="o", col=color,
-         xlim=range(sort_col),ylim=range(cum_perc_col)
+         xlim=range(sort_col,finite=T),ylim=range(cum_perc_col)
     )
   }
   # y???axis label
@@ -1190,6 +1189,46 @@ climate$methods(Plot_annual_rainfall_totals = function (data_list=list(), col="b
     }
   } 
   
+}
+)
+
+#====================================================================================================
+climate$methods( Monthly_number_rain_days_boxplot = function(data_list= list(), fill_col="blue",
+                                                             whisker_col="red", convert=TRUE,var_label=rain_label,time_period=subyearly_label,
+                                                             title="Boxplot of Monthly Rainy Days for all Years",whisklty=1){
+  #--------------------------------------------------------------------------------------------#
+  # This function plots the boxplot of the number of rain per month for all the years in the data 
+  #     set
+  #-------------------------------------------------------------------------------------------#
+  
+  # Specifying the needed variable
+  data_list = add_to_data_info_required_variable_list( data_list, list(var_label))
+  #Using convert_data
+  data_list=c(data_list,convert_data=convert)
+  # Specifying the data_time_period
+  data_list=add_to_data_info_time_period( data_list, time_period)
+  
+  # use data_list to get the required data objects
+  climate_data_objs = get_climate_data_objects( data_list ) 
+  
+  for( data_obj in climate_data_objs){
+    data_name = data_obj$get_meta(data_name_label)
+    
+    if( ! data_obj$is_present( month_label ) ){
+      data_obj$add_year_month_day_cols()
+    }
+    # Get the title of the column of months
+    month_col = data_obj$getvname(month_label)
+    
+    # Access data in methods
+    curr_data_list = data_obj$get_data_for_analysis(data_list)
+    
+    for( curr_data in curr_data_list ) {
+      # Draw the monthly boxplot
+      boxplot( curr_data[["Number of Rain Days"]]~curr_data[[month_col]], whiskcol=whisker_col,col=fill_col, xlab="Month",ylab="Count of Rain Days",
+               main= c( data_name, title), whisklty=whisklty )
+    } 
+  }
 }
 )
 
