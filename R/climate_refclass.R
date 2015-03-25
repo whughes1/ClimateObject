@@ -1144,7 +1144,10 @@ climate$methods(trellis_plot_temperature = function(data_list = list(), main_tit
       
     }  
   } 
+  #fitted line by month
   #summary(lm(curr_data[[ tmin_col]]  ~ curr_data[[year_col]]))
+  
+  
   
 }
 )
@@ -1154,15 +1157,16 @@ climate$methods(Plot_annual_rainfall_totals = function (data_list=list(), col="b
 {
   
   data_list = add_to_data_info_time_period(data_list, yearly_label)
-  data_list = c(data_list, convert_data=TRUE)
+#   # convert data is not yet  
+#   data_list = c(data_list, convert_data=TRUE)
   climate_data_objs = get_climate_data_objects(data_list)
   
   #print(length(climate_data_objs))
   for(data_obj in climate_data_objs) {
     # Must add these columns if not present to display this way
     if( !(data_obj$is_present(year_label) ) ) { 
-      #data_obj$add_year_month_day_cols()
-      data_obj$add_year_col() 
+      data_obj$add_year_month_day_cols()
+      #data_obj$add_year_col() 
     }
     year_col = data_obj$getvname(year_label)
     
