@@ -1149,4 +1149,47 @@ climate$methods(trellis_plot_temperature = function(data_list = list(), main_tit
 }
 )
 
+#=================================================================================
+climate$methods(Plot_annual_rainfall_totals = function (data_list=list(), col="blue", main_title="Plot - Annual Rainfall Total per Year")
+{
+  
+  data_list = add_to_data_info_time_period(data_list, yearly_label)
+  data_list = c(data_list, convert_data=TRUE)
+  climate_data_objs = get_climate_data_objects(data_list)
+  
+  #print(length(climate_data_objs))
+  for(data_obj in climate_data_objs) {
+    # Must add these columns if not present to display this way
+    if( !(data_obj$is_present(year_label) ) ) { 
+      #data_obj$add_year_month_day_cols()
+      data_obj$add_year_col() 
+    }
+    year_col = data_obj$getvname(year_label)
+    
+    #rain_total_col = data_obj$variables[[ total_rainfall_label ]]
+    
+    # we get the total number of rainy days. we need to think about a good way to do this from getvname.
+    rain_total_col = data_obj$getvname ("rain total 1") # how can we get this?
+    
+    #print(rain_total_col)
+    
+    curr_data_list = data_obj$get_data_for_analysis(data_list)
+    #print(curr_data_list)
+    # loop for plotting 
+    for( curr_data in curr_data_list ) { 
+      # curr_data should have two columns which are year and rainfall totals 
+      plot_totals <- plot(curr_data[[year_col]], curr_data[[rain_total_col]],type="b",pch=20,xlab="Year", col="blue",ylim= c(0, max(curr_data[[rain_total_col]])),
+                          xlim = c( min(curr_data[[year_col]], na.rm=TRUE), max( curr_data[[year_col]])),
+                          ylab="Rain Total",main=main_title)
+      abline(h = mean(curr_data[[rain_total_col]][curr_data[[rain_total_col]] > 0]),lty=2,col="red")  
+      grid(length(curr_data[[year_col]]),0, lwd = 2)
+      
+      
+      
+      
+    }
+  } 
+  
+}
+)
 
