@@ -580,7 +580,30 @@ climate_data$methods(missing_dates_check = function()
     else if(data_time_period == subyearly_label) by = "month"
     else if(data_time_period == yearly_label) by = "year"
     
-    full_dates = seq(min(data[[date_col]]), max(data[[date_col]]), by = by)
+    temp_start_date = doy_as_date(get_meta(season_start_day_label),year(min(data[[date_col]])))
+    if(temp_start_date > min(data[[date_col]])) {
+      start_date = temp_start_date
+      year(start_date) <- year(start_date)-1
+    }
+    else {
+      start_date = temp_start_date      
+    }
+    
+    final_year = year(max(data[[date_col]]))
+    final_month = month(start_date-1)
+    final_day = day(start_date-1)
+    temp_end_date = as.Date(paste(final_year,final_month,final_day,sep="-"))
+    
+    if(temp_end_date > max(data[[date_col]])) {
+      end_date = temp_end_date
+    }
+    else {
+      end_date = as.Date(paste(final_year+1,final_month,final_day,sep="-"))
+    }
+    
+    print(start_date)
+    print(end_date)
+    full_dates = seq(start_date, end_date, by = by)
     
     if(length(full_dates) != nrow(data)) {
       dates_table = data.frame(full_dates)
