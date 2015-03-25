@@ -1091,3 +1091,62 @@ climate$methods(yearly_vertical_line = function(data_list=list(), col_var1, col_
   }
 }
 )
+#===========================================================================================
+climate$methods(trellis_plot_temperature = function(data_list = list(), main_title = "Plot - Trellis Plot for Minimum Temperature")
+{  
+  require(lattice)
+  
+  # get_climate_data_objects returns a list of the climate_data objects specified
+  # in the arguements.
+  # If no objects specified then all climate_data objects will be taken by default
+  
+  data_list = add_to_data_info_required_variable_list(data_list, list(temp_min_label))
+  data_list = add_to_data_info_required_variable_list(data_list, list(temp_max_label))
+  data_list = add_to_data_info_time_period(data_list, daily_label)
+  climate_data_objs_list = get_climate_data_objects(data_list)
+  #print(data_list)
+  # print(climate_data_objs_list)
+  
+  for(data_obj in climate_data_objs_list) {
+    # we must have the temperature column in the data, we do not have to check this. 
+    tmin_col  = data_obj$getvname(temp_min_label)
+    #tmax_col = data_obj$getvname(temp_max_label)
+    # we need to have year and month columns in the data, otherwise we must add them. check later!
+    year_col = data_obj$getvname(year_label)
+    # month column should be class factor
+    month_col = data_obj$getvname(month_label)
+    #print(month_col)
+    
+    # ckecking dates column 
+    #data_obj$missing_dates_check()
+    #data_obj$date_col_check()
+    
+    # convert the column month as.integer to be able to create date column. After this, month column have to change back to factor.
+    # data_obj[[month_col]] =  as.integer(data_obj[[month_col]]) # this is not working. which method does this?
+    
+    #print(tmin_col)
+    
+    curr_data_list = data_obj$get_data_for_analysis(data_list)
+    
+    for( curr_data in curr_data_list ) {
+      
+      plot1 <- xyplot(curr_data[[tmin_col]]  ~ curr_data[[year_col]] | as.factor(curr_data[[month_col]]),
+                      layout = c(6, 2),
+                      panel = function(x, y) {
+                        #panel.grid(v=2) 
+                        panel.xyplot(x, y)
+                        panel.loess(x, y)
+                        panel.abline(lm(y~x))
+                      },
+                      xlab = "Year",
+                      ylab = "Tmin", main = main_title)
+      print(plot1)
+      
+    }  
+  } 
+  #summary(lm(curr_data[[ tmin_col]]  ~ curr_data[[year_col]]))
+  
+}
+)
+
+
