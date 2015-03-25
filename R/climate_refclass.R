@@ -957,17 +957,17 @@ climate$methods(new_plot = function() {
 )
 
 
-climate$methods(cumulative_exceedance = function(data_list=list(),interest_col,cumulative_graph =TRUE,
+climate$methods(cumulative_exceedance = function(data_list=list(),interest_var,cumulative_graph =TRUE,
                                                  exceedance_graph=FALSE,color="blue",
                                                  main1="Cumulative Graph",main2="Exceedance Graph",
                                                  xlabel="Length of the season in days",ylabel="Percent of years",
-                                                 convert=TRUE)
+                                                 convert=TRUE, period_label=yearly_label)
 {    
   # get_climate_data_objects returns a list of the climate_data objects specified
   # in the arguements.
   # If no objects specified then all climate_data objects will be taken by default
   # TO DO have options such as colours and the rest
-  data_list=add_to_data_info_time_period(data_list, yearly_label)
+  data_list=add_to_data_info_time_period(data_list, period_label)
   data_list=c(data_list,convert_data=convert)
   climate_data_objs_list = get_climate_data_objects(data_list)
   #print(climate_data_objs_list)
@@ -990,7 +990,7 @@ climate$methods(cumulative_exceedance = function(data_list=list(),interest_col,c
       # sort the data
       #---------------------------------------------------------------------------------#
       
-      sort_col=sort(curr_data[[interest_col]])
+      sort_col=sort(curr_data[[interest_var]])
       
       #---------------------------------------------------------------------------------#
       #calculate the proportions
@@ -1029,25 +1029,8 @@ climate$methods(cumulative_exceedance = function(data_list=list(),interest_col,c
   # y???axis label
   
   if(exceedance_graph == TRUE){
-    plot(sort_col, exceedance_col,xlim=range(sort_col),ylim=range(exceedance_col),col=color,
+    plot(sort_col, exceedance_col,xlim=range(sort_col),ylim=range(exceedance_col),col=color,main=main2
     )
   }
 }
 )
-#     par(new = TRUE)
-#     plot(sort_col[[2]], cum_perc_col[[2]],type="o",xlab="", ylab="",ylim=range(c(cum_perc_col[[1]],cum_perc_col[[2]])),
-#          xlim=range(c(sort_col[[1]],sort_col[[2]])), axes=FALSE,col=color2)
-#   legend(x,y, c("first plot","second plot"),lty=lty, lwd=lwd,pch=pch,col=c(color,color2),bty=bty)
-#   if(grid==TRUE){
-#     grid(nx, ny, lwd = lwd)
-#   }
-# }
-# }
-# )
-# 
-# ###############################################################################################
-# #sort_col=c()
-# for (i in length(samrain$Length)){
-#   sort_col=sort(samrain$Length)
-#   print(sort_col)
-# }
