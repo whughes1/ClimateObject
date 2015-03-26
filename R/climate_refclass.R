@@ -957,38 +957,41 @@ climate$methods(new_plot = function() {
 )
 
 
-climate$methods(cumulative_exceedance = function(data_list=list(),interest_var,cumulative_graph =TRUE,
+climate$methods(cumulative_exceedance_graphs = function(data_list=list(),interest_var,cumulative_graph =TRUE,
                                                  exceedance_graph=FALSE,color="blue",
                                                  main1="Cumulative Graph",main2="Exceedance Graph",
-                                                 xlabel="Length of the season in days",ylabel="Percent of years",
-                                                 convert=T, period_label=yearly_label)
+                                                 xlabel=interest_var,ylabel="Percent of days",
+                                                 convert=TRUE, data_period_label=yearly_label)
 {    
-  # get_climate_data_objects returns a list of the climate_data objects specified
-  # in the arguements.
-  # If no objects specified then all climate_data objects will be taken by default
-  # TO DO have options such as colours and the rest
-  data_list=add_to_data_info_time_period(data_list, period_label)
+    
+  data_list=add_to_data_info_time_period(data_list, data_period_label)
   data_list=c(data_list,convert_data=convert)
   climate_data_objs_list = get_climate_data_objects(data_list)
   #print(climate_data_objs_list)
   #print(data_list)
   
   for(data_obj in climate_data_objs_list) {
-    #curr_threshold = data_obj$get_meta(threshold_label,threshold)
-    
-    
-    
+    data_name = data_obj$get_meta(data_name_label)    
     
     # Access data in methods
     curr_data_list = data_obj$get_data_for_analysis(data_list)
+    #print(curr_data_list)
     #-----------------------------------------------------------------------------------#
-    
+    #print(curr_data_list)
     for( curr_data in curr_data_list ) {
       #---------------------------------------------------------------------------------#
+      if(data_obj$is_present(interest_var)){
+        interest_col=data_obj$getvname(interest_var)
+      } else
+        if( interest_var %in% names(curr_data)) {
+          interest_col=interest_var
+        }else{stop("Enter the correct name of the variable")    
+        }         
+     
       # sort the data
       #---------------------------------------------------------------------------------#
 
-      interest_col=data_obj$getvname(interest_var)
+      #interest_col=data_obj$getvname(interest_var)
       sort_col=sort(curr_data[[interest_col]])
       
       #---------------------------------------------------------------------------------#
@@ -1003,34 +1006,37 @@ climate$methods(cumulative_exceedance = function(data_list=list(),interest_var,c
       cum_col=cumsum(prop_col)
       
       #--------------------------------------------------------------------------------#
-      #calculate the percentage of the cumulative proportions
-      #--------------------------------------------------------------------------------#
       
-      cum_perc_col= cum_col*100 
-      
-      #--------------------------------------------------------------------------------#
-      #=====Add the values for plotting the exceedance graph==========================
-      #--------------------------------------------------------------------------------#
-      exceedance_col=100-cum_perc_col 
+      #====Plotting the cumulative graph when true=====================================
+      #----------------------------------------------------------------------------------#
+      if(cumulative_graph == TRUE){
+        #calculate the percentage of the cumulative proportions
+        #--------------------------------------------------------------------------------#
+        
+        cum_perc_col= cum_col*100 
+        
+        #--------------------------------------------------------------------------------#
+        #====Plotting the cumulative================================================
+        plot(sort_col, cum_perc_col,            
+             main=c(data_name,main1),  
+             xlab=xlabel,         
+             ylab=ylabel,type="o", col=color,
+             xlim=range(sort_col,finite=T),ylim=range(cum_perc_col)
+        )
+      }
+    #====Plotting the exceedance graph  when true========================================     
+      if(exceedance_graph == TRUE){
+        #=====Add the values for plotting the exceedance graph==========================
+        #--------------------------------------------------------------------------------#
+        exceedance_col=100-cum_perc_col        
+        #--------------------------------------------------------------------------------#
+        # Plotting the exceedance graph
+        plot(sort_col, exceedance_col,xlab=xlabel,ylab=ylabel,xlim=range(sort_col),
+             ylim=range(exceedance_col),col=color,main=c(data_name,main2)
+        )
+      }
     }
-  }
-  print(sort_col)
-  #====Plotting the cumulative graph when true=====================================
-  #----------------------------------------------------------------------------------#
-  if(cumulative_graph == TRUE){
-    plot(sort_col, cum_perc_col,            # plot the data 
-         main=main1,  # main title 
-         xlab=xlabel,        # x???axis label 
-         ylab=ylabel,type="o", col=color,
-         xlim=range(sort_col,finite=T),ylim=range(cum_perc_col)
-    )
-  }
-  # y???axis label
-  
-  if(exceedance_graph == TRUE){
-    plot(sort_col, exceedance_col,xlim=range(sort_col),ylim=range(exceedance_col),col=color,main=main2
-    )
-  }
+    }  
 }
 )
 
@@ -1197,21 +1203,22 @@ climate$methods(Plot_annual_rainfall_totals = function (data_list=list(), col="b
 )
 
 #====================================================================================================
-climate$methods( Monthly_number_rain_days_boxplot = function(data_list= list(), fill_col="blue",
-                                                             whisker_col="red", convert=TRUE,var_label=rain_label,time_period=subyearly_label,
-                                                             title="Boxplot of Monthly Rainy Days for all Years",whisklty=1){
+climate$methods(Boxplot = function(data_list= list(), fill_col="blue",interest_var,
+                                                             whisker_col="red", convert=TRUE,data_period_label=daily_label,
+                                                             title="Rain Amount boxplot",whisklty=1,xlab="Months",
+                                                             ylab=interest_var,horizontal=FALSE){
   #--------------------------------------------------------------------------------------------#
   # This function plots the boxplot of the number of rain per month for all the years in the data 
   #     set
   #-------------------------------------------------------------------------------------------#
   
   # Specifying the needed variable
-  data_list = add_to_data_info_required_variable_list( data_list, list(var_label))
+  data_list = add_to_data_info_required_variable_list( data_list, list(interest_var))
   #Using convert_data
   data_list=c(data_list,convert_data=convert)
   # Specifying the data_time_period
-  data_list=add_to_data_info_time_period( data_list, time_period)
-  
+  data_list=add_to_data_info_time_period( data_list, data_period_label)
+ 
   # use data_list to get the required data objects
   climate_data_objs = get_climate_data_objects( data_list ) 
   
@@ -1226,12 +1233,115 @@ climate$methods( Monthly_number_rain_days_boxplot = function(data_list= list(), 
     
     # Access data in methods
     curr_data_list = data_obj$get_data_for_analysis(data_list)
-    
+   
     for( curr_data in curr_data_list ) {
-      # Draw the monthly boxplot
-      boxplot( curr_data[["Number of Rain Days"]]~curr_data[[month_col]], whiskcol=whisker_col,col=fill_col, xlab="Month",ylab="Count of Rain Days",
-               main= c( data_name, title), whisklty=whisklty )
+      if(data_obj$is_present(interest_var)){
+        interest_col=data_obj$getvname(interest_var)
+      } else
+        if( interest_var %in% names(curr_data)) {
+          interest_col=interest_var
+        }else{stop("Enter the correct name")    
+        } 
+      # Draw the boxplot
+      boxplot( curr_data[[interest_col]]~curr_data[[month_col]], whiskcol=whisker_col,col=fill_col, xlab=xlab,ylab=ylab,
+               main= c( data_name, title), whisklty=whisklty,horizontal=horizontal)
     } 
+  }
+}
+)
+
+#=======================================================================================================================
+climate$methods(summary_statistics = function(data_list=list(),interest_var, Proportions=c(),counts=TRUE, percents=FALSE,
+                                              period_label=daily_label, digits=0, statistics=TRUE, percentiles=c(),
+                                              convert=FALSE)
+  
+{    
+  
+  data_list=add_to_data_info_required_variable_list(data_list, list(interest_var))
+  data_list=c(data_list,convert_data=convert)
+  data_list=add_to_data_info_time_period(data_list, period_label)
+  climate_data_objs_list = get_climate_data_objects(data_list)
+  #print(climate_data_objs_list)
+  #print(data_list)
+  for(data_obj in climate_data_objs_list) {
+    data_name = data_obj$get_meta(data_name_label)
+    # Access data in methods
+    curr_data_list = data_obj$get_data_for_analysis(data_list)
+    #print(curr_data_list)
+    for( curr_data in curr_data_list ) {
+      
+      #Check if the column of interest is inputted
+      #---------------------------------------------------------------------------------#      
+      
+      if(data_obj$is_present(interest_var)){
+        interest_col=data_obj$getvname(interest_var)
+      } else
+        if(!("interest_var" %in% names(curr_data))){
+          stop("Enter the correct name")
+        }else{
+          interest_col=interest_var
+        }   
+      #---------------------------------------------------------------------------------#
+      #Check if the vector of proportions is inputted
+      #---------------------------------------------------------------------------------#
+      if( missing( Proportions ) ) { 
+        stop("Proportions vector is missing.")}
+      
+      print(paste("summary statistics for",data_name,"data" ))
+      
+      if (statistics==TRUE){
+        #-------------------------------------------------------------------------------#
+        #get the number of observations 
+        #-------------------------------------------------------------------------------#
+        print(paste(" data No. of observations:",  length(curr_data[[interest_col]])), quote = FALSE)
+        
+        #-------------------------------------------------------------------------------#
+        #get the minimum, mean, median and the maximum from the column of interest
+        #-------------------------------------------------------------------------------#
+        print(summary(curr_data[[interest_col]]) , quote = FALSE)
+        
+        #------------------------------------------------------------------------------#
+        #get the range of the data
+        #------------------------------------------------------------------------------#
+        print(paste("Range:", max(curr_data[[interest_col]], na.rm = T) - min(curr_data[[interest_col]], na.rm = T) ) , quote = FALSE )
+        
+        #-------------------------------------------------------------------------------#
+        #calculate the standard deviation
+        #-------------------------------------------------------------------------------#
+        print(paste("sd.deviation:", round(sd(curr_data[[interest_col]], na.rm = TRUE) ), digits =digits ), quote = FALSE )
+        
+        #-------------------------------------------------------------------------------#
+        #calculate the percentiles
+        #-------------------------------------------------------------------------------#
+        if( !(length( percentiles ) == 0 ) ) {
+          print(quantile(curr_data[[interest_col]], percentiles,,na.rm=T), quote = FALSE)
+        }
+      }
+      
+      #---------------------------------------------------------------------------------#
+      #Initializing empty vectors and looping to get the counts and percentages 
+      #---------------------------------------------------------------------------------#
+      count=c()
+      percent=c()
+      for (i in 1:length(Proportions)){
+        
+        #---------------------------------------------------------------------------------#
+        #returns count only if true
+        #---------------------------------------------------------------------------------#
+        if (counts==TRUE){
+          count[i]=sum(curr_data[[interest_col]]<=Proportions[i], na.rm = TRUE)
+          print(paste("count <=", Proportions[i], "is", count[i]) , quote = FALSE)
+        }
+        
+        #----------------------------------------------------------------------------------#
+        #returns percents only if true
+        #----------------------------------------------------------------------------------#
+        if (percents==TRUE){
+          percent[i]=round((count[i]/length(curr_data[[interest_col]]))*100,digits=digits)
+          print(paste("% of data <=", Proportions[i], "is", percent[i]), quote = FALSE)
+        }
+      }
+    }
   }
 }
 )
