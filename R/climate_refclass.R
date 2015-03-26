@@ -1097,37 +1097,36 @@ climate$methods(yearly_vertical_line = function(data_list=list(), col_var1, col_
 }
 )
 #===========================================================================================
-climate$methods(trellis_plot_temperature = function(data_list = list(), main_title = "Plot - Trellis Plot for Minimum Temperature")
+climate$methods(yearly_trellis_plot = function(data_list = list(),interest_variable,xlab = "Year",ylab,layout = c(6, 2),fac_column,
+                                                    main_title = "Plot - Trellis Plot")
 {  
   require(lattice)
   
   # get_climate_data_objects returns a list of the climate_data objects specified
-  # in the arguements.
+  # in the arguments.
   # If no objects specified then all climate_data objects will be taken by default
   
-  data_list = add_to_data_info_required_variable_list(data_list, list(temp_min_label))
-  data_list = add_to_data_info_required_variable_list(data_list, list(temp_max_label))
+  data_list = add_to_data_info_required_variable_list(data_list, list(interest_variable))
   data_list = add_to_data_info_time_period(data_list, daily_label)
   climate_data_objs_list = get_climate_data_objects(data_list)
   #print(data_list)
   # print(climate_data_objs_list)
   
   for(data_obj in climate_data_objs_list) {
-    # we must have the temperature column in the data, we do not have to check this. 
-    tmin_col  = data_obj$getvname(temp_min_label)
-    #tmax_col = data_obj$getvname(temp_max_label)
-    # we need to have year and month columns in the data, otherwise we must add them. check later!
+   
+    interest_col = data_obj$getvname(interest_variable)
+    
+    factor_col = data_obj$getvname(fac_column)
+    
+    # Must add these columns if not present.
+    if( !(data_obj$is_present(year_label) && data_obj$is_present(month_label) && data_obj$is_present(day_label)) ) {
+      data_obj$add_year_month_day_cols()
+    }
     year_col = data_obj$getvname(year_label)
-    # month column should be class factor
-    month_col = data_obj$getvname(month_label)
-    #print(month_col)
-    
-    # ckecking dates column 
-    #data_obj$missing_dates_check()
-    #data_obj$date_col_check()
-    
-    # convert the column month as.integer to be able to create date column. After this, month column have to change back to factor.
-    # data_obj[[month_col]] =  as.integer(data_obj[[month_col]]) # this is not working. which method does this?
+    # if ylabel is missing, use the column name of the interest variable. 
+    if(missing(ylab)){
+      ylab = data_obj$getvname(interest_variable)
+    }
     
     #print(tmin_col)
     
@@ -1135,63 +1134,64 @@ climate$methods(trellis_plot_temperature = function(data_list = list(), main_tit
     
     for( curr_data in curr_data_list ) {
       
-      plot1 <- xyplot(curr_data[[tmin_col]]  ~ curr_data[[year_col]] | as.factor(curr_data[[month_col]]),
-                      layout = c(6, 2),
+      plot1 <- xyplot(curr_data[[ interest_col]]  ~ curr_data[[year_col]] | as.factor(curr_data[[factor_col]]),
+                      layout = layout,
                       panel = function(x, y) {
                         #panel.grid(v=2) 
                         panel.xyplot(x, y)
                         panel.loess(x, y)
                         panel.abline(lm(y~x))
                       },
-                      xlab = "Year",
-                      ylab = "Tmin", main = main_title)
+                      xlab = xlab,
+                      ylab = ylab, main = main_title)
       print(plot1)
       
     }  
   } 
-  #fitted line by month
-  #summary(lm(curr_data[[ tmin_col]]  ~ curr_data[[year_col]]))
-  
-  
-  
+  #fitted line by month.  
+#   # this gives 12 month intercept and one gradient.
+#   summary(lm(curr_data[[ interest_col]]  ~ curr_data[[year_col]]+curr_data[[factor_col]]/curr_data[[factor_col]]))
+
+#   # this gives the common intercept. 
+#  summary(lm(curr_data[[ interest_col]]  ~ curr_data[[year_col]]/curr_data[[factor_col]]))
+# I think this is not useful.
+# The coefficients in both cases cannot be interpreted as a simple gradient and intercept for each month: 
+# the gradients for month2 and so on are modelled as an additive increment on the first month gradient.
 }
 )
 
 #=================================================================================
-climate$methods(Plot_annual_rainfall_totals = function (data_list=list(), col="blue", main_title="Plot - Annual Rainfall Total per Year")
+climate$methods(Plot_annual_rainfall_totals = function (data_list=list(), col1="blue",ylab="Rain Total",xlab="Year",pch=20,type="b",lty=2,col2="red",lwd = 2,
+                                                        main_title="Plot - Annual Rainfall Total per Year")
 {
   
   data_list = add_to_data_info_time_period(data_list, yearly_label)
-#   # convert data is not yet  
-#   data_list = c(data_list, convert_data=TRUE)
+  # convert data 
+  data_list = c(data_list, convert_data=TRUE)
   climate_data_objs = get_climate_data_objects(data_list)
   
   #print(length(climate_data_objs))
+  
   for(data_obj in climate_data_objs) {
     # Must add these columns if not present to display this way
     if( !(data_obj$is_present(year_label) ) ) { 
-      data_obj$add_year_month_day_cols()
-      #data_obj$add_year_col() 
+      #data_obj$add_year_month_day_cols()
+      data_obj$add_year_col() 
     }
     year_col = data_obj$getvname(year_label)
-    
-    #rain_total_col = data_obj$variables[[ total_rainfall_label ]]
-    
-    # we get the total number of rainy days. we need to think about a good way to do this from getvname.
+        
+    # get the total number of rainy days. we need to think about a good way to do this from getvname.
     rain_total_col = data_obj$getvname ("rain total 1") # how can we get this?
-    
-    #print(rain_total_col)
-    
+        
     curr_data_list = data_obj$get_data_for_analysis(data_list)
-    #print(curr_data_list)
     # loop for plotting 
     for( curr_data in curr_data_list ) { 
       # curr_data should have two columns which are year and rainfall totals 
-      plot_totals <- plot(curr_data[[year_col]], curr_data[[rain_total_col]],type="b",pch=20,xlab="Year", col="blue",ylim= c(0, max(curr_data[[rain_total_col]])),
+      plot_totals <- plot(curr_data[[year_col]], curr_data[[rain_total_col]],type=type,pch=pch,xlab=xlab, col=col1,ylim= c(0, max(curr_data[[rain_total_col]])),
                           xlim = c( min(curr_data[[year_col]], na.rm=TRUE), max( curr_data[[year_col]])),
-                          ylab="Rain Total",main=main_title)
-      abline(h = mean(curr_data[[rain_total_col]][curr_data[[rain_total_col]] > 0]),lty=2,col="red")  
-      grid(length(curr_data[[year_col]]),0, lwd = 2)
+                          ylab=ylab,main=main_title)
+      abline(h = mean(curr_data[[rain_total_col]][curr_data[[rain_total_col]] > 0]),lty=lty,col=col2)  
+      grid(length(curr_data[[year_col]]),0, lwd = lwd)
       
       
       
