@@ -65,8 +65,8 @@ climate_data$methods(initialize = function(data = data.frame(), data_name = "", 
     }
 
     .self$check_multiple_data()
-
     
+
   }
 )
 
@@ -279,7 +279,8 @@ climate_data$methods(replace_column_in_data = function(col_name = "", column_dat
 #      is_data_split<<-FALSE
     }
     if(col_name %in% variables) {
-      label = names(variables[col_name])
+      ind = match(col_name,variables)
+      label = names(variables)[[ind]]
       .self$append_to_variables(label,col_name)
     }
   }
@@ -768,6 +769,7 @@ climate_data$methods(summarize_data = function(new_time_period, day_format = "%d
     else {
       end_date = start_date
       year(end_date) <- year(max(date_col))
+      day(end_date) <- day(end_date)-1
     }
     
     time_periods_list = seq(start_date,end_date,"year")
@@ -825,36 +827,30 @@ climate_data$methods(summarize_data = function(new_time_period, day_format = "%d
         summary_obj$append_to_variables(rain_total_label, total_rain_name)
         
         # Can't use by function here as there may be no values > threshold causing by to skip
-        # a time period. causing an error when we try to append the column.
+        # a time period, causing an error when we try to append the column.
         mean_rain_data = c()
         for(period in split_periods) {
-          curr_mean = mean(data[[curr_col_name]][data[[split_col]]==period & data[[curr_col_name]] > threshold])
+          curr_mean = mean(data[[curr_col_name]][data[[split_col]]==period & data[[curr_col_name]] > threshold], na.rm=na.rm)
           mean_rain_data = c(mean_rain_data, curr_mean)
         }
         
-
         summary_obj$append_column_to_data(mean_rain_data, mean_rain_name)
         mean_rain_label = summary_obj$get_summary_label(var, mean_label, list(na.rm=na.rm, threshold = threshold))
         summary_obj$append_to_variables(mean_rain_label, mean_rain_name)
         
 
-        if(na.rm) {
-          num_rain_days_data = as.vector(by(data[[curr_col_name]][!is.na(data[[curr_col_name]])] > threshold, 
-                                  data[[split_col]][!is.na(data[[curr_col_name]])], sum))
-        }
-        else {
-          num_rain_days_data = as.vector(by(data[[curr_col_name]] > threshold, 
-                                  data[[split_col]], sum))
-        }
+        num_rain_days_data = as.vector(by(data[[curr_col_name]] > threshold, 
+                                          data[[split_col]], sum, na.rm=na.rm))
+
         summary_obj$append_column_to_data(num_rain_days_data, num_rain_days_col)
         rain_days_label = summary_obj$get_summary_label(var, number_of_label, list(na.rm=na.rm, threshold=threshold))
         summary_obj$append_to_variables(rain_days_label,num_rain_days_col)
-        
         
       }
       
       else {
         
+        # For all other variables we add the mean only.  
         mean_var_data = as.vector(by(data[[curr_col_name]],data[[split_col]], mean, na.rm = na.rm))
         mean_var_name = paste(mean_col,curr_col_name)
         summary_obj$append_column_to_data(mean_var_data, mean_var_name)
@@ -865,8 +861,6 @@ climate_data$methods(summarize_data = function(new_time_period, day_format = "%d
       
     }
   }
-
-  summary_obj$append_to_meta_data(summarized_from_label, curr_data_name)
 
   summary_obj$append_to_meta_data(summarized_from_label, curr_data_name)
 
