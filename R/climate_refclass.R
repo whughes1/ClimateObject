@@ -1042,15 +1042,17 @@ climate$methods(cumulative_exceedance_graphs = function(data_list=list(),interes
 
 #===================================================================================================
 
-climate$methods(yearly_vertical_line = function(data_list=list(), col_var1, col_var2, col1 = "blue", col2 = "red", col3 = "green", xlabel = "Year", pch1 = 1, pch2 = 1, pch3 = 1)
+climate$methods(yearly_vertical_line = function(data_list=list(), col_var1, col_var2, col1 = "blue", type1 = "h",type="p",
+                                                col2 = "red", col3 = "green", xlabel = "Year", pch1 = 1, pch2 = 1, pch3 = 1)
 {    
   # get_climate_data_objects returns a list of the climate_data objects specified
   # in the arguments.
   # If no objects specified then all climate_data objects will be taken by default
   
   # the col_var1 and col_var2 must be label. e.g col_var1_label
-  data_list = add_to_data_info_required_variable_list(data_list, list(col_var1_label)) 
-  data_list = add_to_data_info_required_variable_list(data_list, list(col_var2_label))
+  # I should be able to use many variables. Can I make a list of variables?
+  data_list = add_to_data_info_required_variable_list(data_list, list(col_var1)) 
+  data_list = add_to_data_info_required_variable_list(data_list, list(col_var2))
   # we should be able to specify the time period. we need to fix this. Danny said he will work on it. 
   data_list = add_to_data_info_time_period(data_list, yearly_label) 
   
@@ -1064,8 +1066,8 @@ climate$methods(yearly_vertical_line = function(data_list=list(), col_var1, col_
     
     # we need to get the column of interest for the plot.
     # The columns of interest are required so we don't need to check if there are present
-    col_var1 = data_obj$getvname(col_var1_label)
-    col_var2 = data_obj$getvname(col_var2_label)
+    col_var1 = data_obj$getvname(col_var1)
+    col_var2 = data_obj$getvname(col_var2)
     
     
     data_obj$date_col_check(date_format = "%d/%m/%Y", convert = TRUE, create = TRUE, messaging=TRUE)
@@ -1082,15 +1084,15 @@ climate$methods(yearly_vertical_line = function(data_list=list(), col_var1, col_
     
     for( curr_data in curr_data_list ) {
       # plotting the first plot. still need to fix ylim and xlim depending on both variables. 
-      plot(curr_data[[ year_col ]], curr_data[[col_var1]], type = "h", lwd=2, col=col1, xlab=xlabel,
+      plot(curr_data[[ year_col ]], curr_data[[col_var1]], type = type1, lwd=2, col=col1, xlab=xlabel,
            ylim = c( range( curr_data[[col_var1]], curr_data[[col_var2]], na.rm = TRUE) ))
       #Adding points to the plot
-      lines(curr_data[[ year_col ]], curr_data[[col_var1]], type="p", col=col2, pch = pch1)
+      lines(curr_data[[ year_col ]], curr_data[[col_var1]], type=type2, col=col2, pch = pch1)
       #Adding the second plot
-      points(curr_data[[ year_col ]], curr_data[[col_var2]], type = "h", col=col3, pch = pch2 )
+      points(curr_data[[ year_col ]], curr_data[[col_var2]], type = type1, col=col3, pch = pch2 )
       
       #Adding points to the second plot
-      lines(ata[[ year_col ]], data[[col_var2]], type="p", col=col2, pch = pch1)
+      lines(ata[[ year_col ]], data[[col_var2]], type=type2, col=col2, pch = pch1)
     }
     
   }
@@ -1123,18 +1125,20 @@ climate$methods(yearly_trellis_plot = function(data_list = list(),interest_varia
       data_obj$add_year_month_day_cols()
     }
     year_col = data_obj$getvname(year_label)
+    month_col = data_obj$getvname(month_label)
+    day_col = data_obj$getvname(day_label)
+    
+    
     # if ylabel is missing, use the column name of the interest variable. 
     if(missing(ylab)){
       ylab = data_obj$getvname(interest_variable)
     }
-    
-    #print(tmin_col)
-    
+        
     curr_data_list = data_obj$get_data_for_analysis(data_list)
     
     for( curr_data in curr_data_list ) {
-      
-      plot1 <- xyplot(curr_data[[ interest_col]]  ~ curr_data[[year_col]] | as.factor(curr_data[[factor_col]]),
+      # the factor column should be a factor vector giving the name of the class.
+      plot1 <- xyplot(curr_data[[ interest_col]]  ~ curr_data[[year_col]] | curr_data[[factor_col]],
                       layout = layout,
                       panel = function(x, y) {
                         #panel.grid(v=2) 
@@ -1180,7 +1184,7 @@ climate$methods(Plot_annual_rainfall_totals = function (data_list=list(), col1="
     }
     year_col = data_obj$getvname(year_label)
         
-    # get the total number of rainy days. we need to think about a good way to do this from getvname.
+    # get the total rain. we need to think about a good way to do this from getvname.
     rain_total_col = data_obj$getvname ("rain total 1") # how can we get this?
         
     curr_data_list = data_obj$get_data_for_analysis(data_list)
@@ -1188,7 +1192,7 @@ climate$methods(Plot_annual_rainfall_totals = function (data_list=list(), col1="
     for( curr_data in curr_data_list ) { 
       # curr_data should have two columns which are year and rainfall totals 
       plot_totals <- plot(curr_data[[year_col]], curr_data[[rain_total_col]],type=type,pch=pch,xlab=xlab, col=col1,ylim= c(0, max(curr_data[[rain_total_col]])),
-                          xlim = c( min(curr_data[[year_col]], na.rm=TRUE), max( curr_data[[year_col]])),
+                          xlim = c( min(curr_data[[year_col]], na.rm=TRUE), max( curr_data[[year_col]], na.rm=TRUE)),
                           ylab=ylab,main=main_title)
       abline(h = mean(curr_data[[rain_total_col]][curr_data[[rain_total_col]] > 0]),lty=lty,col=col2)  
       grid(length(curr_data[[year_col]]),0, lwd = lwd)
