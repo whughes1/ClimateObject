@@ -572,6 +572,15 @@ climate_data$methods(date_col_check = function(date_format = "%d/%m/%Y", convert
         new_col = as.Date(data[[date_string_col]], format = date_format)
         .self$append_column_to_data(new_col,variables[[date_label]])
       }
+
+      # Else if date string column is there and create == TRUE create date column
+      else if (create == TRUE && is_present(year_label) && is_present(doy_label)) {
+        year_col = data[[getvname(year_label)]]
+        doy_col = data[[getvname(doy_label)]]
+        new_col = do.call(c,mapply(doy_as_date,as.list(doy_col),as.list(year_col), SIMPLIFY=FALSE))
+        .self$append_column_to_data(new_col,variables[[date_label]])
+      }
+
       #TO DO we should also be able to create this from year and doy
       else {warning("Cannot create or edit a date column. There is insufficient information in the
                     data frame to have a date column.")}
