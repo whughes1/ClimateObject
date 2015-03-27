@@ -283,7 +283,6 @@ climate_data$methods(replace_column_in_data = function(col_name = "", column_dat
 
 climate_data$methods(rename_column_in_data = function(curr_col_name = "", new_col_name="") {
   
-  print(curr_col_name)
   # Column name must be character
   if( ! is.character(curr_col_name) ) {
     stop("Current column name must be of type: character")
@@ -305,7 +304,7 @@ climate_data$methods(rename_column_in_data = function(curr_col_name = "", new_co
     names(data)[names(data) == curr_col_name] <<- new_col_name
     .self$append_to_changes(list(Renamed_col, curr_col_name, new_col_name))
     if(curr_col_name %in% variables) {
-      append_to_variables(names(which(variables==curr_col_name)), new_col_name)
+      .self$append_to_variables(names(which(variables==curr_col_name)), new_col_name)
     }
 
   }
