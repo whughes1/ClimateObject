@@ -594,31 +594,12 @@ climate_data$methods(missing_dates_check = function()
     else if(data_time_period == subyearly_label) by = "month"
     else if(data_time_period == yearly_label) by = "year"
     
-    temp_start_date = doy_as_date(get_meta(season_start_day_label),year(min(data[[date_col]])))
-    if(temp_start_date > min(data[[date_col]])) {
-      start_date = temp_start_date
-      year(start_date) <- year(start_date)-1
-    }
-    else {
-      start_date = temp_start_date      
-    }
+    start_end_dates = .self$get_daily_data_start_end_dates()
     
-    final_year = year(max(data[[date_col]]))
-    final_month = month(start_date-1)
-    final_day = day(start_date-1)
-    temp_end_date = as.Date(paste(final_year,final_month,final_day,sep="-"))
+#     append_to_meta_data(data_start_date_label,start_date)
+#     append_to_meta_data(data_end_date_label,end_date)
     
-    if(temp_end_date >= max(data[[date_col]])) {
-      end_date = temp_end_date
-    }
-    else {
-      end_date = as.Date(paste(final_year+1,final_month,final_day,sep="-"))
-    }
-    
-    append_to_meta_data(data_start_date_label,start_date)
-    append_to_meta_data(data_end_date_label,end_date)
-    
-    full_dates = seq(start_date, end_date, by = by)
+    full_dates = seq(start_end_dates[[1]], start_end_dates[[2]], by = by)
     
     if(length(full_dates) != nrow(data)) {
       dates_table = data.frame(full_dates)
@@ -744,19 +725,9 @@ climate_data$methods(summarize_data = function(new_time_period, day_format = "%d
   
   if(data_time_period == daily_label && new_time_period == subyearly_label) {
     
-    if(is_meta_data(data_start_date_label)) {
-      start_date = get_meta(data_start_date_label)
-    }
-    else start_date = min(date_col)
-    
-    if(is_meta_data(data_end_date_label)) {
-      end_date = get_meta(data_end_date_label)+1
-      month(end_date) <- month(end_date)-1
-    }
-    else {
-      end_date = start_date
-      month(end_date) <- month(max(date_col))
-    }
+    start_date = .self$get_daily_data_start_end_dates()[[1]]
+    end_date = .self$get_daily_data_start_end_dates()[[2]]+1
+    month(end_date) = month(end_date)-1
     
     time_periods_list = seq(start_date,end_date,"month")
     split_list = list(month(data[[date_col_name]]), year(data[[date_col_name]]))
@@ -764,22 +735,11 @@ climate_data$methods(summarize_data = function(new_time_period, day_format = "%d
 
   if(data_time_period == daily_label && new_time_period == yearly_label) {
     
-    if(is_meta_data(data_start_date_label)) {
-      start_date = get_meta(data_start_date_label)
-    }
-    else start_date = min(date_col)
-    
-    if(is_meta_data(data_end_date_label)) {
-      end_date = get_meta(data_end_date_label)+1
-      year(end_date) <- year(end_date)-1
-    }
-    else {
-      end_date = start_date
-      year(end_date) <- year(max(date_col))
-      day(end_date) <- day(end_date)-1
-    }
-    
+    start_date = .self$get_daily_data_start_end_dates()[[1]]
+    end_date = .self$get_daily_data_start_end_dates()[[2]]+1
+    year(end_date) = year(end_date)-1
     time_periods_list = seq(start_date,end_date,"year")
+    
     if(!is_present(season_label)) add_doy_col()
     split_col = getvname(season_label)
     split_periods = unique(data[[getvname(season_label)]])
@@ -1029,5 +989,32 @@ climate_data$methods(view_definition = function(col_name) {
     }
   }
   else return(NA)
+}
+)
+
+climate_data$methods(get_daily_data_start_end_dates = function() {
+  date_col = getvname(date_label)
+  temp_start_date = doy_as_date(get_meta(season_start_day_label),year(min(data[[date_col]])))
+  if(temp_start_date > min(data[[date_col]])) {
+    start_date = temp_start_date
+    year(start_date) <- year(start_date)-1
+  }
+  else {
+    start_date = temp_start_date      
+  }
+  
+  final_year = year(max(data[[date_col]]))
+  final_month = month(start_date-1)
+  final_day = day(start_date-1)
+  temp_end_date = as.Date(paste(final_year,final_month,final_day,sep="-"))
+  
+  if(temp_end_date >= max(data[[date_col]])) {
+    end_date = temp_end_date
+  }
+  else {
+    end_date = as.Date(paste(final_year+1,final_month,final_day,sep="-"))
+  }
+  
+  return(c(start_date,end_date))
 }
 )
