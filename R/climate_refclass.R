@@ -957,13 +957,13 @@ climate$methods(new_plot = function() {
 )
 
 
-climate$methods(cumulative_exceedance_graphs = function(data_list=list(),interest_var,cumulative_graph =TRUE,
+climate$methods(cumulative_exceedance_graphs = function(data_list=list(),interest_var=list(),cumulative_graph =TRUE,
                                                  exceedance_graph=FALSE,color="blue",
                                                  main1="Cumulative Graph",main2="Exceedance Graph",
                                                  xlabel=interest_var,ylabel="Percent of days",
                                                  convert=TRUE, data_period_label=yearly_label)
 {    
-    
+  data_list=add_to_data_info_required_variable_list(data_list, interest_var)  
   data_list=add_to_data_info_time_period(data_list, data_period_label)
   data_list=c(data_list,convert_data=convert)
   climate_data_objs_list = get_climate_data_objects(data_list)
@@ -978,17 +978,15 @@ climate$methods(cumulative_exceedance_graphs = function(data_list=list(),interes
     #print(curr_data_list)
     #-----------------------------------------------------------------------------------#
     #print(curr_data_list)
+    
     for( curr_data in curr_data_list ) {
       #---------------------------------------------------------------------------------#
-      if(data_obj$is_present(interest_var)){
-        interest_col=data_obj$getvname(interest_var)
-      } else
-        if( interest_var %in% names(curr_data)) {
-          interest_col=interest_var
-        }else{stop("Enter the correct name of the variable")    
-        }         
-     
-      # sort the data
+      
+      for (i in length(interest_var)) {
+      
+        interest_col=data_obj$getvname(interest_var[[i]])
+      
+          # sort the data
       #---------------------------------------------------------------------------------#
 
       #interest_col=data_obj$getvname(interest_var)
@@ -1006,15 +1004,15 @@ climate$methods(cumulative_exceedance_graphs = function(data_list=list(),interes
       cum_col=cumsum(prop_col)
       
       #--------------------------------------------------------------------------------#
+      #calculate the percentage of the cumulative proportions
+      #--------------------------------------------------------------------------------#
       
+      cum_perc_col= cum_col*100 
+      #------------------------------------------------------------------------------
       #====Plotting the cumulative graph when true=====================================
       #----------------------------------------------------------------------------------#
       if(cumulative_graph == TRUE){
-        #calculate the percentage of the cumulative proportions
-        #--------------------------------------------------------------------------------#
-        
-        cum_perc_col= cum_col*100 
-        
+       
         #--------------------------------------------------------------------------------#
         #====Plotting the cumulative================================================
         plot(sort_col, cum_perc_col,            
@@ -1035,6 +1033,7 @@ climate$methods(cumulative_exceedance_graphs = function(data_list=list(),interes
              ylim=range(exceedance_col),col=color,main=c(data_name,main2)
         )
       }
+    }
     }
     }  
 }
