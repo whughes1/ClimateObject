@@ -709,6 +709,8 @@ climate_data$methods(summarize_data = function(new_time_period, day_format = "%d
                                                num_rain_days_col = "Number of Rain Days", total_col = "Total",
                                                mean_col = "Mean", period_col_name = "Period", 
                                                mean_rain_name = "Average rain per rain day")
+  
+  # remove date formats, remove threshold, 
 {
   if(missing(new_time_period)) {
     stop("Specify the time period you want the summarized data to be in.")
@@ -1016,5 +1018,37 @@ climate_data$methods(get_daily_data_start_end_dates = function() {
   }
   
   return(c(start_date,end_date))
+}
+)
+
+climate_data$methods(time_period_check = function(messages=TRUE) {
+
+  date_col = data[[getvname(date_label)]]
+  diff_values = difftime(tail(date_col,-1),head(date_col,-1), units="days")
+  min_diff = min(diff_values)
+  median_diff = median(diff_values)
+  mode_diff = mode_stat(diff_values)
+  
+  if(min_diff < 1) {
+    data_time_period = "subdaily"
+    message("Detected time period: subyearly")
+    if(messages && (min_diff != median_diff || min_diff != mode_diff) ) {
+      warning("The data time period does ")
+    }
+  }
+  else if (min_diff == 1) {
+    data_time_period = "daily"
+  }
+  else if (min_diff > 1 && min_diff < 365) {
+    data_time_period = "subyearly"
+  }
+  else if (min_diff == 365) {
+    data_time_period = "yearly"
+  }
+  else {
+    stop("Cannot determine the data time period.")
+  }
+  
+  
 }
 )

@@ -453,3 +453,8 @@ doy_as_date <- function(doy, year) {
   else return(as.Date(paste(year,doy), format="%Y %j"))
   
 }
+
+mode_stat <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
