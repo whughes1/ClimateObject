@@ -24,10 +24,10 @@ climate_data <- setRefClass("climate_data",
 # We can refer to any field of a climate_data object by name. e.g. data or variables
 
 climate_data$methods(initialize = function(data = data.frame(), data_name = "", meta_data = list(), 
-                                           variables = list(),data_time_period=daily_label, imported_from = "", 
-                                           messages = TRUE, identify_variables = TRUE, 
+                                           variables = list(), imported_from = "", 
+                                           messages = TRUE, convert=TRUE, create = TRUE, identify_variables = TRUE, 
                                            start_point=1, check_dates=TRUE, check_missing_dates = TRUE, 
-                                           date_format = "%m/%d/%Y")
+                                           date_format = "%m/%d/%Y", data_time_period = "daily")
   {
 
     # Set up the Climate data object
@@ -41,7 +41,6 @@ climate_data$methods(initialize = function(data = data.frame(), data_name = "", 
     else{
       .self$set_variables(add_defaults(imported_from, variables))
     }
-    .self$set_data_time_period(data_time_period)
     
     # If no name for the data.frame has been given in the list we create a default one.
     # Decide how to choose default name index
@@ -56,8 +55,12 @@ climate_data$methods(initialize = function(data = data.frame(), data_name = "", 
       else meta_data[[data_name_label]] <<- data_name      
     }
     
+    .self$set_data_time_period(data_time_period)
+    
+    .self$date_format_check(convert=convert, messages=messages)
+    
     if (check_dates){
-      .self$date_col_check(date_format=date_format)
+      .self$date_col_check(date_format=date_format, convert=convert, create = create, messages=messages)
     }
     
     if (check_missing_dates){
@@ -522,104 +525,174 @@ climate_data$methods(get_split_data = function(return_data) {
 # Date column name is not changed if date column is already there
 # Created replace_column_in_data method for climate_data to use to change class of date column
 
-climate_data$methods(date_col_check = function(date_format = "%d/%m/%Y", convert = TRUE, create = TRUE, messaging=TRUE) 
-  {    
+climate_data$methods(date_col_check = function(date_format = "%d/%m/%Y", convert = TRUE, create = TRUE, messages=TRUE)
+  { 
     # Check if there is a date column already
     # Check if the date is in the Date class
     # If convert == TRUE
     # Convert class to date class
-    if (data_time_period==daily_label){
-      if (.self$is_present(date_label)) {
-        date_col = variables[[date_label]]
-        if (!class(data[[variables[[date_label]]]])=="Date"){
-          if (messaging) message("date column is not stored as Date class.")
-          if (convert == TRUE) {
-            if (messaging) message("Attempting to convert date column to Date class.")
-            new_col = as.Date(data[[date_col]], format = date_format)
-            .self$replace_column_in_data(date_col,new_col)
-          }
-        } 
-        
+    if (.self$is_present(date_label)) {
+      date_col = variables[[date_label]]
+      if (!is.Date(data[[date_col]])) {
+        if (messages) message("date column is not stored as Date class.")
+        if (convert == TRUE) {
+          if (messages) message("Attempting to convert date column to Date class.")
+          new_col = as.Date(as.character(data[[date_col]]), format = date_format)
+          .self$replace_column_in_data(date_col,new_col)
+        }
       }
-      # If the year, month, day column are there and create == TRUE create date column
-      else if (create == TRUE && is_present(year_label) && is_present(month_label) && is_present(day_label)) 
-      {
-        day_col = data[[getvname(day_label)]]
-        month_col = data[[getvname(month_label)]]
+    }
+    
+    # Else if date string column is there and create == TRUE create date column
+    else if (create && is_present(date_asstring_label)) 
+    {
+      date_string_col = variables[[date_asstring_label]]
+      new_col = as.Date(data[[date_string_col]], format = date_format)
+      .self$append_column_to_data(new_col,variables[[date_label]])
+    }
+    
+    # If the year, month, day column are there and create == TRUE create date column
+    else if (create && is_present(year_label) && is_present(month_label) && is_present(day_label))
+    {
+      day_col = data[[getvname(day_label)]]
+      month_col = data[[getvname(month_label)]]
+      year_col = data[[getvname(year_label)]]
+      
+      if(all(month.abb %in% month_col)) {
+        month_col = match(month_col,month.abb)
+      }
+      
+      if(all(month.name %in% month_col)) {
+        month_col = match(month_col,month.abb)
+      }
+      
+      new_col = as.Date(paste(year_col, month_col, day_col, sep="-"))
+      .self$append_column_to_data(new_col, variables[[date_label]])
+    }
+    
+    else if (create && is_present(year_label) && is_present(doy_label)) {
+      year_col = data[[getvname(year_label)]]
+      doy_col = data[[getvname(doy_label)]]
+      new_col = do.call(c,mapply(doy_as_date,as.list(doy_col),as.list(year_col), SIMPLIFY=FALSE))
+      .self$append_column_to_data(new_col,variables[[date_label]])
+    }
+    
+    # Else check time period specific cases
+    else if (data_time_period==subdaily_label || data_time_period==daily_label) {
+      warning("Cannot create or edit a date column. There is insufficient information in the
+                    data frame to have a date column.")
+    }
+    
+    else if (data_time_period==subyearly_label) {
+      
+      if (create == TRUE && is_present(year_month_label)) {
+        year_month_col = data[[getvname(year_month_label)]]
+        new_col = as.Date(paste(year_month_col,"1"), format = paste(date_format,"%d"))
+        .self$append_column_to_data(new_col,variables[[date_label]])
+      }
+      
+      else if (create && is_present(year_label) && is_present(month_label)) {
         year_col = data[[getvname(year_label)]]
-
+        month_col = data[[getvname(month_label)]]
         if(all(month.abb %in% month_col)) {
           month_col = match(month_col,month.abb)
-          replace_column_in_data(getvname(month_label),factor(data[[getvname(month_label)]], month.abb, ordered=TRUE))
         }
-        
         if(all(month.name %in% month_col)) {
           month_col = match(month_col,month.abb)
-          replace_column_in_data(getvname(month_label),factor(data[[getvname(month_label)]], month.name, ordered=TRUE))
         }
-
-        #TO DO fix the issue with importing different types of month
-        new_col = as.Date(paste(year_col, month_col, day_col, sep="-"))
-#        print(sum(is.na(new_col)))
-        .self$append_column_to_data(new_col, variables[[date_label]])
-      }
-      # Else if date string column is there and create == TRUE create date column
-      else if (create == TRUE && is_present(date_asstring_label)) 
-      {
-        date_string_col = variables[[date_asstring_label]]
-        new_col = as.Date(data[[date_string_col]], format = date_format)
+        new_col = as.Date(paste(year_col,month_col,"1"), format = "%Y %m %d")
         .self$append_column_to_data(new_col,variables[[date_label]])
       }
-
-      # Else if date string column is there and create == TRUE create date column
-      else if (create == TRUE && is_present(year_label) && is_present(doy_label)) {
-        year_col = data[[getvname(year_label)]]
-        doy_col = data[[getvname(doy_label)]]
-        new_col = do.call(c,mapply(doy_as_date,as.list(doy_col),as.list(year_col), SIMPLIFY=FALSE))
-        .self$append_column_to_data(new_col,variables[[date_label]])
-      }
-
-      #TO DO we should also be able to create this from year and doy
+      
       else {warning("Cannot create or edit a date column. There is insufficient information in the
                     data frame to have a date column.")}
-    }#TO DO else cases for non daily data.
+    }
+    
+    else if (data_time_period==yearly_label) {
+      if (create && is_present(year_label)) {
+        year_col = variables[[year_label]]
+        new_col = as.Date(paste(data[[year_col]],1,1), format = "%Y %m %d")
+        .self$append_column_to_data(new_col,variables[[date_label]])
+      }
+      else {warning("Cannot create or edit a date column. There is insufficient information in the
+                    data frame to have a date column.")}
+    }
+    
+    if(data_time_period==subdaily_label) {
+      
+      if (.self$is_present(date_time_label)) {
+        date_time_col = getvname(date_label)
+        if (!is.POSIXct(data[[date_time_col]])) {
+          if (messages) message("date-time column is not stored as POSIXct class.")
+          if (convert) {
+            if (messages) message("Attempting to convert date column to POSIXct class.")
+            new_col = as.POSIXct(data[[date_time_col]], format = date_format)
+            .self$replace_column_in_data(date_time_col,new_col)
+          }
+        }
+      }
+      
+      else if(create && is_present(time_label)) {
+        time_col = getvname(time_label)
+        if(grepl(":",data[[time_col]][[1]])) {
+          if(nchar(data[[time_col]][[1]]==5)) time_format = "%H:%M"
+          else if(nchar(data[[time_col]][[1]]==7)) time_format = "%H:%M:%S"
+          else stop("Cannot recognise the format of time column.")
+        }
+        else if(nchar(data[[time_col]][[1]]==4)) time_format = "%H%M"
+        else if(nchar(data[[time_col]][[1]]==6)) time_format = "%H%M%S"
+        else stop("Cannot recognise the format of time column.")
+        date_col = getvname(date_label)
+        new_col = as.POSIXct(paste(data[[date_col]],data[[time_col]]),
+                             format = paste("%Y-%m-%d",time_format))
+        .self$append_column_to_data(new_col,"Date Time")
+        
+      }
+      
+      else if (create && is_present(date_asstring_label)) 
+      {
+        date_string_col = variables[[date_asstring_label]]
+        new_col = as.POSIXct(data[[date_string_col]], format = date_format)
+        .self$append_column_to_data(new_col,variables[[date_time_label]])
+      }
+      
+    }
   }
 )
 
 climate_data$methods(missing_dates_check = function()
 {    
   if(!get_meta(complete_dates_label)) {
-    date_col = getvname(date_label)
-    if(data_time_period == daily_label) by = "day"
-    else if(data_time_period == subyearly_label) by = "month"
-    else if(data_time_period == yearly_label) by = "year"
-    
-    start_end_dates = .self$get_daily_data_start_end_dates()
-    
-#     append_to_meta_data(data_start_date_label,start_date)
-#     append_to_meta_data(data_end_date_label,end_date)
-    
-    full_dates = seq(start_end_dates[[1]], start_end_dates[[2]], by = by)
-    
-    if(length(full_dates) != nrow(data)) {
-      dates_table = data.frame(full_dates)
-      names(dates_table) <- date_col
-      if(is_present(year_label)) {
-        year_col = getvname(year_label)
-        dates_table[[year_col]] <- year(dates_table[[date_col]]) 
+    if(data_time_period == daily_label) {
+      by = "day"
+      date_col = getvname(date_label)
+      
+      start_end_dates = .self$get_daily_data_start_end_dates()
+      
+  #     append_to_meta_data(data_start_date_label,start_date)
+  #     append_to_meta_data(data_end_date_label,end_date)
+      full_dates = seq(start_end_dates[[1]], start_end_dates[[2]], by = by)
+      
+      if(length(full_dates) != nrow(data)) {
+        dates_table = data.frame(full_dates)
+        names(dates_table) <- date_col
+        if(is_present(year_label)) {
+          year_col = getvname(year_label)
+          dates_table[[year_col]] <- year(dates_table[[date_col]]) 
+        }
+        if(is_present(month_label)) {
+          month_col = getvname(month_label)
+          dates_table[[month_col]] <- month(dates_table[[date_col]]) 
+        }
+        if(is_present(day_label)) {
+          day_col = getvname(day_label)
+          dates_table[[day_col]] <- day(dates_table[[date_col]]) 
+        }
+        merged_data <- join(dates_table, get_data(), match="first")
+        set_data(merged_data)
       }
-      if(is_present(month_label)) {
-        month_col = getvname(month_label)
-        dates_table[[month_col]] <- month(dates_table[[date_col]]) 
-      }
-      if(is_present(day_label)) {
-        day_col = getvname(day_label)
-        dates_table[[day_col]] <- day(dates_table[[date_col]]) 
-      }
-      merged_data <- join(dates_table, get_data(), match="first")
-      set_data(merged_data)
+      append_to_meta_data(complete_dates_label,TRUE)
     }
-    append_to_meta_data(complete_dates_label,TRUE)
   }
 }
 )
@@ -997,7 +1070,7 @@ climate_data$methods(view_definition = function(col_name) {
 climate_data$methods(get_daily_data_start_end_dates = function() {
   date_col = getvname(date_label)
   temp_start_date = doy_as_date(get_meta(season_start_day_label),year(min(data[[date_col]])))
-  if(temp_start_date > min(data[[date_col]])) {
+  if( temp_start_date > min(data[[date_col]]) ) {
     start_date = temp_start_date
     year(start_date) <- year(start_date)-1
   }
@@ -1009,8 +1082,7 @@ climate_data$methods(get_daily_data_start_end_dates = function() {
   final_month = month(start_date-1)
   final_day = day(start_date-1)
   temp_end_date = as.Date(paste(final_year,final_month,final_day,sep="-"))
-  
-  if(temp_end_date >= max(data[[date_col]])) {
+  if( temp_end_date >= max(data[[date_col]]) ) {
     end_date = temp_end_date
   }
   else {
@@ -1024,31 +1096,53 @@ climate_data$methods(get_daily_data_start_end_dates = function() {
 climate_data$methods(time_period_check = function(messages=TRUE) {
 
   date_col = data[[getvname(date_label)]]
+  print(date_col)
   diff_values = difftime(tail(date_col,-1),head(date_col,-1), units="days")
   min_diff = min(diff_values)
   median_diff = median(diff_values)
   mode_diff = mode_stat(diff_values)
   
   if(min_diff < 1) {
-    data_time_period = "subdaily"
-    message("Detected time period: subyearly")
-    if(messages && (min_diff != median_diff || min_diff != mode_diff) ) {
-      warning("The data time period does ")
-    }
+    data_time_period <<- subdaily_label
   }
   else if (min_diff == 1) {
-    data_time_period = "daily"
+    data_time_period <<- daily_label
   }
   else if (min_diff > 1 && min_diff < 365) {
-    data_time_period = "subyearly"
+    data_time_period <<- subyearly_label
   }
   else if (min_diff == 365) {
-    data_time_period = "yearly"
+    data_time_period <<- yearly_label
   }
   else {
     stop("Cannot determine the data time period.")
   }
   
+  if(messages) message(paste("Detected time period:", data_time_period))
+  if(messages && (min_diff != median_diff) ) {
+    warning(paste("The data time period does not match with the median time difference:", median_diff))
+  }
+  if(messages && min_diff != mode_diff) {
+    warning(paste("The data time period does not match with the mode time difference:", mode_diff))
+  }
+  
+}
+)
+
+climate_data$methods(date_format_check = function(convert = TRUE, messages=TRUE) {
+  
+  if(is_present(month_label)) {
+    month_col = data[[getvname(month_label)]]
+    if(convert && all(month.abb %in% month_col)) {
+      if(messages) message("Converting month column to ordered factor.")
+      replace_column_in_data(getvname(month_label),factor(data[[getvname(month_label)]], month.abb, ordered=TRUE))
+    }
+    
+    else if(convert && all(month.name %in% month_col)) {
+      if(messages) message("Converting month column to ordered factor.")
+        replace_column_in_data(getvname(month_label),factor(data[[getvname(month_label)]], month.name, ordered=TRUE))
+    }
+  }
   
 }
 )

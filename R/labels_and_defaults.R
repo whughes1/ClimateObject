@@ -1,12 +1,13 @@
 library(reshape2)
 library(lubridate)
 library(plyr)
-
 #Labels for variables which will be recognised by the Climate objects
 rain_label="rain"
 date_label="date"
 doy_label="doy"
 year_label="year"
+year_month_label="year_month"
+date_time_label="date_time"
 dos_label="dos"
 season_label="season"
 month_label="month"
@@ -107,7 +108,7 @@ ident_var <- function (data,variables) {
     }
   }
   if(!(date_label %in% names(merged))) {
-    for (label in c("Date","date", "Date.D")){
+    for (label in c("Date","date", "Date.D", "DATE")){
       if (label %in% names(data)){
         merged[[date_label]]<-label
         break
@@ -166,6 +167,14 @@ ident_var <- function (data,variables) {
     for (label in c("Time","time")){
       if (label %in% names(data)){
         merged[[time_label]]<-label
+        break
+      } 
+    }
+  }
+  if(!(year_month_label %in% names(merged))) {
+    for (label in c("Year Month","YearMonth")){
+      if (label %in% names(data)){
+        merged[[year_month_label]]<-label
         break
       } 
     }

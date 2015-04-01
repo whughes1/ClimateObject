@@ -34,7 +34,9 @@ climate$methods(initialize = function(data_tables = list(), climate_obj_meta_dat
                                       data_tables_meta_data = rep(list(list()),length(data_tables)),
                                       data_tables_variables = rep(list(list()),length(data_tables)), 
                                       imported_from = as.list(rep("",length(data_tables))),
-                                      messages=TRUE, date_format = "%d/%m/%Y") 
+                                      data_time_periods = as.list(rep("daily",length(data_tables))),
+                                      messages=TRUE, convert=TRUE, create=TRUE,
+                                      date_formats = as.list(rep("%d/%m/%Y",length(data_tables))))
 {
 
   meta_data <<- climate_obj_meta_data
@@ -45,8 +47,9 @@ climate$methods(initialize = function(data_tables = list(), climate_obj_meta_dat
   }
   
   else {
-    .self$import_data(data_tables,data_tables_meta_data, data_tables_variables,
-                                               imported_from, messages = messages, date_format = date_format)
+    .self$import_data(data_tables,data_tables_meta_data, data_tables_variables, 
+                      imported_from, data_time_periods, messages = messages, 
+                      date_formats = date_formats)
   }
   
 }
@@ -57,7 +60,10 @@ climate$methods(initialize = function(data_tables = list(), climate_obj_meta_dat
 
 climate$methods(import_data = function(data_tables = list(), data_tables_meta_data = rep(list(list()),length(data_tables)),
                                        data_tables_variables = rep(list(list()),length(data_tables)), 
-                                       imported_from = as.list(rep("",length(data_tables))), messages=TRUE, date_format = "%d/%m/%Y")
+                                       imported_from = as.list(rep("",length(data_tables))), 
+                                       data_time_periods = as.list(rep("daily",length(data_tables))),
+                                       messages=TRUE, convert=TRUE, create=TRUE, 
+                                       date_formats = as.list(rep("%d/%m/%Y",length(data_tables))))
 {
 
   if (missing(data_tables) || length(data_tables) == 0) {
@@ -88,6 +94,13 @@ climate$methods(import_data = function(data_tables = list(), data_tables_meta_da
       stop("imported_from must be a list of the same length as data_tables")
     }
     
+    if ( !(class(data_time_periods) == "list") || ! (length(data_time_periods) == length(data_tables))  ) { 
+      stop("data_time_periods must be a list of the same length as data_tables")
+    }
+
+    if ( !(class(date_formats) == "list") || ! (length(date_formats) == length(data_tables))  ) { 
+      stop("data_formats must be a list of the same length as data_tables")
+    }
     # loop through the data_tables list and create a climate_data object for each
     # data.frame given
     
@@ -97,7 +110,10 @@ climate$methods(import_data = function(data_tables = list(), data_tables_meta_da
       
       new_data = climate_data$new(data=data_tables[[i]], data_name = names(data_tables)[[i]], 
                                   meta_data = data_tables_meta_data[[i]], variables = data_tables_variables[[i]], 
-                                  imported_from = imported_from[[i]], start_point = i, messages = messages, date_format = date_format)
+                                  imported_from = imported_from[[i]], 
+                                  data_time_period = data_time_periods[[i]], start_point = i, 
+                                  messages = messages, convert = convert, create = create,
+                                  date_format = date_formats[[i]])
       
       # Add this new climate_data object to our list of climate_data objects
       .self$append_climate_data_objects( new_data$meta_data[[data_name_label]],new_data)
