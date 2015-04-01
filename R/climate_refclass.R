@@ -1025,6 +1025,7 @@ climate$methods(cumulative_exceedance_graphs = function(data_list=list(),interes
       #----------------------------------------------------------------------------------#
       
       if(cumulative_graph == TRUE){
+        par(new=FALSE)
        for (i in 1:length(sort_col)){
         #--------------------------------------------------------------------------------#
          if (i>1){
@@ -1044,7 +1045,7 @@ climate$methods(cumulative_exceedance_graphs = function(data_list=list(),interes
         par(new=TRUE)
       }
       }
-      windows()
+      par(new=FALSE)
     #====Plotting the exceedance graph  when true========================================     
       if(exceedance_graph == TRUE){
         for (i in 1:length(sort_col)){
@@ -1265,13 +1266,9 @@ climate$methods(Boxplot = function(data_list= list(), fill_col="blue",interest_v
     curr_data_list = data_obj$get_data_for_analysis(data_list)
    
     for( curr_data in curr_data_list ) {
-      if(data_obj$is_present(interest_var)){
-        interest_col=data_obj$getvname(interest_var)
-      } else
-        if( interest_var %in% names(curr_data)) {
-          interest_col=interest_var
-        }else{stop("Enter the correct name")    
-        } 
+      
+      interest_col=data_obj$getvname(interest_var)
+       
       # Draw the boxplot
       boxplot( curr_data[[interest_col]]~curr_data[[month_col]], whiskcol=whisker_col,col=fill_col, xlab=xlab,ylab=ylab,
                main= c( data_name, title), whisklty=whisklty,horizontal=horizontal)
@@ -1282,14 +1279,14 @@ climate$methods(Boxplot = function(data_list= list(), fill_col="blue",interest_v
 
 #=======================================================================================================================
 climate$methods(summary_statistics = function(data_list=list(),interest_var, Proportions=c(),counts=TRUE, percents=FALSE,
-                                              period_label=daily_label, digits=0, statistics=TRUE, percentiles=c(),
+                                              data_period_label=daily_label, digits=0, statistics=TRUE, percentiles=c(),
                                               convert=FALSE)
   
 {    
   
   data_list=add_to_data_info_required_variable_list(data_list, list(interest_var))
   data_list=c(data_list,convert_data=convert)
-  data_list=add_to_data_info_time_period(data_list, period_label)
+  data_list=add_to_data_info_time_period(data_list, data_period_label)
   climate_data_objs_list = get_climate_data_objects(data_list)
   #print(climate_data_objs_list)
   #print(data_list)
@@ -1302,15 +1299,8 @@ climate$methods(summary_statistics = function(data_list=list(),interest_var, Pro
       
       #Check if the column of interest is inputted
       #---------------------------------------------------------------------------------#      
+      interest_col=data_obj$getvname(interest_var)
       
-      if(data_obj$is_present(interest_var)){
-        interest_col=data_obj$getvname(interest_var)
-      } else
-        if(!("interest_var" %in% names(curr_data))){
-          stop("Enter the correct name")
-        }else{
-          interest_col=interest_var
-        }   
       #---------------------------------------------------------------------------------#
       #Check if the vector of proportions is inputted
       #---------------------------------------------------------------------------------#
