@@ -614,6 +614,7 @@ climate_data$methods(date_col_check = function(date_format = "%d/%m/%Y", convert
         new_col = as.Date(paste(data[[year_col]],1,1), format = "%Y %m %d")
         .self$append_column_to_data(new_col,variables[[date_label]])
       }
+      
       else {warning("Cannot create or edit a date column. There is insufficient information in the
                     data frame to have a date column.")}
     }
@@ -776,8 +777,7 @@ climate_data$methods(add_doy_col = function(YearLabel="Year", DOYLabel="DOY", Se
 )
 #TO DO Conversions to other cases
 
-climate_data$methods(summarize_data = function(new_time_period, day_format = "%d", month_format = "%b",
-                                               year_format = "%Y", summarize_name = paste(.self$meta_data[[data_name_label]],new_time_period), 
+climate_data$methods(summarize_data = function(new_time_period, summarize_name = paste(.self$meta_data[[data_name_label]],new_time_period), 
                                                threshold = 0.85, na.rm = FALSE, start_point = 1, 
                                                num_rain_days_col = "Number of Rain Days", total_col = "Total",
                                                mean_col = "Mean", period_col_name = "Period", 
@@ -813,17 +813,22 @@ climate_data$methods(summarize_data = function(new_time_period, day_format = "%d
     start_date = .self$get_daily_data_start_end_dates()[[1]]
     end_date = .self$get_daily_data_start_end_dates()[[2]]+1
     year(end_date) = year(end_date)-1
-    time_periods_list = seq(start_date,end_date,"year")
+    season_dates = seq(start_date,end_date,"year")
     
     if(!is_present(season_label)) add_doy_col()
-    split_col = getvname(season_label)
-    split_periods = unique(data[[getvname(season_label)]])
-  }
-
-  summarized_data = data.frame(Date = time_periods_list)
+    season_col = getvname(season_label)
+    unique_seasons = unique(data[[getvname(season_label)]])
     
+    summarized_data = data.frame(unique_seasons)
+    names(summarized_data) <- season_col
+    summarized_data[[date_col_name]] <- season_dates
+    
+  }
+  
   summary_obj = climate_data$new(data = summarized_data, data_name = summarize_name, 
-                                   start_point = start_point, data_time_period = new_time_period)
+                                 start_point = start_point, data_time_period = new_time_period)
+  
+  View(summary_obj$data)
 
   summary_obj$append_to_variables(date_label,getvname(date_label))
   
