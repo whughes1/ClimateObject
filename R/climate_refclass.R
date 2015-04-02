@@ -1161,7 +1161,7 @@ climate$methods(yearly_trellis_plot = function(data_list = list(),interest_varia
     }
     year_col = data_obj$getvname(year_label)
     month_col = data_obj$getvname(month_label)
-    day_col = data_obj$getvname(day_label)
+    #day_col = data_obj$getvname(day_label)
     
     
     # if ylabel is missing, use the column name of the interest variable. 
@@ -1203,10 +1203,13 @@ climate$methods(yearly_trellis_plot = function(data_list = list(),interest_varia
 climate$methods(Plot_annual_rainfall_totals = function (data_list=list(), col1="blue",ylab="Rain Total",xlab="Year",pch=20,type="b",lty=2,col2="red",lwd = 2,
                                                         main_title="Plot - Annual Rainfall Total per Year")
 {
-  
-  data_list = add_to_data_info_time_period(data_list, yearly_label)
+  # rain required
+  data_list = add_to_data_info_required_variable_list(data_list, list(rain_label))
   # convert data 
   data_list = c(data_list, convert_data=TRUE)
+  # time period
+  data_list = add_to_data_info_time_period(data_list, yearly_label)
+  
   climate_data_objs = get_climate_data_objects(data_list)
   
   #print(length(climate_data_objs))
@@ -1436,6 +1439,18 @@ climate$methods(vertical_line = function(data_list=list(), all, data_period_labe
   }
 }
 )
+
+
+
+# dd <- subset(data, select=c(Date,Start.of.Rain..i.,Start.of.Rain..ii.,Start.of.Rain..iii.))
+# names(dd)
+# View(dd)
+# d2 <- melt(dd ,  id = 'Date')
+# #ggplot(d2, aes(Date,value)) + geom_line(aes(colour = variable))
+# 
+# ggplot(d2, aes(Date, value)) +
+#   geom_histogram(  position="dodge",  stat = "identity", aes(fill = variable))
+
 
 
 
