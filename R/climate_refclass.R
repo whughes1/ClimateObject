@@ -1406,16 +1406,16 @@ climate$methods(vertical_line = function(data_list=list(), all, data_period_labe
      # print(head(dat))
       #Melt the data into a form suitable for easy casting
       dat2 <- melt(dat ,  id = 'Year')
-    
-      #data <- melt(dat ,  id.vars = "Year", variable_name = "start")
+    print(head(dat2))
       print(names(dat2))
-#     print(tail(dat2))
+     #"Year"     "variable" "value"
       # plot all variables on the same graph
       # Need to read more about ggplot bcse here it is not plotting.
       #?ggplot
       ggplot(dat2, aes(Year, value)) +
       geom_histogram(  position="dodge",  stat = "identity", aes(fill = variable))
-      #"Year"     "variable" "value"
+     
+      #ggplot(dat2, aes(Year,value)) + geom_line(aes(colour = variable))
     }
     
   }
