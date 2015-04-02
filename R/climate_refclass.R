@@ -962,8 +962,11 @@ climate$methods(cumulative_exceedance_graphs = function(data_list=list(),interes
                                                  main1="Cumulative Graph",main2="Exceedance Graph",
                                                  xlabel=interest_var,ylabel="Percent of days",
                                                  convert=TRUE, data_period_label=yearly_label)
-{    
-    
+{  
+  if (!is.list(interest_var)){
+    interest_var=list(interest_var)
+  }
+  data_list=add_to_data_info_required_variable_list(data_list, interest_var)  
   data_list=add_to_data_info_time_period(data_list, data_period_label)
   data_list=c(data_list,convert_data=convert)
   climate_data_objs_list = get_climate_data_objects(data_list)
@@ -978,63 +981,87 @@ climate$methods(cumulative_exceedance_graphs = function(data_list=list(),interes
     #print(curr_data_list)
     #-----------------------------------------------------------------------------------#
     #print(curr_data_list)
+    
     for( curr_data in curr_data_list ) {
       #---------------------------------------------------------------------------------#
-      if(data_obj$is_present(interest_var)){
-        interest_col=data_obj$getvname(interest_var)
-      } else
-        if( interest_var %in% names(curr_data)) {
-          interest_col=interest_var
-        }else{stop("Enter the correct name of the variable")    
-        }         
-     
-      # sort the data
+      
+      sort_col=list()
+      prop_col=list()
+      cum_col=list()
+      cum_perc_col=list()
+      exceedance_col=list()
+      for (i in length(interest_var)) {
+      
+        interest_col=data_obj$getvname(interest_var[[i]])
+      
+          # sort the data
       #---------------------------------------------------------------------------------#
 
       #interest_col=data_obj$getvname(interest_var)
-      sort_col=sort(curr_data[[interest_col]])
+      sort_col[[i]]=sort(curr_data[[interest_col[[i]]]])
       
       #---------------------------------------------------------------------------------#
       #calculate the proportions
       #---------------------------------------------------------------------------------#
       
-      prop_col=prop.table(sort_col)
+      prop_col[[i]]=prop.table(sort_col[[i]])
       
       #--------------------------------------------------------------------------------#
       #calculate the cumulative proportions
       #--------------------------------------------------------------------------------#
-      cum_col=cumsum(prop_col)
+      cum_col[[i]]=cumsum(prop_col[[i]])
       
       #--------------------------------------------------------------------------------#
+      #calculate the percentage of the cumulative proportions
+      #--------------------------------------------------------------------------------#
       
+      cum_perc_col[[i]]= cum_col[[i]]*100 
+      #------------------------------------------------------------------------------
+      #=====Add the values for plotting the exceedance graph==========================
+      #--------------------------------------------------------------------------------#
+      exceedance_col[[i]]=100-cum_perc_col[[i]]        
+      }
       #====Plotting the cumulative graph when true=====================================
       #----------------------------------------------------------------------------------#
+      
       if(cumulative_graph == TRUE){
-        #calculate the percentage of the cumulative proportions
+        par(new=FALSE)
+       for (i in 1:length(sort_col)){
         #--------------------------------------------------------------------------------#
-        
-        cum_perc_col= cum_col*100 
-        
-        #--------------------------------------------------------------------------------#
-        #====Plotting the cumulative================================================
-        plot(sort_col, cum_perc_col,            
+         if (i>1){
+           xlabel=""
+           ylabel=""
+         }
+         #====Plotting the cumulative================================================
+        plot(sort_col[[i]], cum_perc_col[[i]],            
              main=c(data_name,main1),  
              xlab=xlabel,         
              ylab=ylabel,type="o", col=color,
              xlim=range(sort_col,finite=T),ylim=range(cum_perc_col)
+             
         )
+        par(xaxt="n")
+        par(yaxt="n")
+        par(new=TRUE)
       }
+      }
+      par(new=FALSE)
     #====Plotting the exceedance graph  when true========================================     
       if(exceedance_graph == TRUE){
-        #=====Add the values for plotting the exceedance graph==========================
-        #--------------------------------------------------------------------------------#
-        exceedance_col=100-cum_perc_col        
+        for (i in 1:length(sort_col)){
+          if (i>1){
+            xlabel=""
+            ylabel=""
+          }
         #--------------------------------------------------------------------------------#
         # Plotting the exceedance graph
-        plot(sort_col, exceedance_col,xlab=xlabel,ylab=ylabel,xlim=range(sort_col),
+        plot(sort_col[[i]], exceedance_col[[i]],xlab=xlabel,ylab=ylabel,xlim=range(sort_col),
              ylim=range(exceedance_col),col=color,main=c(data_name,main2)
         )
-      }
+        par(xaxt="s")
+        par(new=TRUE)
+      }      
+    }
     }
     }  
 }
@@ -1247,13 +1274,9 @@ climate$methods(Boxplot = function(data_list= list(), fill_col="blue",interest_v
     curr_data_list = data_obj$get_data_for_analysis(data_list)
    
     for( curr_data in curr_data_list ) {
-      if(data_obj$is_present(interest_var)){
-        interest_col=data_obj$getvname(interest_var)
-      } else
-        if( interest_var %in% names(curr_data)) {
-          interest_col=interest_var
-        }else{stop("Enter the correct name")    
-        } 
+      
+      interest_col=data_obj$getvname(interest_var)
+       
       # Draw the boxplot
       boxplot( curr_data[[interest_col]]~curr_data[[month_col]], whiskcol=whisker_col,col=fill_col, xlab=xlab,ylab=ylab,
                main= c( data_name, title), whisklty=whisklty,horizontal=horizontal)
@@ -1264,14 +1287,14 @@ climate$methods(Boxplot = function(data_list= list(), fill_col="blue",interest_v
 
 #=======================================================================================================================
 climate$methods(summary_statistics = function(data_list=list(),interest_var, Proportions=c(),counts=TRUE, percents=FALSE,
-                                              period_label=daily_label, digits=0, statistics=TRUE, percentiles=c(),
+                                              data_period_label=daily_label, digits=0, statistics=TRUE, percentiles=c(),
                                               convert=FALSE)
   
 {    
   
   data_list=add_to_data_info_required_variable_list(data_list, list(interest_var))
   data_list=c(data_list,convert_data=convert)
-  data_list=add_to_data_info_time_period(data_list, period_label)
+  data_list=add_to_data_info_time_period(data_list, data_period_label)
   climate_data_objs_list = get_climate_data_objects(data_list)
   #print(climate_data_objs_list)
   #print(data_list)
@@ -1284,15 +1307,8 @@ climate$methods(summary_statistics = function(data_list=list(),interest_var, Pro
       
       #Check if the column of interest is inputted
       #---------------------------------------------------------------------------------#      
+      interest_col=data_obj$getvname(interest_var)
       
-      if(data_obj$is_present(interest_var)){
-        interest_col=data_obj$getvname(interest_var)
-      } else
-        if(!("interest_var" %in% names(curr_data))){
-          stop("Enter the correct name")
-        }else{
-          interest_col=interest_var
-        }   
       #---------------------------------------------------------------------------------#
       #Check if the vector of proportions is inputted
       #---------------------------------------------------------------------------------#
