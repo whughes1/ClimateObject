@@ -1041,20 +1041,21 @@ climate$methods(cumulative_exceedance_graphs = function(data_list=list(),interes
 )
 
 #===================================================================================================
-
-climate$methods(yearly_vertical_line = function(data_list=list(), col_var1, col_var2, col1 = "blue", type1 = "h",type="p",
-                                                col2 = "red", col3 = "green", xlabel = "Year", pch1 = 1, pch2 = 1, pch3 = 1)
+# this name will be vertical line at the end of this method.
+climate$methods(yearly_vertical_line = function(data_list=list(), all=list(), ylabel= "Meaningfull Text", col1 = "blue", type1 = "h",type2="p",
+                                                col2 = "red", col3 = "green", xlabel = "Year", pch1 = 1, pch2 = 1, pch3 = 1, data_period_label = yearly_label)
 {    
   # get_climate_data_objects returns a list of the climate_data objects specified
   # in the arguments.
   # If no objects specified then all climate_data objects will be taken by default
   
   # the col_var1 and col_var2 must be label. e.g col_var1_label
-  # I should be able to use many variables. Can I make a list of variables?
-  data_list = add_to_data_info_required_variable_list(data_list, list(col_var1)) 
-  data_list = add_to_data_info_required_variable_list(data_list, list(col_var2))
-  # we should be able to specify the time period. we need to fix this. Danny said he will work on it. 
-  data_list = add_to_data_info_time_period(data_list, yearly_label) 
+  # I should be able to use many variables. Can I make a list of variables? Yes we can. 
+  # The analysis should take account of the structure of the data.
+  data_list = add_to_data_info_required_variable_list(data_list, all) 
+  #data_list = add_to_data_info_required_variable_list(data_list, list(col_var2))
+  # we should be able to specify any time period. we need to fix this. Danny is working on it. 
+  data_list = add_to_data_info_time_period(data_list, data_period_label) 
   
   #data_list = c(data_list, convert_data = FALSE)
   
@@ -1066,8 +1067,15 @@ climate$methods(yearly_vertical_line = function(data_list=list(), col_var1, col_
     
     # we need to get the column of interest for the plot.
     # The columns of interest are required so we don't need to check if there are present
-    col_var1 = data_obj$getvname(col_var1)
-    col_var2 = data_obj$getvname(col_var2)
+    #I have to see how to use ggplot function
+    for(i in 1:length(all)){
+      col_var1 = data_obj$getvname(all[[i]])
+      #print(col_var1)
+    }
+    
+   # col_var1 = data_obj$getvname(all[[1]])
+    #col_var2 = data_obj$getvname(all[[2]])
+   
     
     
     data_obj$date_col_check(date_format = "%d/%m/%Y", convert = TRUE, create = TRUE, messaging=TRUE)
@@ -1083,8 +1091,8 @@ climate$methods(yearly_vertical_line = function(data_list=list(), col_var1, col_
     curr_data_list = data_obj$get_data_for_analysis(data_list)
     
     for( curr_data in curr_data_list ) {
-      # plotting the first plot. still need to fix ylim and xlim depending on both variables. 
-      plot(curr_data[[ year_col ]], curr_data[[col_var1]], type = type1, lwd=2, col=col1, xlab=xlabel,
+      # plotting the first plot.  
+      plot(curr_data[[ year_col ]], curr_data[[col_var1]], type = type1, lwd=2, col=col1, xlab=xlabel,ylab=ylabel,
            ylim = c( range( curr_data[[col_var1]], curr_data[[col_var2]], na.rm = TRUE) ))
       #Adding points to the plot
       lines(curr_data[[ year_col ]], curr_data[[col_var1]], type=type2, col=col2, pch = pch1)
@@ -1092,7 +1100,7 @@ climate$methods(yearly_vertical_line = function(data_list=list(), col_var1, col_
       points(curr_data[[ year_col ]], curr_data[[col_var2]], type = type1, col=col3, pch = pch2 )
       
       #Adding points to the second plot
-      lines(ata[[ year_col ]], data[[col_var2]], type=type2, col=col2, pch = pch1)
+      lines(curr_data[[ year_col ]], curr_data[[col_var2]], type=type2, col=col2, pch = pch1)
     }
     
   }
@@ -1191,7 +1199,7 @@ climate$methods(Plot_annual_rainfall_totals = function (data_list=list(), col1="
     # loop for plotting 
     for( curr_data in curr_data_list ) { 
       # curr_data should have two columns which are year and rainfall totals 
-      plot_totals <- plot(curr_data[[year_col]], curr_data[[rain_total_col]],type=type,pch=pch,xlab=xlab, col=col1,ylim= c(0, max(curr_data[[rain_total_col]])),
+      plot_totals <- plot(curr_data[[year_col]], curr_data[[rain_total_col]],type=type,pch=pch,xlab=xlab, col=col1,ylim= c(0, max(curr_data[[rain_total_col]], na.rm=TRUE)),
                           xlim = c( min(curr_data[[year_col]], na.rm=TRUE), max( curr_data[[year_col]], na.rm=TRUE)),
                           ylab=ylab,main=main_title)
       abline(h = mean(curr_data[[rain_total_col]][curr_data[[rain_total_col]] > 0]),lty=lty,col=col2)  
@@ -1349,4 +1357,70 @@ climate$methods(summary_statistics = function(data_list=list(),interest_var, Pro
   }
 }
 )
+# After looking and findout that the function ggplot can plot multiple columns on the same plot,
+# We can adopt it for yearly_vertical_line method easly
+#=========================================================================================================
+
+climate$methods(vertical_line = function(data_list=list(), all, id.vars = Year, variable_name = Start, type1 = "h", data_period_label = yearly_label)
+{   
+  require(ggplot2)
+  require(reshape)
+  
+  # get_climate_data_objects returns a list of the climate_data objects specified
+  # in the arguments.
+  # If no objects specified then all climate_data objects will be taken by default
+  
+  # Can I use a list of variables? Yes . 
+  # The analysis should take account of the structure of the data.
+  data_list = add_to_data_info_required_variable_list(data_list, all) 
+  # we should be able to specify any time period. we need to fix this. Danny is working on it. 
+  data_list = add_to_data_info_time_period(data_list, data_period_label) 
+    
+  climate_data_objs_list = get_climate_data_objects(data_list)
+    
+  for(data_obj in climate_data_objs_list) {
+    
+    # we need to get the column of interest for the plot.
+    # since the column of interest is a list, the loop gets all at the same time.
+    interest_variable =list()
+    for(i in 1:length(all)){
+      
+      interest_variable[[i]] <- data_obj$getvname(all[[i]]) 
+    }
+   print(interest_variable)
+    
+    
+    date_col = data_obj$getvname(date_label)
+    
+    #adding year column if not present 
+    if( !(data_obj$is_present(year_label)) ) {
+      data_obj$add_year_col()
+    }
+    year_col = data_obj$getvname(year_label)
+    
+    curr_data_list = data_obj$get_data_for_analysis(data_list)
+    
+    for( curr_data in curr_data_list ) {
+      # subset the data. Here get only time period and the interest variables 
+      dat <- subset(curr_data, select=c( year_col, interest_variable = unlist(interest_variable)))
+    # print(head(dat))
+      #Melt the data into a form suitable for easy casting
+      data <- melt(dat ,  id.vars = "Year", variable_name = "start")
+      print(names(data))
+      print(tail(data))
+      # plot all variables on the same graph
+      # Need to read more about ggplot bcse here it is not plotting.
+      #?ggplot
+      ggplot(data, aes(Year,value)) + geom_line(aes(colour = start),type = type1)      
+      
+    }
+    
+  }
+}
+)
+
+
+
+
+
 
