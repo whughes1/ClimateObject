@@ -1361,7 +1361,7 @@ climate$methods(summary_statistics = function(data_list=list(),interest_var, Pro
 # We can adopt it for yearly_vertical_line method easly
 #=========================================================================================================
 
-climate$methods(vertical_line = function(data_list=list(), all, id.vars = Year, variable_name = Start, type1 = "h", data_period_label = yearly_label)
+climate$methods(vertical_line = function(data_list=list(), all, data_period_label = yearly_label)
 {   
   require(ggplot2)
   require(reshape)
@@ -1387,7 +1387,7 @@ climate$methods(vertical_line = function(data_list=list(), all, id.vars = Year, 
       
       interest_variable[[i]] <- data_obj$getvname(all[[i]]) 
     }
-   print(interest_variable)
+   #print(interest_variable)
     
     
     date_col = data_obj$getvname(date_label)
@@ -1403,24 +1403,38 @@ climate$methods(vertical_line = function(data_list=list(), all, id.vars = Year, 
     for( curr_data in curr_data_list ) {
       # subset the data. Here get only time period and the interest variables 
       dat <- subset(curr_data, select=c( year_col, interest_variable = unlist(interest_variable)))
-    # print(head(dat))
+     # print(head(dat))
       #Melt the data into a form suitable for easy casting
-      data <- melt(dat ,  id.vars = "Year", variable_name = "start")
-      print(names(data))
-      print(tail(data))
+      dat2 <- melt(dat ,  id = 'Year')
+    
+      #data <- melt(dat ,  id.vars = "Year", variable_name = "start")
+      print(names(dat2))
+#     print(tail(dat2))
       # plot all variables on the same graph
       # Need to read more about ggplot bcse here it is not plotting.
       #?ggplot
-      ggplot(data, aes(Year,value)) + geom_line(aes(colour = start),type = type1)      
-      
+      ggplot(dat2, aes(Year, value)) +
+      geom_histogram(  position="dodge",  stat = "identity", aes(fill = variable))
+      #"Year"     "variable" "value"
     }
     
   }
 }
 )
 
+#======================================================================
 
 
+# dd <- subset(data, select=c(Date,Start.of.Rain..i.,Start.of.Rain..ii.,Start.of.Rain..iii.))
+# 
+# d2 <- melt(dd ,  id = 'Date')
+# 
+# ggplot(d2, aes(Date,value)) + geom_line(aes(colour = variable))
+# 
+# ggplot(d2, aes(Date, value)) +
+#   geom_histogram(  position="dodge",  stat = "identity", aes(fill = variable))
+# 
+# 
 
 
 
