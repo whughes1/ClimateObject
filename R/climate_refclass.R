@@ -1419,38 +1419,23 @@ climate$methods(vertical_line = function(data_list=list(), all, data_period_labe
     for( curr_data in curr_data_list ) {
       # subset the data. Here get only time period and the interest variables 
       dat <- subset(curr_data, select=c( year_col, interest_variable = unlist(interest_variable)))
-     # print(head(dat))
+      print(head(dat))
       #Melt the data into a form suitable for easy casting
       dat2 <- melt(dat ,  id = 'Year')
-    print(head(dat2))
+      print(head(dat2))
       print(names(dat2))
      #"Year"     "variable" "value"
       # plot all variables on the same graph
       # Need to read more about ggplot bcse here it is not plotting.
-      #?ggplot
+      #?ggplot() is typically used to construct a plot incrementally.
       ggplot(dat2, aes(Year, value)) +
       geom_histogram(  position="dodge",  stat = "identity", aes(fill = variable))
      
-      #ggplot(dat2, aes(Year,value)) + geom_line(aes(colour = variable))
     }
     
   }
 }
 )
-
-#======================================================================
-
-
-# dd <- subset(data, select=c(Date,Start.of.Rain..i.,Start.of.Rain..ii.,Start.of.Rain..iii.))
-# 
-# d2 <- melt(dd ,  id = 'Date')
-# 
-# ggplot(d2, aes(Date,value)) + geom_line(aes(colour = variable))
-# 
-# ggplot(d2, aes(Date, value)) +
-#   geom_histogram(  position="dodge",  stat = "identity", aes(fill = variable))
-# 
-# 
 
 
 
