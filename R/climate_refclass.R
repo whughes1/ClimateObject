@@ -990,36 +990,35 @@ climate$methods(cumulative_exceedance_graphs = function(data_list=list(),interes
       cum_col=list()
       cum_perc_col=list()
       exceedance_col=list()
-      for (i in length(interest_var)) {
-      
+      for (i in length(interest_var)) 
+        {
         interest_col=data_obj$getvname(interest_var[[i]])
       
           # sort the data
       #---------------------------------------------------------------------------------#
 
       #interest_col=data_obj$getvname(interest_var)
-      sort_col[[i]]=sort(curr_data[[interest_col[[i]]]])
+        sort_col[[i]]=sort(curr_data[[interest_col[[i]]]])
       
       #---------------------------------------------------------------------------------#
       #calculate the proportions
       #---------------------------------------------------------------------------------#
       
-      prop_col[[i]]=prop.table(sort_col[[i]])
+        prop_col[[i]]=prop.table(1:length(sort_col[[i]]))
       
       #--------------------------------------------------------------------------------#
       #calculate the cumulative proportions
       #--------------------------------------------------------------------------------#
-      cum_col[[i]]=cumsum(prop_col[[i]])
-      
+        cum_col[[i]]=cumsum(prop_col[[i]])
       #--------------------------------------------------------------------------------#
       #calculate the percentage of the cumulative proportions
       #--------------------------------------------------------------------------------#
       
-      cum_perc_col[[i]]= cum_col[[i]]*100 
+        cum_perc_col[[i]]= cum_col[[i]]*100 
       #------------------------------------------------------------------------------
       #=====Add the values for plotting the exceedance graph==========================
       #--------------------------------------------------------------------------------#
-      exceedance_col[[i]]=100-cum_perc_col[[i]]        
+        exceedance_col[[i]]=100-cum_perc_col[[i]]        
       }
       #====Plotting the cumulative graph when true=====================================
       #----------------------------------------------------------------------------------#
@@ -1040,8 +1039,8 @@ climate$methods(cumulative_exceedance_graphs = function(data_list=list(),interes
              xlim=range(sort_col,finite=T),ylim=range(cum_perc_col)
              
         )
-        par(xaxt="n")
-        par(yaxt="n")
+#         par(xaxt="n")
+#         par(yaxt="n")
         par(new=TRUE)
       }
       }
@@ -1234,43 +1233,55 @@ climate$methods(Plot_annual_rainfall_totals = function (data_list=list(), col1="
 )
 
 #====================================================================================================
-climate$methods(Boxplot = function(data_list= list(), fill_col="blue",interest_var,
+climate$methods(Boxplot = function(data_list= list(), fill_col="blue",interest_var,factor=month_label,
                                                              whisker_col="red", convert=TRUE,data_period_label=daily_label,
                                                              title="Rain Amount boxplot",whisklty=1,xlab="Months",
                                                              ylab=interest_var,horizontal=FALSE){
   #--------------------------------------------------------------------------------------------#
-  # This function plots the boxplot of the number of rain per month for all the years in the data 
-  #     set
+  # This function plots the boxplot for the variable of interest i.e interest_var
+  #     
   #-------------------------------------------------------------------------------------------#
   
   # Specifying the needed variable
-  data_list = add_to_data_info_required_variable_list( data_list, list(interest_var))
+  data_list = add_to_data_info_required_variable_list( data_list, list(interest_var,factor))
   #Using convert_data
   data_list=c(data_list,convert_data=convert)
   # Specifying the data_time_period
   data_list=add_to_data_info_time_period( data_list, data_period_label)
- 
   # use data_list to get the required data objects
   climate_data_objs = get_climate_data_objects( data_list ) 
   
+  
   for( data_obj in climate_data_objs){
+    #threshold = data_obj$get_meta_new(threshold_label,missing(threshold),threshold)
     data_name = data_obj$get_meta(data_name_label)
-    
-    if( ! data_obj$is_present( month_label ) ){
-      data_obj$add_year_month_day_cols()
-    }
-    # Get the title of the column of months
-    month_col = data_obj$getvname(month_label)
     
     # Access data in methods
     curr_data_list = data_obj$get_data_for_analysis(data_list)
    
     for( curr_data in curr_data_list ) {
-      
       interest_col=data_obj$getvname(interest_var)
-       
+      
+#       if (length(threshold>0)){
+#         curr_data=curr_data[which(curr_data[[interest_col]]>threshold),]
+#         print(head(curr_data))
+#       }     
+      
+      
+#       if (factor==month_label){
+#         if( ! data_obj$is_present(factor) ){
+#           #print(curr_data[[month_label]])
+#           data_obj$add_year_month_day_cols()
+#           #print(curr_data[[month_label]])
+#         }
+#       }
+      
+      # Get the title of the column of factors
+     
+      factor_col = data_obj$getvname(factor) 
+      #print(curr_data[[factor_col]])
       # Draw the boxplot
-      boxplot( curr_data[[interest_col]]~curr_data[[month_col]], whiskcol=whisker_col,col=fill_col, xlab=xlab,ylab=ylab,
+      boxplot(as.formula(paste(interest_col,"~",factor_col)), data=curr_data, whiskcol=whisker_col,col=fill_col, xlab=xlab,ylab=ylab,
                main= c( data_name, title), whisklty=whisklty,horizontal=horizontal)
     } 
   }
@@ -1350,7 +1361,7 @@ climate$methods(summary_statistics = function(data_list=list(),interest_var, Pro
         #---------------------------------------------------------------------------------#
         if (counts==TRUE){
           count[i]=sum(curr_data[[interest_col]]<=Proportions[i], na.rm = TRUE)
-          print(paste("count <=", Proportions[i], "is", count[i]) , quote = FALSE)
+          print(paste("count <=", Proportions[i], "is", count[i]))
         }
         
         #----------------------------------------------------------------------------------#

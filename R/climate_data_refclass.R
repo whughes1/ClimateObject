@@ -412,21 +412,27 @@ climate_data$methods(append_to_changes = function(value) {
 # if extra columns should be added.
 # TO DO check functionality for missing cols and if there are multiple elements in long format (currently will return true even if there are no instances possibly correct as like returning true when all values are missing?)
 
-climate_data$methods(is_present = function(str, require_all=TRUE) {
+climate_data$methods(is_present = function(str, require_all=TRUE, create=TRUE) {
   out = FALSE
-  if (is.character(str)){
+  if (is.list(str)){
+    for (temp in str){
+      out=is_present(temp, require_all, create)
+      if (require_all) if (!out) break
+      if (!require_all) if (out) break
+    }
+  }
+  else {
     if(str %in% names(variables) ) {
       var_name = variables[[str]]
       if(var_name %in% names(data)) {
         out = TRUE
       }
-    }
-  }
-  else if (is.list(str)){
-    for (temp in str){
-      out=is_present(temp)
-      if (require_all) if (!out) break
-      if (!require_all) if (out) break
+      else if (create){ #TO DO fill in all the cases that can be created
+        if ((str==day_label || str==month_label || str==year_label) && data_time_period==daily_label){
+          .self$add_year_month_day_cols()
+          out = TRUE
+        }
+      }
     }
   }
   return(out)
@@ -524,7 +530,7 @@ climate_data$methods(date_col_check = function(date_format = "%d/%m/%Y", convert
     # If convert == TRUE
     # Convert class to date class
     if (data_time_period==daily_label){
-      if (.self$is_present(date_label)) {
+      if (.self$is_present(date_label, create=FALSE)) {
         date_col = variables[[date_label]]
         if (!class(data[[variables[[date_label]]]])=="Date"){
           if (messaging) message("date column is not stored as Date class.")
@@ -537,7 +543,7 @@ climate_data$methods(date_col_check = function(date_format = "%d/%m/%Y", convert
         
       }
       # If the year, month, day column are there and create == TRUE create date column
-      else if (create == TRUE && is_present(year_label) && is_present(month_label) && is_present(day_label)) 
+      else if (create == TRUE && is_present(year_label,create=FALSE) && is_present(month_label,create=FALSE) && is_present(day_label,create=FALSE)) 
       {
         #TO DO fix the issue with importing different types of month
         new_col = as.Date(paste(data[[variables[[year_label]]]], data[[variables[[month_label]]]], data[[variables[[day_label]]]],sep="-"))
@@ -545,7 +551,7 @@ climate_data$methods(date_col_check = function(date_format = "%d/%m/%Y", convert
         .self$append_column_to_data(new_col, variables[[date_label]])
       }  
       # Else if date string column is there and create == TRUE create date column
-      else if (create == TRUE && is_present(date_asstring_label)) 
+      else if (create == TRUE && is_present(date_asstring_label,create=FALSE)) 
       {
         date_string_col = variables[[date_asstring_label]]
         new_col = as.Date(data[[date_string_col]], format = date_format)
@@ -594,21 +600,21 @@ climate_data$methods(missing_dates_check = function()
 #add_year_month_day_cols simply converts a date column to Year month and day if they don't exist.
 #TO DO Should be adapted for other types of data_time_period currently just for daily
 
-climate_data$methods(add_year_month_day_cols = function(date_format="%d/%m/%Y", YearLabel="Year", MonthLabel="Month", DayLabel="Day")
+climate_data$methods(add_year_month_day_cols = function(YearLabel="Year", MonthLabel="Month", DayLabel="Day")
 {
-  if (.self$is_present( date_label)){
+  if (.self$is_present(date_label)){
     date_col = variables[[date_label]]
-    if (!.self$is_present(year_label)){
+    if (!.self$is_present(year_label,create=FALSE)){
 #      append_column_to_data (as.numeric(format(as.POSIXlt(strptime(data[[date_col]], date_format)), format = "%Y")), YearLabel) this should not need more than strptime
       .self$append_column_to_data (year(data[[date_col]]), YearLabel) 
       .self$append_to_variables(year_label, YearLabel)
     }
-    if (!.self$is_present(month_label)){
+    if (!.self$is_present(month_label,create=FALSE)){
 #      append_column_to_data (as.numeric(format(as.POSIXlt(strptime(data[[date_col]], date_format)), format = "%m")), MonthLabel) 
       .self$append_column_to_data (month(data[[date_col]]), MonthLabel) 
       .self$append_to_variables(month_label, MonthLabel)
     }    
-    if (!.self$is_present(day_label)){
+    if (!.self$is_present(day_label,create=FALSE)){
 #      append_column_to_data (as.numeric(format(as.POSIXlt(strptime(data[[date_col]], date_format)), format = "%d")), DayLabel) 
       .self$append_column_to_data (day(data[[date_col]]), DayLabel) 
       .self$append_to_variables(day_label, DayLabel)
