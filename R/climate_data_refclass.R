@@ -982,8 +982,6 @@ climate_data$methods(view_definition = function(col_name) {
 )
 #==============================================================================
 #add_year_col simply converts a date column to Year if it doesn't exist.
-#TO DO Should be adapted for other types of data_time_period currently just for daily
-
 climate_data$methods(add_year_col = function(date_format="%d/%m/%Y", YearLabel="Year")
 {
   if (.self$is_present( date_label)){
