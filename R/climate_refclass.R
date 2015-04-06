@@ -1096,7 +1096,7 @@ climate$methods(yearly_vertical_line = function(data_list=list(), all=list(), yl
     # The columns of interest are required so we don't need to check if there are present
     #I have to see how to use ggplot function
     for(i in 1:length(all)){
-      col_var1 = data_obj$getvname(all[[i]])
+      col_var1[[i]] = data_obj$getvname(all[[i]])
       #print(col_var1)
     }
     
@@ -1150,6 +1150,8 @@ climate$methods(yearly_trellis_plot = function(data_list = list(),interest_varia
   # print(climate_data_objs_list)
   
   for(data_obj in climate_data_objs_list) {
+    data_name = data_obj$get_meta(data_name_label)
+    
    
     interest_col = data_obj$getvname(interest_variable)
     
@@ -1182,7 +1184,7 @@ climate$methods(yearly_trellis_plot = function(data_list = list(),interest_varia
                         panel.abline(lm(y~x))
                       },
                       xlab = xlab,
-                      ylab = ylab, main = main_title)
+                      ylab = ylab, main = c(data_name, main_title))
       print(plot1)
       
     }  
@@ -1200,11 +1202,11 @@ climate$methods(yearly_trellis_plot = function(data_list = list(),interest_varia
 )
 
 #=================================================================================
-climate$methods(Plot_annual_rainfall_totals = function (data_list=list(), col1="blue",ylab="Rain Total",xlab="Year",pch=20,type="b",lty=2,col2="red",lwd = 2,
-                                                        main_title="Plot - Annual Rainfall Total per Year")
+climate$methods(Plot_yearly_sumamry = function (data_list=list(), col1="blue",ylab,xlab="Year",pch=20,type="b",lty=2,col2="red",lwd = 2,interest_var,var_label = rain_label,
+                                                        main_title="Plot - Summary per Year")
 {
   # rain required
-  data_list = add_to_data_info_required_variable_list(data_list, list(rain_label))
+  data_list = add_to_data_info_required_variable_list(data_list, list(var_label))
   # convert data 
   data_list = c(data_list, convert_data=TRUE)
   # time period
@@ -1215,6 +1217,8 @@ climate$methods(Plot_annual_rainfall_totals = function (data_list=list(), col1="
   #print(length(climate_data_objs))
   
   for(data_obj in climate_data_objs) {
+    data_name = data_obj$get_meta(data_name_label)
+    
     # Must add these columns if not present to display this way
     if( !(data_obj$is_present(year_label) ) ) { 
       #data_obj$add_year_month_day_cols()
@@ -1223,20 +1227,26 @@ climate$methods(Plot_annual_rainfall_totals = function (data_list=list(), col1="
     year_col = data_obj$getvname(year_label)
         
     # get the total rain. we need to think about a good way to do this from getvname.
-    rain_total_col = data_obj$getvname ("rain total 1") # how can we get this?
+    interset_var_col = data_obj$getvname (interest_var) # how can we get this?  "rain total 1"
+    
+    if(missing(ylab)){
+      ylab = data_obj$getvname(interest_var)
+    }
         
     curr_data_list = data_obj$get_data_for_analysis(data_list)
     # loop for plotting 
     for( curr_data in curr_data_list ) { 
       # curr_data should have two columns which are year and rainfall totals 
-      plot_totals <- plot(curr_data[[year_col]], curr_data[[rain_total_col]],type=type,pch=pch,xlab=xlab, col=col1,ylim= c(0, max(curr_data[[rain_total_col]], na.rm=TRUE)),
+      plot_yearly_summary <- plot(curr_data[[year_col]], curr_data[[interset_var_col]],type=type,pch=pch,xlab=xlab, col=col1,ylim= c(0, max(curr_data[[interset_var_col]], na.rm=TRUE)),
                           xlim = c( min(curr_data[[year_col]], na.rm=TRUE), max( curr_data[[year_col]], na.rm=TRUE)),
-                          ylab=ylab,main=main_title)
-      abline(h = mean(curr_data[[rain_total_col]][curr_data[[rain_total_col]] > 0]),lty=lty,col=col2)  
-      grid(length(curr_data[[year_col]]),0, lwd = lwd)
+                          ylab=ylab, main= c( data_name, main_title))
+       abline(h = mean(curr_data[[interset_var_col]][curr_data[[interset_var_col]] > 0]),lty=lty,col=col2)  
+       grid(length(curr_data[[year_col]]),0, lwd = lwd)
       
       
-      
+      #reg=lm(curr_data[[interset_var_col]] ~ curr_data[[year_col]], na.rm = TRUE)
+      #abline(reg,col="red",lwd=1.5)
+      #summary(reg)
       
     }
   } 
