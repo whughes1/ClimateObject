@@ -1143,6 +1143,8 @@ climate$methods(yearly_trellis_plot = function(data_list = list(),interest_varia
   # If no objects specified then all climate_data objects will be taken by default
   
   data_list = add_to_data_info_required_variable_list(data_list, list(interest_variable))
+  data_list = c(data_list, convert_data=TRUE)
+  
   data_list = add_to_data_info_time_period(data_list, daily_label)
   climate_data_objs_list = get_climate_data_objects(data_list)
   #print(data_list)
