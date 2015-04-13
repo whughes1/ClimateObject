@@ -1228,7 +1228,7 @@ climate$methods(Plot_yearly_sumamry = function (data_list=list(), col1="blue",yl
     year_col = data_obj$getvname(year_label)
         
     # get the total rain. we need to think about a good way to do this from getvname.
-    interset_var_col = data_obj$getvname (interest_var) # how can we get this?  "rain total 1"
+    interset_var_col = data_obj$getvname (interest_var) #   "rain total 1"
     
     if(missing(ylab)){
       ylab = data_obj$getvname(interest_var)
