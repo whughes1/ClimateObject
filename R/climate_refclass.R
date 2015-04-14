@@ -958,8 +958,8 @@ climate$methods(new_plot = function() {
 
 
 climate$methods(cumulative_exceedance_graphs = function(data_list=list(),interest_var,cumulative_graph =TRUE,
-                                                 color=rainbow(12),percent=TRUE,main="Cumulative Graph", 
-                                                 xlabel=interest_var,ylabel="Percent of days",
+                                                 color=rainbow(12),percent=TRUE, main="", 
+                                                 xlabel="",ylabel="",
                                                  convert=TRUE, data_period_label=daily_label,
                                                  legend_position="center",legend_label=c("plot1","plot2"))
 {  
@@ -1065,7 +1065,7 @@ climate$methods(cumulative_exceedance_graphs = function(data_list=list(),interes
       }
     }
   }
-)#To Do: Add legends to the plots
+)#To Do: same plot window. Add line type as arguement. Add sensible defaults to the plot.
 
 #===================================================================================================
 # this name will be vertical line at the end of this method.
