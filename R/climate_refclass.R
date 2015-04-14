@@ -1466,6 +1466,52 @@ climate$methods(vertical_line = function(data_list=list(), all, data_period_labe
 # 
 # ggplot(d2, aes(Date, value)) +
 #   geom_histogram(  position="dodge",  stat = "identity", aes(fill = variable))
+#==================================================================================================
+
+
+climate$methods(compute_raindays = function(data_list = list(), monStart=1, monEnd=3, threshold=0.85)
+{
+  
+  # rain required
+  data_list=add_to_data_info_required_variable_list(data_list, list(rain_label))
+  # date time period is "daily"
+  data_list=add_to_data_info_time_period(data_list, daily_label)
+  # a list of climate data objects
+  climate_data_objs = get_climate_data_objects(data_list)
+  
+  for(data_obj in climate_data_objs) {
+    data_name = data_obj$get_meta(data_name_label)
+    
+    curr_threshold = data_obj$get_meta(threshold_label,threshold)
+    
+    rain_col  = data_obj$getvname(rain_label)
+        
+    # Must add these columns if not present to compute raindays
+    if( !(data_obj$is_present(year_label) && data_obj$is_present(month_label)) ) {
+      data_obj$add_year_month_day_cols()
+    }
+    
+    year_col = data_obj$getvname(year_label)
+    month_col = data_obj$getvname(month_label)
+    
+    curr_data_list = data_obj$get_data_for_analysis(data_list)
+    # loop for computing 
+    for( curr_data in curr_data_list ) { 
+    with(curr_data,{
+      selRows <- curr_data[[month_col]]>=monStart & curr_data[[month_col]] <=monEnd & curr_data[[rain_col]] > curr_threshold
+      ndays <- tapply(selRows, curr_data[[year_col]], sum)
+      print(ndays) 
+    })
+    }
+    
+  }
+}
+)
+
+
+
+
+
 
 
 
