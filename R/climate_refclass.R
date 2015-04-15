@@ -1507,7 +1507,66 @@ climate$methods(compute_raindays = function(data_list = list(), monStart=1, monE
   }
 }
 )
+#=============================================================================================
+climate$methods(compute_raintotal = function(data_list = list(), monStart=1, monEnd=3)
+{
+  library(plyr)
+  # rain required
+  data_list=add_to_data_info_required_variable_list(data_list, list(rain_label))
+  # date time period is "daily"
+  data_list=add_to_data_info_time_period(data_list, daily_label)
+  # a list of climate data objects
+  climate_data_objs = get_climate_data_objects(data_list)
+  
+  for(data_obj in climate_data_objs) {
+    data_name = data_obj$get_meta(data_name_label)
+        
+    rain_col  = data_obj$getvname(rain_label)
+    
+    # Must add these columns if not present to rainfall total
+    if( !(data_obj$is_present(year_label) && data_obj$is_present(month_label)) ) {
+      data_obj$add_year_month_day_cols()
+    }
+    
+    year_col = data_obj$getvname(year_label)
+    month_col = data_obj$getvname(month_label)
+    
+    curr_data_list = data_obj$get_data_for_analysis(data_list)
+    # loop for computing rain total
+    for( curr_data in curr_data_list ) {
+      #CREATE THE SEASONS (JFM) FOR EACH YEAR
+      curr_data$season<-""
+      curr_data$season[curr_data[[month_col]] >= monStart & curr_data[[month_col]] <=monEnd] <-"LR"
+      # add season column to the data
+      curr_data2<-curr_data[curr_data$season!="",]
+      curr_data2$season<-paste(curr_data2[[year_col]],curr_data2$season,sep="")
+      # Add a column of rain to the data with a specific: "Rain" name for ddply use
+      curr_data2 = cbind(curr_data2, new_rain_col=curr_data2[[rain_col]])
+      #Get summaries for each year and season in each year
+      season.rain<-ddply(curr_data2,.(Year = year_col,season),summarize,sum(new_rain_col,na.rm=F))
+      
+      # Delete the new rain column added
+      season.rain$new_rain_col=NULL
+      print(season.rain)
+    }# curr_data
+  }# data_obj
+}
+)
 
+# library(plyr)
+# ###############      CREATE THE SEASONS (JFM) FOR EACH YEAR
+# kitale$season<-""
+# kitale$season[kitale$Month >= 1 & kitale$Month <=3] <-"LR"
+# 
+# kitale2<-kitale[kitale$season!="",]
+# kitale2$season<-paste(kitale2$Year,kitale2$season,sep="")
+# 
+# season.rain<-ddply(kitale2,.(Year,season),summarize,sum(Rain,na.rm=F))
+# head(season.rain)
+# names(season.rain)<-c("Year","season","rain_tot")
+# 
+# plot(season.rain$Year, season.rain$rain_tot, type = "b", col = "blue")
+# 
 
 
 
