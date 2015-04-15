@@ -1500,14 +1500,15 @@ climate$methods(compute_raindays = function(data_list = list(), monStart=1, monE
     with(curr_data,{
       selRows <- curr_data[[month_col]]>=monStart & curr_data[[month_col]] <=monEnd & curr_data[[rain_col]] > curr_threshold
       ndays <- tapply(selRows, curr_data[[year_col]], sum)
-      print(ndays) 
+       print(data.frame(ndays))       
     })
-    }
     
+    }
+
   }
 }
-)
-#=============================================================================================
+) #To Do: better way to present the output. Flexibility of the months- 1 or Jan or J or January
+#======================================================================================================
 climate$methods(compute_raintotal = function(data_list = list(), monStart=1, monEnd=3)
 {
   library(plyr)
