@@ -1469,7 +1469,8 @@ climate$methods(vertical_line = function(data_list=list(), all, data_period_labe
 #==================================================================================================
 
 
-climate$methods(compute_raindays = function(data_list = list(), monStart=1, monEnd=3, threshold=0.85)
+climate$methods(compute_raindays = function(data_list = list(), monStart=1, monEnd=3, threshold=0.85,
+                                            na.rm=FALSE)
 {
   
   # rain required
@@ -1497,12 +1498,10 @@ climate$methods(compute_raindays = function(data_list = list(), monStart=1, monE
     curr_data_list = data_obj$get_data_for_analysis(data_list)
     # loop for computing 
     for( curr_data in curr_data_list ) { 
-    with(curr_data,{
-      selRows <- curr_data[[month_col]]>=monStart & curr_data[[month_col]] <=monEnd & curr_data[[rain_col]] > curr_threshold
-      ndays <- tapply(selRows, curr_data[[year_col]], sum)
-       print(data.frame(ndays))       
-    })
-    
+          selRows <- curr_data[[month_col]]>=monStart & curr_data[[month_col]] <=monEnd & curr_data[[rain_col]] > curr_threshold
+      ndays <- tapply(selRows, curr_data[[year_col]], sum, na.rm=na.rm)
+      print(class(ndays))
+       return(ndays)        
     }
 
   }
