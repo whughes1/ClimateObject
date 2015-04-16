@@ -1491,22 +1491,15 @@ climate$methods(compute_raindays = function(data_list = list(), monStart=1, monE
       data_obj$add_year_month_day_cols()
     }
     
-    #year_col = data_obj$getvname(year_label)
+    year_col = data_obj$getvname(year_label)
     month_col = data_obj$getvname(month_label)
-    
-    # If  year column for the season is not in the data frame, create it.
-    if ( !(data_obj$is_present(season_label))) {
-      # add_doy_col function does not exist yet.
-      data_obj$add_doy_col()
-    }
-    season_col = data_obj$getvname(season_label)
     
     curr_data_list = data_obj$get_data_for_analysis(data_list)
     # loop for computing 
     for( curr_data in curr_data_list ) { 
     with(curr_data,{
       selRows <- curr_data[[month_col]]>=monStart & curr_data[[month_col]] <=monEnd & curr_data[[rain_col]] > curr_threshold
-      ndays <- tapply(selRows, curr_data[[season_col]], sum)
+      ndays <- tapply(selRows, curr_data[[year_col]], sum)
        print(data.frame(ndays))       
     })
     
@@ -1565,7 +1558,7 @@ climate$methods(compute_raintotal = function(data_list = list(), monStart=1, mon
     data_obj$add_doy_col()
   }
   season_col = data_obj$getvname(season_label)
-  #print(season_col)
+    #print(season_col)
     
     curr_data_list = data_obj$get_data_for_analysis(data_list)
     
