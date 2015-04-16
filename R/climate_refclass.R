@@ -1510,7 +1510,7 @@ climate$methods(compute_raindays = function(data_list = list(), monStart=1, monE
 ) #To Do: better way to present the output. Flexibility of the months- 1 or Jan or J or January
 
 #=============================================================================================
-climate$methods(compute_raintotal = function(data_list = list(), monStart=1, monEnd=3, na.rm = FALSE, season = "JFM", col_name = "Total", replace = FALSE)
+climate$methods(compute_raintotal = function(data_list = list(), month_start, season_start_day = 1, year = 1952, monEnd=3, na.rm = FALSE, season = "JFM", col_name = "Total", replace = FALSE)
 
 {
   library(plyr)
@@ -1541,7 +1541,7 @@ climate$methods(compute_raintotal = function(data_list = list(), monStart=1, mon
 #       message(paste("A column named", col_name, "already exists. The column will replaced 
 #                     in the data."))
 #     }
-    
+     
     
     # Must add these columns if not present to rainfall total
     if( !(data_obj$is_present(year_label) && data_obj$is_present(month_label)) ) {
@@ -1551,13 +1551,27 @@ climate$methods(compute_raintotal = function(data_list = list(), monStart=1, mon
     #year_col = data_obj$getvname(year_label)
     month_col = data_obj$getvname(month_label)
 
-  # If doy or year column is not in the data frame, create it.
-  if ( !(data_obj$is_present(season_label))) {
-    # add_doy_col function does not exist yet.
-    data_obj$add_doy_col()
-  }
-  season_col = data_obj$getvname(season_label)
-    #print(season_col)
+
+#     if(missing(month_start)){
+#       month_start = match("Dec", month.abb)
+#     }
+  
+    # If doy or year column is not in the data frame, create it.
+    if ( !(data_obj$is_present(season_label))) {
+      # add_doy_col function does not exist yet.
+      data_obj$add_doy_col()
+    }
+    season_col = data_obj$getvname(season_label)
+
+    curr_season_start_day = data_obj$get_meta(season_start_day_label,season_start_day)
+    print(curr_season_start_day)
+
+    date = doy_as_date(season_start_day, year)  
+    #print(date)
+    
+    if(missing(month_start)){
+      month_start = month(date)
+    }
     
     curr_data_list = data_obj$get_data_for_analysis(data_list)
     
@@ -1565,7 +1579,7 @@ climate$methods(compute_raintotal = function(data_list = list(), monStart=1, mon
     for( curr_data in curr_data_list ) {
       #CREATE THE SEASON FOR EACH YEAR
       curr_data$season<-""
-      curr_data$season[curr_data[[month_col]] >= monStart & curr_data[[month_col]] <= monEnd] <- season
+      curr_data$season[curr_data[[month_col]] >= month_start & curr_data[[month_col]] <= monEnd] <- season
       # seasonal column
       curr_data2<-curr_data[curr_data$season!="",]
       curr_data2$season<-paste(curr_data2[[season_col]],curr_data2$season,sep="")      
@@ -1573,11 +1587,15 @@ climate$methods(compute_raintotal = function(data_list = list(), monStart=1, mon
       curr_data2 = cbind(curr_data2, new_rain_col=curr_data2[[rain_col]], season_col = curr_data2[[season_col]] )
       #Get summaries for each year and season in each year
       season.rain<-ddply(curr_data2,.( season_col ,season),summarize,sum( new_rain_col, na.rm = FALSE))
+      
+     # nraindays<-ddply(curr_data2,.(season_col ,season), summarise, length(na.omit(new_rain_col[new_rain_col>0.85])))
+      
       names(season.rain)<-c("Year","Season","Total")
       # Delete the new rain column added
       season.rain$new_rain_col=NULL
       #print(class(season.rain))
       print(season.rain)
+      #print(nraindays)
     }# curr_data
     #summary_obj$append_column_to_data(season.rain, col_name)
   }# data_obj
