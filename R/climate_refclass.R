@@ -1520,7 +1520,9 @@ climate$methods(compute_raindays = function(data_list = list(), month_start, mon
 ) #To Do: better way to present the output. Flexibility of the months- 1 or Jan or J or January
 
 #=============================================================================================
-climate$methods(compute_seasonal_summary = function(data_list = list(), month_start, month_end = 3, season_start_day = 1, print_season = FALSE, year = 1952,  na.rm = FALSE, season = "JFM", threshold = 0.85, col_name = "season_tot_JFM", col_name2 = "season_raindays_JFM",replace = FALSE)
+climate$methods(compute_seasonal_summary = function(data_list = list(), month_start, month_end = 3, season_start_day = 1, print_season = FALSE, 
+                                                    year = 1952,  na.rm = FALSE, season = "JFM", threshold = 0.85, col_name = "season_tot_JFM",
+                                                    col_name2 = "season_raindays_JFM",replace = FALSE)
 
 {
   library(plyr)
@@ -1583,8 +1585,13 @@ climate$methods(compute_seasonal_summary = function(data_list = list(), month_st
       date = doy_as_date(season_start_day, year)  
       month_start = month(date)
     }
-    print(month_start)
-#     mon = match(c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"), month.abb)
+    if (is.character(month_start)){
+      month_start= 1 + ((match(tolower(month_start), tolower(c(month.abb, month.name))) - 1) %% 12)
+    }else {
+      month_start=month_start
+    }
+#     print(month_start)
+# #     mon = match(c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"), month.abb)
 #     month_end = c()
 #     for (i in 1:length(mon)){
 #       month_end = mon[i]
