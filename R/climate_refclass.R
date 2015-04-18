@@ -1469,8 +1469,8 @@ climate$methods(vertical_line = function(data_list=list(), all, data_period_labe
 #==================================================================================================
 
 
-climate$methods(compute_raindays = function(data_list = list(), monStart=1, monEnd=3, threshold=0.85,
-                                            na.rm=FALSE)
+climate$methods(compute_raindays = function(data_list = list(), month_start, monEnd=3, threshold=0.85,
+                                            na.rm=FALSE,season_start_day = 1)
 {
   
   # rain required
@@ -1488,20 +1488,30 @@ climate$methods(compute_raindays = function(data_list = list(), monStart=1, monE
     rain_col  = data_obj$getvname(rain_label)
         
     # Must add these columns if not present to compute raindays
-    if( !(data_obj$is_present(year_label) && data_obj$is_present(month_label)) ) {
-      data_obj$add_year_month_day_cols()
+#     if( !(data_obj$is_present(year_label) && data_obj$is_present(month_label)) ) {
+#       data_obj$add_year_month_day_cols()
+#     }
+    if ( !(data_obj$is_present(season_label))) {
+      data_obj$add_doy_col()
     }
-    
-    year_col = data_obj$getvname(year_label)
+    season_col = data_obj$getvname(season_label)
     month_col = data_obj$getvname(month_label)
-    
+    if(missing(month_start)){
+      curr_season_start_day = data_obj$get_meta(season_start_day_label,season_start_day)
+      date = doy_as_date(curr_season_start_day, 1988)
+      month_start = month(date)
+    }   
+    if (is.character(month_start)){
+      month_start= 1 + ((match(tolower(month_start), tolower(c(month.abb, month.name))) - 1) %% 12)
+    }else {
+      month_start=month_start
+    }
     curr_data_list = data_obj$get_data_for_analysis(data_list)
     # loop for computing 
-    for( curr_data in curr_data_list ) { 
-          selRows <- curr_data[[month_col]]>=monStart & curr_data[[month_col]] <=monEnd & curr_data[[rain_col]] > curr_threshold
-      ndays <- tapply(selRows, curr_data[[year_col]], sum, na.rm=na.rm)
-      print(class(ndays))
-       return(ndays)        
+    for( curr_data in curr_data_list ) {
+      selRows <- curr_data[[month_col]]>=month_start & curr_data[[month_col]] <=monEnd & curr_data[[rain_col]] > curr_threshold
+      ndays <- tapply(selRows, curr_data[[season_col]], sum, na.rm=na.rm)
+      return(ndays)        
     }
 
   }
