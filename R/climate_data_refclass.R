@@ -783,7 +783,7 @@ climate_data$methods(summarize_data = function(new_time_period, summarize_name =
                                                threshold = 0.85, na.rm = FALSE, start_point = 1, 
                                                num_rain_days_col = "Number of Rain Days", total_col = "Total",
                                                mean_col = "Mean", period_col_name = "Period", 
-                                               mean_rain_name = "Average rain per rain day")
+                                               mean_rain_name = "Average rain per rain day", factor_col)
   
   # TO DO remove date formats, remove threshold, 
 {
@@ -802,21 +802,27 @@ climate_data$methods(summarize_data = function(new_time_period, summarize_name =
   
   if(new_time_period == daily_label) {
     
-    start_date = .self$get_data_start_end_dates()[[1]]
-    end_date = .self$get_data_start_end_dates()[[2]]
+    # TO DO work out how to do missing_dates_check for subdaily data
+    .self$missing_dates_check()
     
-    unique_dates = seq(start_date,end_date,"day")
+    unique_dates = unique(data[[date_col_name]])
     
     summarized_data = data.frame(unique_dates)
     names(summarized_data) <- date_col_name
-    
     summary_obj = climate_data$new(data = summarized_data, data_name = summarize_name, 
-                                   start_point = start_point, data_time_period = new_time_period)
-    
+                                   start_point = start_point, data_time_period = new_time_period,
+                                   # This can be removed once missing_dates_check works for subdaily data
+                                   check_missing_dates = FALSE)
+    View(summary_obj$data)
     split_col = date_col_name
   }
+  
+  else if(new_time_period == subyearly_label) {
+    #TO DO allow to summarize to subyearly by using the factor_col argument
+    #      need to think how date column will be created for subyearly summary
+  }
 
-  if(new_time_period == yearly_label) {
+  else if(new_time_period == yearly_label) {
     
     start_date = .self$get_data_start_end_dates()[[1]]
     end_date = .self$get_data_start_end_dates()[[2]]+1
@@ -855,7 +861,7 @@ climate_data$methods(summarize_data = function(new_time_period, summarize_name =
   }
   
   if( new_time_period == daily_label ) {
-    if(.self$is_present(day_label)) {
+    if( !summary_obj$is_present(season_label) && .self$is_present(day_label) ) {
     summary_obj$append_column_to_data(day(summ_date_col_name),getvname(day_label))
     summary_obj$append_to_variables(day_label,getvname(day_label))
     }
@@ -866,7 +872,7 @@ climate_data$methods(summarize_data = function(new_time_period, summarize_name =
     #      do we need a season function similar to year()?
   }
 
-  if(!summary_obj$is_present(year_label) && .self$is_present(year_label)) {
+  if( !summary_obj$is_present(year_label) && .self$is_present(year_label) ) {
     summary_obj$append_column_to_data(year(summ_date_col_name),getvname(year_label))
     summary_obj$append_to_variables(year_label,getvname(year_label))
   }
@@ -886,7 +892,6 @@ climate_data$methods(summarize_data = function(new_time_period, summarize_name =
         
         total_rain_data = as.vector(by(data[[curr_col_name]],data[[split_col]], sum, na.rm = na.rm))
         total_rain_name = paste(total_col,curr_col_name)
-        print(data[[split_col]])
         summary_obj$append_column_to_data(total_rain_data, total_rain_name)
         rain_total_label = summary_obj$get_summary_label(var, total_label, list(na.rm=na.rm))
         summary_obj$append_to_variables(rain_total_label, total_rain_name)
