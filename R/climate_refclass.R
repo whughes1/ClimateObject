@@ -1520,8 +1520,8 @@ climate$methods(compute_raindays = function(data_list = list(), month_start, mon
 ) #To Do: better way to present the output. Flexibility of the months- 1 or Jan or J or January
 
 #=============================================================================================
-climate$methods(compute_seasonal_summary = function(data_list = list(), month_start, number_month = 3,  print_season = FALSE, season_start_day = 1,
-                                                    year = 1952,  na.rm = FALSE, threshold = 0.85, col_name = "season_tot_JFM",
+climate$methods(compute_seasonal_summary = function(data_list = list(), month_start, number_month = 3,  print_season = FALSE, 
+                                                    na.rm = FALSE, threshold = 0.85, col_name = "season_tot_JFM",
                                                     col_name2 = "season_raindays_JFM",replace = FALSE)
 
 {
@@ -1566,11 +1566,11 @@ climate$methods(compute_seasonal_summary = function(data_list = list(), month_st
     if ( !(data_obj$is_present(season_label))) {
       data_obj$add_doy_col()
     }
-    season_col = data_obj$getvname(season_label)
-
-   curr_season_start_day = data_obj$get_meta(season_start_day_label,season_start_day)
+    season_col = data_obj$getvname(season_label)   
         
     if(missing(month_start)){
+      curr_season_start_day = data_obj$get_meta(season_start_day_label)
+      year=1952
       date = doy_as_date(curr_season_start_day, year)  
       month_start = month(date)
     }
@@ -1583,34 +1583,27 @@ climate$methods(compute_seasonal_summary = function(data_list = list(), month_st
     # month to be summed for the season.
      sub_month = month_start:(month_start+number_month-1) %% 12
    
-#     if(month_start>=1){
-#       sub_month = month_start:(month_start+number_month-1) %% 12
-#       zeros = match(0,sub_month) 
-#      # print(zeros)
-#       sub_month[[zeros]] <- 12
-#       }else{
-#        sub_month = month_start:(month_start+number_month-1) %% 12
-#     }
-   print(sub_month)
-    
+    if(0 %in% c(sub_month)){
+      zeros = match(0,sub_month) 
+      sub_month[[zeros]] <- 12
+      }
     curr_data_list = data_obj$get_data_for_analysis(data_list)
     
     # loop for computing seasonal rain totals and number of rain days
     for( curr_data in curr_data_list ) {
       
-      curr_data =  curr_data[ curr_data[[month_col]] %in% c(sub_month),]
-      #print(curr_data)
+      curr_data =  curr_data[ curr_data[[month_col]] %in% c(sub_month),]      
       # Add a column of rain to the data with a specific: "Rain" name for ddply use
       curr_data = cbind(curr_data, new_rain_col=curr_data[[rain_col]], season_col = curr_data[[season_col]] )
       #Get summaries for each year and season in each year
-      season.rain<-ddply(curr_data,.( season_col ),here(summarize),sum( new_rain_col, na.rm = na.rm), length(na.omit(new_rain_col[new_rain_col > curr_threshold])))
+      season.rain<-ddply(curr_data,.( season_col ),here(summarize),sum( new_rain_col, na.rm = na.rm), sum(new_rain_col > curr_threshold,na.rm=na.rm))
       names(season.rain)<-c("Year","season_total", "season_rain_days")
       # Delete the new rain column added
       season.rain$new_rain_col=NULL
 
       # Only print if requested
       if(print_season) {print(season.rain)}
-    }# curr_data
+    }
     summary_obj$append_column_to_data(season.rain$season_total, col_name)
     summary_obj$append_column_to_data(season.rain$season_rain_days, col_name2)
     label = summary_obj$get_summary_label(rain_label, seasonal_total_label)
