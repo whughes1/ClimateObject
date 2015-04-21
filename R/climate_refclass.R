@@ -1658,11 +1658,12 @@ climate$methods(compute_seasonal_summary = function(data_list = list(), month_st
 
 #==================================================================================================
 
-climate$methods(seasonal_summary = function(data_list = list(), month_start, number_month = 3, threshold = 0.85, col_name = "Rain Total JFM",col_name2 = "Number Raindays JFM", print_season = FALSE, 
+climate$methods(seasonal_summary = function(data_list = list(), month_start, number_month = 3, threshold = 0.85, 
+                                            col_name = "Rain Total JFM", season_rain_total=FALSE, season_rain_days=FALSE,
+                                            col_name2 = "Number Raindays JFM", print_season = FALSE, 
                                                     na.rm = FALSE, replace = FALSE)
   
-{
-  
+{  
   # rain required
   data_list = add_to_data_info_required_variable_list(data_list, list(rain_label))
   # date time period is "daily"
@@ -1671,7 +1672,7 @@ climate$methods(seasonal_summary = function(data_list = list(), month_start, num
   climate_data_objs = get_climate_data_objects(data_list)
   
   for(data_obj in climate_data_objs) {
-    
+      
     curr_threshold = data_obj$get_meta(threshold_label,threshold)
     
     rain_col  = data_obj$getvname(rain_label) 
@@ -1711,34 +1712,42 @@ climate$methods(seasonal_summary = function(data_list = list(), month_start, num
     
     continue = TRUE
     
-    if(col_name %in% names(summary_obj$get_data()) && !replace) {
-      message(paste("A column named", col_name, "already exists. The column will not be replaced.
-                    To replace to column, re run this function and specify replace = TRUE."))
-      continue = FALSE
-    }
-    
-    if(col_name2 %in% names(summary_obj$get_data()) && !replace) {
-      message(paste("A column named", col_name2, "already exists. The column will not be replaced.
-                    To replace to column, re run this function and specify replace = TRUE."))
-      continue = FALSE
-    }
-    if(col_name %in% names(summary_obj$get_data()) && replace){
-      message(paste("A column named", col_name, "already exists. The column will replaced 
-                    in the data."))
-    }
-    if(col_name2 %in% names(summary_obj$get_data()) && replace){
-      message(paste("A column named", col_name2, "already exists. The column will replaced 
-                    in the data."))
-    }
-    
     curr_definition = list(month_start = month_start, number_month = number_month, threshold = threshold)
     
-    if( continue && summary_obj$is_definition(rain_label,seasonal_total_label,curr_definition)) {
-      message("A column with this defintion already exists in the data.
+    if(season_rain_total || !season_rain_days){
+      if(col_name %in% names(summary_obj$get_data()) && !replace) {
+        message(paste("A column named", col_name, "already exists. The column will not be replaced.
+                    To replace to column, re run this function and specify replace = TRUE."))
+        continue = FALSE
+      }
+      if(col_name %in% names(summary_obj$get_data()) && replace){
+        message(paste("A column named", col_name, "already exists. The column will be replaced 
+                    in the data."))
+      }
+      if( continue && summary_obj$is_definition(rain_label,seasonal_total_label,curr_definition)) {
+        message("A column with this defintion already exists in the data.
               The column will not be added again.")
-      continue = FALSE
+        continue = FALSE
+      }
     }
     
+    if (season_rain_days || !season_rain_total){
+      if(col_name2 %in% names(summary_obj$get_data()) && !replace) {
+        message(paste("A column named", col_name2, "already exists. The column will not be replaced.
+                    To replace to column, re run this function and specify replace = TRUE."))
+        continue = FALSE
+      }
+      if(col_name2 %in% names(summary_obj$get_data()) && replace){
+        message(paste("A column named", col_name2, "already exists. The column will be replaced
+                    in the data."))
+      }
+      if( continue && summary_obj$is_definition(rain_label,seasonal_raindays_label,curr_definition)) {
+        message("A column with this defintion already exists in the data.
+              The column will not be added again.")
+        continue = FALSE
+      }
+    }    
+  
     if(continue) {
     
     curr_data_list = data_obj$get_data_for_analysis(data_list)
@@ -1752,24 +1761,45 @@ climate$methods(seasonal_summary = function(data_list = list(), month_start, num
       for (mon in months) {
         rain.season = curr_data[curr_data[month_col]==mon,c(season_col,rain_col)]   
         for (yr in unique(curr_data[[season_col]])) {
+          if(season_rain_total){
           month_tot[yr-min(unique(curr_data[[season_col]])-1),mon]=sum(rain.season[rain.season[,season_col]==yr,rain_col])
+          }
+          if(season_rain_days){
           raindays[yr-min(unique(curr_data[[season_col]])-1),mon]=sum(rain.season[rain.season[,season_col]==yr,rain_col]>threshold)
+          }
+          if(!season_rain_total && !season_rain_days){
+            month_tot[yr-min(unique(curr_data[[season_col]])-1),mon]=sum(rain.season[rain.season[,season_col]==yr,rain_col])
+            raindays[yr-min(unique(curr_data[[season_col]])-1),mon]=sum(rain.season[rain.season[,season_col]==yr,rain_col]>threshold)            
+          }
         }
       }
       month_tot <- rowSums(month_tot[,months], na.rm = na.rm) 
       raindays <-  rowSums(raindays[,months], na.rm = na.rm)
       
-     rain_tot <- data.frame(cbind(month_tot, raindays ))
+      if(season_rain_total && print_season){
+        print(month_tot)
+      }
+      if(season_rain_days && print_season){
+        print(raindays)
+      }
       # Only print if requested
-      if(print_season) {print(data.frame(rain_tot))}
+      if(print_season && !season_rain_total && !season_rain_days) {
+        rain_tot <- data.frame(cbind(month_tot, raindays )) 
+        colnames(rain_tot) <- c(col_name,col_name2)
+        print(rain_tot)
+      }
       
     }
-    summary_obj$append_column_to_data(month_tot, col_name)
-    summary_obj$append_column_to_data(raindays, col_name2)
-    label = summary_obj$get_summary_label(rain_label, seasonal_total_label,curr_definition)
-    label2 = summary_obj$get_summary_label(rain_label, seasonal_raindays_label,curr_definition)
-    summary_obj$append_to_variables(label, col_name)
-    summary_obj$append_to_variables(label2,col_name2)
+    if (season_rain_total || !season_rain_days){
+      summary_obj$append_column_to_data(month_tot, col_name)
+      label = summary_obj$get_summary_label(rain_label, seasonal_total_label,curr_definition)
+      summary_obj$append_to_variables(label, col_name)      
+    }
+    if (season_rain_days || !season_rain_total){
+      summary_obj$append_column_to_data(raindays, col_name2)
+      label2 = summary_obj$get_summary_label(rain_label, seasonal_raindays_label,curr_definition)
+      summary_obj$append_to_variables(label2,col_name2)      
+    }
     }
   }
 }
