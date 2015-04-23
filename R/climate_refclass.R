@@ -1204,7 +1204,7 @@ climate$methods(yearly_trellis_plot = function(data_list = list(),interest_varia
 )
 
 #=================================================================================
-climate$methods(Plot_yearly_sumamry = function (data_list=list(), col1="blue",ylab,xlab="Year",pch=20,type="b",lty=2,col2="red",lwd = 2,interest_var,var_label = rain_label,
+climate$methods(Plot_yearly_sumamry = function (data_list=list(), col1="blue",ylab,xlab="Year",na.rm=TRUE, pch=20,ylim=0,type="b",lty=2,col2="red",lwd = 2,lwd2 = 1.5,interest_var,var_label = rain_label,
                                                         main_title="Plot - Summary per Year")
 {
   # rain required
@@ -1221,15 +1221,13 @@ climate$methods(Plot_yearly_sumamry = function (data_list=list(), col1="blue",yl
   for(data_obj in climate_data_objs) {
     data_name = data_obj$get_meta(data_name_label)
     
-    # Must add these columns if not present to display this way
+    # Must add these columns if not present 
     if( !(data_obj$is_present(year_label) ) ) { 
-      #data_obj$add_year_month_day_cols()
       data_obj$add_year_col() 
     }
     year_col = data_obj$getvname(year_label)
         
-    # get the total rain. we need to think about a good way to do this from getvname.
-    interset_var_col = data_obj$getvname (interest_var) #   "rain total 1"
+    interset_var_col = data_obj$getvname (interest_var) 
     
     if(missing(ylab)){
       ylab = data_obj$getvname(interest_var)
@@ -1238,17 +1236,16 @@ climate$methods(Plot_yearly_sumamry = function (data_list=list(), col1="blue",yl
     curr_data_list = data_obj$get_data_for_analysis(data_list)
     # loop for plotting 
     for( curr_data in curr_data_list ) { 
-      # curr_data should have two columns which are year and rainfall totals 
-      plot_yearly_summary <- plot(curr_data[[year_col]], curr_data[[interset_var_col]],type=type,pch=pch,xlab=xlab, col=col1,ylim= c(0, max(curr_data[[interset_var_col]], na.rm=TRUE)),
-                          xlim = c( min(curr_data[[year_col]], na.rm=TRUE), max( curr_data[[year_col]], na.rm=TRUE)),
+      plot_yearly_summary <- plot( curr_data[[year_col]], curr_data[[interset_var_col]],type=type,pch=pch,xlab=xlab, col=col1,ylim= c(ylim, max(curr_data[[interset_var_col]], na.rm=na.rm)),
+                          xlim = c( min(curr_data[[year_col]], na.rm=na.rm), max( curr_data[[year_col]], na.rm=na.rm)),
                           ylab=ylab, main= c( data_name, main_title))
-       abline(h = mean(curr_data[[interset_var_col]][curr_data[[interset_var_col]] > 0]),lty=lty,col=col2)  
-       grid(length(curr_data[[year_col]]),0, lwd = lwd)
+      #abline(h = mean(curr_data[[interset_var_col]]),lty=lty,col=col2) 
+      grid(length(curr_data[[year_col]]),0, lwd = lwd)
       
       
-      #reg=lm(curr_data[[interset_var_col]] ~ curr_data[[year_col]], na.rm = TRUE)
-      #abline(reg,col="red",lwd=1.5)
-      #summary(reg)
+      reg=lm(curr_data[[interset_var_col]] ~ curr_data[[year_col]])
+      abline(reg,col=col2,lwd=lwd2 )
+      print(summary(reg))
       
     }
   } 
@@ -1441,14 +1438,19 @@ climate$methods(vertical_line = function(data_list=list(), all, data_period_labe
       print(head(dat))
       #Melt the data into a form suitable for easy casting
       dat2 <- melt(dat ,  id = 'Year')
-      print(head(dat2))
-      print(names(dat2))
+#       print(head(dat2))
+#       print(names(dat2))
+      dat2$Year <-as.factor(dat2$Year) # factor
+      dat2$value <- as.integer(dat2$value) # integer
+#       print(class(dat2$Year))
+#       print(class(dat2$variable))
+#       print(class(dat2$value))
      #"Year"     "variable" "value"
       # plot all variables on the same graph
       # Need to read more about ggplot bcse here it is not plotting.
       #?ggplot() is typically used to construct a plot incrementally.
-      ggplot(dat2, aes(Year, value)) +
-      geom_histogram(  position="dodge",  stat = "identity", aes(fill = variable))
+     ggplot(data = d2, aes(x = Year, y = value, group=1)) + geom_line(aes(colour = variable))+
+       ggtitle("Start of the Rain by Year")
      
     }
     
