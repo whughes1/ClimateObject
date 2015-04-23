@@ -1763,15 +1763,11 @@ climate$methods(seasonal_summary = function(data_list = list(), month_start, num
       for (mon in months) {
         rain.season = curr_data[curr_data[month_col]==mon,c(season_col,rain_col)]   
         for (yr in unique(curr_data[[season_col]])) {
-          if(season_rain_total){
+          if(season_rain_total || !season_rain_days){
           month_tot[yr-min(unique(curr_data[[season_col]])-1),mon]=sum(rain.season[rain.season[,season_col]==yr,rain_col])
           }
-          if(season_rain_days){
+          if(season_rain_days || !season_rain_total){
           raindays[yr-min(unique(curr_data[[season_col]])-1),mon]=sum(rain.season[rain.season[,season_col]==yr,rain_col]>threshold)
-          }
-          if(!season_rain_total && !season_rain_days){
-            month_tot[yr-min(unique(curr_data[[season_col]])-1),mon]=sum(rain.season[rain.season[,season_col]==yr,rain_col])
-            raindays[yr-min(unique(curr_data[[season_col]])-1),mon]=sum(rain.season[rain.season[,season_col]==yr,rain_col]>threshold)            
           }
         }
       }
