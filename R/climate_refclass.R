@@ -957,7 +957,7 @@ climate$methods(new_plot = function() {
 )
 
 
-climate$methods(cumulative_exceedance_graphs = function(data_list=list(),interest_var,cumulative_graph =TRUE,
+climate$methods(cumulative_exceedance_graphs = function(data_list=list(),interest_var,cumulative_graph =TRUE, legend_bty="n",
                                                  color=rainbow(12),percent=TRUE, main="", xlabel="",ylabel="",line_type="o",
                                                  convert=TRUE, data_period_label=daily_label, legend_position="center",
                                                  legend_label=c("plot1","plot2"),station_name=TRUE, plot_window=FALSE,gpar=par(mfrow=c(2,4)))
@@ -1092,7 +1092,7 @@ climate$methods(cumulative_exceedance_graphs = function(data_list=list(),interes
             }
           }
       if (length(interest_var)>1){
-        legend(legend_position,legend_label,fill = color, bty = "n")
+        legend(legend_position,legend_label,fill = color, bty = legend_bty)
         }
       }    
     }
