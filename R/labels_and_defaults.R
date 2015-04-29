@@ -1,6 +1,7 @@
 library(reshape2)
 library(lubridate)
 library(plyr)
+require(lattice)
 
 #Labels for variables which will be recognised by the Climate objects
 rain_label="rain"
