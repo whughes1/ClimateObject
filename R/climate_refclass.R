@@ -343,8 +343,8 @@ climate$methods(plot_missing_values_rain = function(data_list=list(), threshold 
       
       # plot(unique(curr_data[[season_col]]),curr_data[[dos_col]], log = "", asp = NA)
       plot(curr_data[[season_col]],curr_data[[dos_col]], ylim=c(0,500), log = "", asp = NA, xlab="Year",ylab="Day of Year", main="Rain Present")
-      #plot.window(xlim=c(min(curr_data[[season_col]]),max(curr_data[[season_col]])),ylim=c(0,500), log = "", asp = NA) #TO DO Tidy up graphical parameters
-      #title(xlab="Year",ylab="Day of Year", main="Rain Present") #TO DO Need to think hard about how display name are stored
+#       plot.window(xlim=c(min(curr_data[[season_col]], na.rm = TRUE),max(curr_data[[season_col]], na.rm = TRUE)),ylim=c(0,500), log = "", asp = NA) #TO DO Tidy up graphical parameters
+#       title(xlab="Year",ylab="Day of Year", main="Rain Present") #TO DO Need to think hard about how display name are stored
       legend("topright",c("Rain","Dry","NA"),fill=fill_col,horiz=TRUE)
       points(as.numeric(a1[[season_col]]),a1[[dos_col]],pch="-",col=fill_col[3])
       points(as.numeric(a2[[season_col]]),a2[[dos_col]],pch="-",col=fill_col[1])
@@ -957,107 +957,87 @@ climate$methods(new_plot = function() {
 )
 
 
-climate$methods(cumulative_exceedance_graphs = function(data_list=list(),interest_var,cumulative_graph =TRUE, legend_bty="n",
-                                                 color=rainbow(12),percent=TRUE, main="", xlabel="",ylabel="",line_type="o",
-                                                 convert=TRUE, data_period_label=daily_label, legend_position="center",
-                                                 legend_label=c("plot1","plot2"),station_name=TRUE, plot_window=FALSE,gpar=par(mfrow=c(2,4)))
+climate$methods(cumulative_exceedance_graphs = function(data_list=list(),interest_var,cumulative_graph =TRUE,
+                                                 color=rainbow(12),percent=TRUE, main="", 
+                                                 xlabel="",ylabel="",
+                                                 convert=TRUE, data_period_label=daily_label,
+                                                 legend_position="center",legend_label=c("plot1","plot2"))
 {  
   
   if (!is.list(interest_var)){
     interest_var=list(interest_var)
   }
-  data_list=add_to_data_info_required_variable_list(data_list, interest_var) 
-  
+  data_list=add_to_data_info_required_variable_list(data_list, interest_var)  
   data_list=add_to_data_info_time_period(data_list, data_period_label)
-  
   data_list=c(data_list,convert_data=convert)
-  
   climate_data_objs_list = get_climate_data_objects(data_list)
-    
+  #print(climate_data_objs_list)
+  #print(data_list)
+  
   for(data_obj in climate_data_objs_list) {
     
-    if (station_name){    
-    data_name = data_obj$get_meta(data_name_label)
-    }else {
-      data_name=NULL
-    }
+    data_name = data_obj$get_meta(data_name_label)    
     
     # Access data in methods
     curr_data_list = data_obj$get_data_for_analysis(data_list)
-    
+    #print(curr_data_list)
     #-----------------------------------------------------------------------------------#
-        
+    #print(curr_data_list)
+    
     for( curr_data in curr_data_list ) {
       #---------------------------------------------------------------------------------#
       
       sort_col <- list()
-      
       prop_col <- list()
-      
       cum_perc_col <- list()
-      
       exceedance_col <- list()
-      
       exceedance_prop <- list()
-      
-      for (i in 1:length(interest_var)) {
-        
+      for (i in 1:length(interest_var)) 
+        {
         interest_col=data_obj$getvname(interest_var[[i]])
       
           # sort the data
         sort_col[[i]]=sort(curr_data[[interest_col]])
-        #---------------------------------------------------------------------------------#
-        #calculate the proportions
-        #---------------------------------------------------------------------------------#      
+      #---------------------------------------------------------------------------------#
+      #---------------------------------------------------------------------------------#
+      #calculate the proportions
+      #---------------------------------------------------------------------------------#
+      
         prop_col[[i]]=(1:length(sort_col[[i]]))/length(sort_col[[i]])
       
         if (percent == TRUE){     
-        #--------------------------------------------------------------------------------#
+      #--------------------------------------------------------------------------------#
      
-        #calculate the percentage of the cumulative proportions
-        #--------------------------------------------------------------------------------#
+      #calculate the percentage of the cumulative proportions
+      #--------------------------------------------------------------------------------#
+      
           cum_perc_col[[i]]= prop_col[[i]]*100 
-          #------------------------------------------------------------------------------
-          #=====Add the values for plotting the exceedance graph==========================
-          #--------------------------------------------------------------------------------#
+      #------------------------------------------------------------------------------
+      #=====Add the values for plotting the exceedance graph==========================
+      #--------------------------------------------------------------------------------#
           exceedance_col[[i]]=100-cum_perc_col[[i]]        
          }else {
            
           #Values for exceedance graph using the probabilities     
           exceedance_prop[[i]]=1-prop_col[[i]] 
           }
-        }
-      
-      if (plot_window){
-        par=gpar
-      }       
+      }
+      #print(exceedance_prop)
       #====Plotting the cumulative graph when true=====================================
       #----------------------------------------------------------------------------------#
-      if(cumulative_graph){
+      
+      if(cumulative_graph == TRUE){
         par(new=FALSE)
         for (i in 1:length(sort_col)){
           #--------------------------------------------------------------------------------#
-          if (main==""){
-            main="cumulative graph"
-          }
-          if (xlabel==""){
-            xlabel= "Variable of interest"
-          }
           #====Plotting the cumulative================================================
           if (percent ==TRUE){
-            
-            if (ylabel==""){
-              ylabel= " Pencent of days" 
-            }
             plot(sort_col[[i]], cum_perc_col[[i]],
-                 main=c(data_name,main), xlab=xlabel, ylab=ylabel,type=line_type, col=color[i],
+                 main=c(data_name,main), xlab=xlabel, ylab=ylabel,type="o", col=color[i],
                  xlim=range(sort_col),ylim=range(cum_perc_col))
             }else{
-              if (ylabel==""){
-                ylabel= " Proportion of days" 
-              }
               plot(sort_col[[i]], prop_col[[i]],main=c(data_name,main), xlab=xlabel, 
-                   ylab=ylabel,type=line_type, col=color[i],
+                   ylab=ylabel,type="o", col=color[i],
                    xlim=range(sort_col),ylim=range(prop_col))
               }
           par(new=TRUE)
@@ -1067,110 +1047,31 @@ climate$methods(cumulative_exceedance_graphs = function(data_list=list(),interes
           #====Plotting the exceedance graph  when true======================================== 
           for (i in 1:length(sort_col)){
             #--------------------------------------------------------------------------------#
-            if (main==""){
-              main="Exceedance graph"
-            }
-            if (xlabel==""){
-              xlabel= "Variable of interest"
-            }
             if(percent == TRUE){
               # Plotting the exceedance graph
-              if (ylabel==""){
-                ylabel= " Pencent of days" 
-              }
               plot(sort_col[[i]], exceedance_col[[i]],xlab=xlabel,ylab=ylabel,xlim=range(sort_col),
-                   ylim=range(exceedance_col),col=color[i], main=c(data_name,main),type=line_type)
+                   ylim=range(exceedance_col),col=color[i], main=c(data_name,main))
               #         par(new=TRUE)
               }else{
-                if (ylabel==""){
-                  ylabel= " Proportion of days" 
-                }
                 plot(sort_col[[i]], exceedance_prop[[i]],xlab=xlabel,ylab=ylabel,xlim=range(sort_col),
-                     ylim=range(exceedance_prop),col=color[i],main=c(data_name,main),type=line_type)
+                     ylim=range(exceedance_prop),col=color[i],main=c(data_name,main))
                 }
             par(new=TRUE)
             }
           }
       if (length(interest_var)>1){
-        legend(legend_position,legend_label,fill = color, bty = legend_bty)
+        legend(legend_position,legend_label,fill = color, bty = "n")
         }
-      }    
+      }
     }
-  par(mfrow=c(1,1))
   }
 )#To Do: same plot window. Add line type as arguement. Add sensible defaults to the plot.
 
 #===================================================================================================
-# this name will be vertical line at the end of this method.
-climate$methods(yearly_vertical_line = function(data_list=list(), all=list(), ylabel= "Meaningfull Text", col1 = "blue", type1 = "h",type2="p",
-                                                col2 = "red", col3 = "green", xlabel = "Year", pch1 = 1, pch2 = 1, pch3 = 1, data_period_label = yearly_label)
-{    
-  # get_climate_data_objects returns a list of the climate_data objects specified
-  # in the arguments.
-  # If no objects specified then all climate_data objects will be taken by default
-  
-  # the col_var1 and col_var2 must be label. e.g col_var1_label
-  # I should be able to use many variables. Can I make a list of variables? Yes we can. 
-  # The analysis should take account of the structure of the data.
-  data_list = add_to_data_info_required_variable_list(data_list, all) 
-  #data_list = add_to_data_info_required_variable_list(data_list, list(col_var2))
-  # we should be able to specify any time period. we need to fix this. Danny is working on it. 
-  data_list = add_to_data_info_time_period(data_list, data_period_label) 
-  
-  #data_list = c(data_list, convert_data = FALSE)
-  
-  climate_data_objs_list = get_climate_data_objects(data_list)
-  
-  #print(climate_data_objs_list)
-  
-  for(data_obj in climate_data_objs_list) {
-    
-    # we need to get the column of interest for the plot.
-    # The columns of interest are required so we don't need to check if there are present
-    #I have to see how to use ggplot function
-    for(i in 1:length(all)){
-      col_var1[[i]] = data_obj$getvname(all[[i]])
-      #print(col_var1)
-    }
-    
-   # col_var1 = data_obj$getvname(all[[1]])
-    #col_var2 = data_obj$getvname(all[[2]])
-   
-    
-    
-    data_obj$date_col_check(date_format = "%d/%m/%Y", convert = TRUE, create = TRUE, messaging=TRUE)
-    
-    date_col = data_obj$getvname(date_label)
-    
-    #adding year column if not present 
-    if( !(data_obj$is_present(year_label) && data_obj$is_present(month_label) && data_obj$is_present(day_label)) ) {
-      data_obj$add_year_month_day_cols()
-    }
-    year_col = data_obj$getvname(year_label)
-    
-    curr_data_list = data_obj$get_data_for_analysis(data_list)
-    
-    for( curr_data in curr_data_list ) {
-      # plotting the first plot.  
-      plot(curr_data[[ year_col ]], curr_data[[col_var1]], type = type1, lwd=2, col=col1, xlab=xlabel,ylab=ylabel,
-           ylim = c( range( curr_data[[col_var1]], curr_data[[col_var2]], na.rm = TRUE) ))
-      #Adding points to the plot
-      lines(curr_data[[ year_col ]], curr_data[[col_var1]], type=type2, col=col2, pch = pch1)
-      #Adding the second plot
-      points(curr_data[[ year_col ]], curr_data[[col_var2]], type = type1, col=col3, pch = pch2 )
-      
-      #Adding points to the second plot
-      lines(curr_data[[ year_col ]], curr_data[[col_var2]], type=type2, col=col2, pch = pch1)
-    }
-    
-  }
-}
-)
-#===========================================================================================
+
 climate$methods(yearly_trellis_plot = function(data_list = list(),interest_variable,xlab = "Year",ylab,layout = c(6, 2),fac_column,
                                                     main_title = "Plot - Trellis Plot")
 {  
-  require(lattice)
   
   # get_climate_data_objects returns a list of the climate_data objects specified
   # in the arguments.
@@ -1216,7 +1117,7 @@ climate$methods(yearly_trellis_plot = function(data_list = list(),interest_varia
                         #panel.grid(v=2) 
                         panel.xyplot(x, y)
                         panel.loess(x, y)
-                        panel.abline(lm(y~x))
+                        #panel.abline(lm(y~x))
                       },
                       xlab = xlab,
                       ylab = ylab, main = c(data_name, main_title))
@@ -1237,7 +1138,7 @@ climate$methods(yearly_trellis_plot = function(data_list = list(),interest_varia
 )
 
 #=================================================================================
-climate$methods(Plot_yearly_sumamry = function (data_list=list(), col1="blue",ylab,xlab="Year",na.rm=TRUE, pch=20,ylim=0,type="b",lty=2,col2="red",lwd = 2,lwd2 = 1.5,interest_var,var_label = rain_label,
+climate$methods(Plot_yearly_sumamry = function (data_list=list(), col1="blue",ylab,xlab="Year", pch=20,ylim=0,type="b",lty=2,col2="red",lwd = 2,lwd2 = 1.5,interest_var,var_label = rain_label,
                                                 plot_line = FALSE, main_title="Plot - Summary per Year")
 {
   # rain required
@@ -1269,8 +1170,8 @@ climate$methods(Plot_yearly_sumamry = function (data_list=list(), col1="blue",yl
     curr_data_list = data_obj$get_data_for_analysis(data_list)
     # loop for plotting 
     for( curr_data in curr_data_list ) { 
-      plot_yearly_summary <- plot( curr_data[[year_col]], curr_data[[interset_var_col]],type=type,pch=pch,xlab=xlab, col=col1,ylim= c(ylim, max(curr_data[[interset_var_col]], na.rm=na.rm)),
-                          xlim = c( min(curr_data[[year_col]], na.rm=na.rm), max( curr_data[[year_col]], na.rm=na.rm)),
+      plot_yearly_summary <- plot( curr_data[[year_col]], curr_data[[interset_var_col]],type=type,pch=pch,xlab=xlab, col=col1,ylim= c(ylim, max(curr_data[[interset_var_col]], na.rm=TRUE)),
+                          xlim = c( min(curr_data[[year_col]], na.rm=TRUE), max( curr_data[[year_col]], na.rm=TRUE)),
                           ylab=ylab, main= c( data_name, main_title))
       #abline(h = mean(curr_data[[interset_var_col]]),lty=lty,col=col2) 
       grid(length(curr_data[[year_col]]),0, lwd = lwd)
@@ -1427,83 +1328,6 @@ climate$methods(summary_statistics = function(data_list=list(),interest_var, Pro
 # After looking and findout that the function ggplot can plot multiple columns on the same plot,
 # We can adopt it for yearly_vertical_line method easly
 #=========================================================================================================
-
-climate$methods(vertical_line = function(data_list=list(), all, data_period_label = yearly_label)
-{   
-  require(ggplot2)
-  require(reshape)
-  
-  # get_climate_data_objects returns a list of the climate_data objects specified
-  # in the arguments.
-  # If no objects specified then all climate_data objects will be taken by default
-  
-  # Can I use a list of variables? Yes . 
-  # The analysis should take account of the structure of the data.
-  data_list = add_to_data_info_required_variable_list(data_list, all) 
-  # we should be able to specify any time period. we need to fix this. Danny is working on it. 
-  data_list = add_to_data_info_time_period(data_list, data_period_label) 
-    
-  climate_data_objs_list = get_climate_data_objects(data_list)
-    
-  for(data_obj in climate_data_objs_list) {
-    
-    # we need to get the column of interest for the plot.
-    # since the column of interest is a list, the loop gets all at the same time.
-    interest_variable =list()
-    for(i in 1:length(all)){
-      
-      interest_variable[[i]] <- data_obj$getvname(all[[i]]) 
-    }
-   #print(interest_variable)
-    
-    
-    date_col = data_obj$getvname(date_label)
-    
-    #adding year column if not present 
-    if( !(data_obj$is_present(year_label)) ) {
-      data_obj$add_year_col()
-    }
-    year_col = data_obj$getvname(year_label)
-    
-    curr_data_list = data_obj$get_data_for_analysis(data_list)
-    
-    for( curr_data in curr_data_list ) {
-      # subset the data. Here get only time period and the interest variables 
-      dat <- subset(curr_data, select=c( year_col, interest_variable = unlist(interest_variable)))
-      print(head(dat))
-      #Melt the data into a form suitable for easy casting
-      dat2 <- melt(dat ,  id = 'Year')
-#       print(head(dat2))
-#       print(names(dat2))
-      dat2$Year <-as.factor(dat2$Year) # factor
-      dat2$value <- as.integer(dat2$value) # integer
-#       print(class(dat2$Year))
-#       print(class(dat2$variable))
-#       print(class(dat2$value))
-     #"Year"     "variable" "value"
-      # plot all variables on the same graph
-      # Need to read more about ggplot bcse here it is not plotting.
-      #?ggplot() is typically used to construct a plot incrementally.
-     ggplot(data = d2, aes(x = Year, y = value, group=1)) + geom_line(aes(colour = variable))+
-       ggtitle("Start of the Rain by Year")
-     
-    }
-    
-  }
-}
-)
-
-
-
-# dd <- subset(data, select=c(Date,Start.of.Rain..i.,Start.of.Rain..ii.,Start.of.Rain..iii.))
-# names(dd)
-# View(dd)
-# d2 <- melt(dd ,  id = 'Date')
-# #ggplot(d2, aes(Date,value)) + geom_line(aes(colour = variable))
-# 
-# ggplot(d2, aes(Date, value)) +
-#   geom_histogram(  position="dodge",  stat = "identity", aes(fill = variable))
-#==================================================================================================
 
 
 climate$methods(compute_raindays = function(data_list = list(), month_start, monEnd=3, threshold=0.85,
