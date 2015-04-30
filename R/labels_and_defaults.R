@@ -206,6 +206,14 @@ ident_var <- function (data,variables) {
       } 
     }
   }
+  if(!(element_factor_label %in% names(merged))) {
+    for (label in c("Element_id","element_id")){
+      if (label %in% names(data)){
+        merged[[element_factor_label]]<-label
+        break
+      } 
+    }
+  }
   return(merged)    
   
 }
