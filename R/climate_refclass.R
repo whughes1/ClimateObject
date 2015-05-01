@@ -1174,7 +1174,7 @@ climate$methods(yearly_trellis_plot = function(data_list = list(),interest_varia
 
 #=================================================================================
 climate$methods(Plot_yearly_sumamry = function (data_list=list(), col1="blue",ylab,xlab="Year", pch=20,ylim=0,type="b",lty=2,col2="red",lwd = 2,lwd2 = 1.5,interest_var,var_label = rain_label,
-                                                plot_line = FALSE, main_title="Plot - Summary per Year")
+                                                plot_line = FALSE,graph_parameter = par(mfrow=c(2,2)),plot_window = TRUE, main_title="Plot - Summary per Year")
 {
   # rain required
   data_list = add_to_data_info_required_variable_list(data_list, list(var_label))
@@ -1202,6 +1202,9 @@ climate$methods(Plot_yearly_sumamry = function (data_list=list(), col1="blue",yl
       ylab = data_obj$getvname(interest_var)
     }
         
+    if (plot_window){
+      par = graph_parameter
+    } 
     curr_data_list = data_obj$get_data_for_analysis(data_list)
     # loop for plotting 
     for( curr_data in curr_data_list ) { 
@@ -1220,7 +1223,7 @@ climate$methods(Plot_yearly_sumamry = function (data_list=list(), col1="blue",yl
       
     }
   } 
-  
+  par(mfrow=c(1,1))
 }
 )
 
@@ -1608,7 +1611,7 @@ climate$methods(seasonal_summary = function(data_list = list(), month_start, num
     
     continue = TRUE
     
-    curr_definition = list(month_start = month_start, number_month = number_month, threshold = threshold)
+    curr_season = list(month_start = month_start, number_month = number_month, threshold = threshold)
     
     if(season_rain_total || !season_rain_days){
       if(col_name %in% names(summary_obj$get_data()) && !replace) {
@@ -1620,8 +1623,8 @@ climate$methods(seasonal_summary = function(data_list = list(), month_start, num
         message(paste("A column named", col_name, "already exists. The column will be replaced 
                     in the data."))
       }
-      if( continue && summary_obj$is_definition(rain_label,seasonal_total_label,curr_definition)) {
-        message("A column with this defintion already exists in the data.
+      if( continue && summary_obj$is_definition(rain_label,seasonal_total_label,curr_season)) {
+        message("A column with this season already exists in the data.
               The column will not be added again.")
         continue = FALSE
       }
@@ -1637,8 +1640,8 @@ climate$methods(seasonal_summary = function(data_list = list(), month_start, num
         message(paste("A column named", col_name2, "already exists. The column will be replaced
                     in the data."))
       }
-      if( continue && summary_obj$is_definition(rain_label,seasonal_raindays_label,curr_definition)) {
-        message("A column with this defintion already exists in the data.
+      if( continue && summary_obj$is_definition(rain_label,seasonal_raindays_label,curr_season)) {
+        message("A column with this season already exists in the data.
               The column will not be added again.")
         continue = FALSE
       }
@@ -1684,12 +1687,12 @@ climate$methods(seasonal_summary = function(data_list = list(), month_start, num
     }
     if (season_rain_total || !season_rain_days){
       summary_obj$append_column_to_data(month_tot, col_name)
-      label = summary_obj$get_summary_label(rain_label, seasonal_total_label,curr_definition)
+      label = summary_obj$get_summary_label(rain_label, seasonal_total_label,curr_season)
       summary_obj$append_to_variables(label, col_name)      
     }
     if (season_rain_days || !season_rain_total){
       summary_obj$append_column_to_data(raindays, col_name2)
-      label2 = summary_obj$get_summary_label(rain_label, seasonal_raindays_label,curr_definition)
+      label2 = summary_obj$get_summary_label(rain_label, seasonal_raindays_label,curr_season)
       summary_obj$append_to_variables(label2,col_name2)      
     }
     }
