@@ -1027,9 +1027,7 @@ climate$methods(cumulative_exceedance_graphs = function(data_list=list(),interes
           #Values for exceedance graph using the proportions    
           exceedance_prop[[i]]=1-prop_col[[i]] 
         }
-      }
-      print(sort_col);print(cum_perc_col)
-      
+      }           
       if (plot_window){
         par=gpar
       }       
