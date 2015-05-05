@@ -22,6 +22,7 @@ evaporation_label="evaporation"
 element_factor_label="element_type"
 identifier_label = "identifier"
 capacity_label = "capacity_max"
+day_month_label = "day_month"
 
 total_label="total"
 number_of_label="number_of"
