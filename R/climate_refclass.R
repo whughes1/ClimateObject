@@ -1174,7 +1174,7 @@ climate$methods(yearly_trellis_plot = function(data_list = list(),interest_varia
 
 climate$methods(Plot_yearly_summary = function (data_list=list(), col1="blue",ylab,xlab="Year", pch=20,ylim=0,type="b",lty=2,col2="red",lwd = 2,lwd2 = 1.5,
                                                 interest_var,var_label = rain_label, na.rm=TRUE,plot_line = FALSE,graph_parameter = par(mfrow=c(2,2)),
-                                                plot_window =FALSE, main_title="Plot - Summary per Year",grid=FALSE, ygrid=0,xgrid=length(curr_data[[year_col]]))
+                                                plot_window =FALSE, main_title="Plot - Summary per Year",plot_grid=FALSE, ygrid=0)
 {
   # rain required
   data_list = add_to_data_info_required_variable_list(data_list, list(var_label))
@@ -1212,8 +1212,9 @@ climate$methods(Plot_yearly_summary = function (data_list=list(), col1="blue",yl
                           xlim = c( min(curr_data[[year_col]], na.rm=na.rm), max( curr_data[[year_col]], na.rm=na.rm)),
                           ylab=ylab, main= c( data_name, main_title))
       #abline(h = mean(curr_data[[interset_var_col]]),lty=lty,col=col2) 
-      if(grid){
-        grid(xgrid,ygrid, lwd = lwd)
+      
+      if(plot_grid){              
+        grid(length(curr_data[[year_col]]),ygrid, lwd = lwd)
       }    
       
       if(plot_line) {
