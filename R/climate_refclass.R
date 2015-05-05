@@ -1171,13 +1171,14 @@ climate$methods(yearly_trellis_plot = function(data_list = list(),interest_varia
 )
 
 #=================================================================================
-climate$methods(Plot_yearly_sumamry = function (data_list=list(), col1="blue",ylab,xlab="Year", pch=20,ylim=0,type="b",lty=2,col2="red",lwd = 2,lwd2 = 1.5,interest_var,var_label = rain_label,
-                                                plot_line = FALSE,graph_parameter = par(mfrow=c(2,2)),plot_window = TRUE, main_title="Plot - Summary per Year")
+climate$methods(Plot_yearly_summary = function (data_list=list(), col1="blue",ylab,xlab="Year", pch=20,ylim=0,type="b",lty=2,col2="red",lwd = 2,lwd2 = 1.5,
+                                                interest_var,var_label = rain_label, na.rm=TRUE,plot_line = FALSE,graph_parameter = par(mfrow=c(2,2)),
+                                                plot_window = TRUE, main_title="Plot - Summary per Year",convert=TRUE)
 {
   # rain required
   data_list = add_to_data_info_required_variable_list(data_list, list(var_label))
   # convert data 
-  data_list = c(data_list, convert_data=TRUE)
+  data_list = c(data_list, convert_data=convert)
   # time period
   data_list = add_to_data_info_time_period(data_list, yearly_label)
   
@@ -1206,8 +1207,8 @@ climate$methods(Plot_yearly_sumamry = function (data_list=list(), col1="blue",yl
     curr_data_list = data_obj$get_data_for_analysis(data_list)
     # loop for plotting 
     for( curr_data in curr_data_list ) { 
-      plot_yearly_summary <- plot( curr_data[[year_col]], curr_data[[interset_var_col]],type=type,pch=pch,xlab=xlab, col=col1,ylim= c(ylim, max(curr_data[[interset_var_col]], na.rm=TRUE)),
-                          xlim = c( min(curr_data[[year_col]], na.rm=TRUE), max( curr_data[[year_col]], na.rm=TRUE)),
+      plot_yearly_summary <- plot( curr_data[[year_col]], curr_data[[interset_var_col]],type=type,pch=pch,xlab=xlab, col=col1,ylim= c(ylim, max(curr_data[[interset_var_col]], na.rm=na.rm)),
+                          xlim = c( min(curr_data[[year_col]], na.rm=na.rm), max( curr_data[[year_col]], na.rm=na.rm)),
                           ylab=ylab, main= c( data_name, main_title))
       #abline(h = mean(curr_data[[interset_var_col]]),lty=lty,col=col2) 
       grid(length(curr_data[[year_col]]),0, lwd = lwd)
@@ -1697,6 +1698,3 @@ climate$methods(seasonal_summary = function(data_list = list(), month_start, num
   }
 }
 )
-
-
-
