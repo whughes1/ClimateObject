@@ -1706,6 +1706,7 @@ climate$methods(seasonal_summary = function(data_list = list(), month_start, num
 #=====================================================================================
 #this method Changes the format of date so that the date appear in the format day+month (i.e. "17 Apr" rather than "108")
 #given the day of year,  or year, month, and day or date.
+# it takes a specific date of the year and create a column of the date in the format day-month.
 climate$methods(change_format_day_month_col = function(data_list = list(), col_name = "Day_Month", month_format = "%m", required_format = "%d-%b", option = 1)
   
 {  
@@ -1730,12 +1731,14 @@ climate$methods(change_format_day_month_col = function(data_list = list(), col_n
       data_obj$add_doy_col()
     }
     doy_col = data_obj$getvname(doy_label) 
-        
+    
+    #Check if option is within 1,2 or 3
+    if(option < 1 || option > 3) stop("Please enter values of options whithin the range  1, 2, or 3")  
+    
     curr_data_list = data_obj$get_data_for_analysis(data_list)
     
     for (curr_data in curr_data_list){
-    #Check if option is within 1,2 or 3
-    if(option < 1 || option > 3) stop("Please enter values of options whithin the range  1, 2, or 3")
+    
     #Initialise the vector which will contain the result
     day_month_col <- c()
     
@@ -1745,11 +1748,11 @@ climate$methods(change_format_day_month_col = function(data_list = list(), col_n
       if ( curr_data[[doy_col]][i] == 60 ) {
         day_month_col[ i ] = "29 Feb"
       }
-      if (  curr_data[[doy_col]][i] < 60  ){
+      if ( curr_data[[doy_col]][i] < 60 ){
         day_month_col[i] =  format( strptime( curr_data[[doy_col]][i], format = "%j" ), format = required_format)
       }
       if( curr_data[[doy_col]][i] > 60  ){
-        day_month_col[i] =  format(strptime( curr_data[[doy_col]][i] - 1, format = "%j"), format = required_format)
+        day_month_col[i] =  format( strptime( curr_data[[doy_col]][i] - 1, format = "%j" ), format = required_format)
       }
       
     }
@@ -1757,10 +1760,10 @@ climate$methods(change_format_day_month_col = function(data_list = list(), col_n
     }
     
     if(option == 1){
-      day_month_col = format(strptime(curr_data[[date_col]], format="%Y-%m-%d"), format = required_format)
+      day_month_col = format( strptime(curr_data[[date_col]], format="%Y-%m-%d"), format = required_format)
       
     }else if(option == 2){
-      day_month_col = format(strptime( paste( curr_data[[year_col]], curr_data[[month_col]], curr_data[[day_col]]), format = paste("%Y", month_format, "%d") ), 
+      day_month_col = format( strptime( paste( curr_data[[year_col]], curr_data[[month_col]], curr_data[[day_col]]), format = paste("%Y", month_format, "%d") ), 
                  format = required_format)
     }
 }
