@@ -1237,8 +1237,9 @@ climate$methods(yearly_trellis_plot = function(data_list = list(),interest_varia
 )
 
 #=================================================================================
-climate$methods(Plot_yearly_sumamry = function (data_list=list(), col1="blue",ylab,xlab="Year",na.rm=TRUE, pch=20,ylim=0,type="b",lty=2,col2="red",lwd = 2,lwd2 = 1.5,interest_var,var_label = rain_label,
-                                                plot_line = FALSE, main_title="Plot - Summary per Year")
+climate$methods(plot_yearly_summary = function (data_list=list(), col1="blue",ylab,xlab="Year",na.rm=TRUE, pch=20,ylim=0,type="b",lty=2,col2="red",lwd = 2,lwd2 = 1.5,
+                                                interest_var,var_label = rain_label,plot_line = FALSE,ygrid=0, graph_parameter = par(mfrow=c(2,2)),plot_window = FALSE,
+                                                main_title="Plot - Summary per Year",grid=FALSE)
 {
   # rain required
   data_list = add_to_data_info_required_variable_list(data_list, list(var_label))
@@ -1264,17 +1265,20 @@ climate$methods(Plot_yearly_sumamry = function (data_list=list(), col1="blue",yl
     
     if(missing(ylab)){
       ylab = data_obj$getvname(interest_var)
-    }
-    
+    }    
     curr_data_list = data_obj$get_data_for_analysis(data_list)
+    if (plot_window){   
+      par = graph_parameter 
+    } 
     # loop for plotting 
     for( curr_data in curr_data_list ) { 
       plot_yearly_summary <- plot( curr_data[[year_col]], curr_data[[interset_var_col]],type=type,pch=pch,xlab=xlab, col=col1,ylim= c(ylim, max(curr_data[[interset_var_col]], na.rm=na.rm)),
                                    xlim = c( min(curr_data[[year_col]], na.rm=na.rm), max( curr_data[[year_col]], na.rm=na.rm)),
                                    ylab=ylab, main= c( data_name, main_title))
       #abline(h = mean(curr_data[[interset_var_col]]),lty=lty,col=col2) 
-      grid(length(curr_data[[year_col]]),0, lwd = lwd)
-      
+      if (grid){
+        grid(length(curr_data[[year_col]]),ygrid, lwd = lwd)
+      }      
       
       if(plot_line) {
         reg=lm(curr_data[[interset_var_col]] ~ curr_data[[year_col]])
@@ -1283,8 +1287,8 @@ climate$methods(Plot_yearly_sumamry = function (data_list=list(), col1="blue",yl
       }
       
     }
-  } 
-  
+  }
+  par(mfrow=c(1,1))
 }
 )
 
