@@ -1842,13 +1842,12 @@ climate$methods(seasonal_summary = function(data_list = list(), month_start, num
 }
 )
 
-<<<<<<< HEAD
+
 #=====================================================================================
 #this method Changes the format of date so that the date appear in the format day+month (i.e. "17 Apr" rather than "108")
 #given the day of year,  or year, month, and day or date.
 # it takes a specific date of the year and create a column of the date in the format day-month.
 climate$methods(change_format_day_month_col = function(data_list = list(), col_name = "Day_Month", month_format = "%m", required_format = "%d-%b", option = 1)
-=======
 
 #=============================================================================
 # WIND ROSE
@@ -1876,7 +1875,7 @@ climate$methods(get.windrose = function(data_list = list(), WR.type="single",
   data_list=add_to_data_info_required_variable_list(data_list, list(wind_speed_label,wind_direction_label))
   #  date time period is "daily" todo check it works for all time periods
   data_list=add_to_data_info_time_period(data_list, daily_label)
->>>>>>> fb03aefdc4367d3d5cf5418528fcb2515d2610bf
+
   
   climate_data_objs = get_climate_data_objects(data_list)
   
@@ -1892,7 +1891,7 @@ climate$methods(get.windrose = function(data_list = list(), WR.type="single",
     year_col = data_obj$getvname(year_label)
     month_col = data_obj$getvname(month_label)
     day_col = data_obj$getvname(day_label)
-<<<<<<< HEAD
+
     # must add doy column to the data if not present
     if ( !(data_obj$is_present(doy_label))) {
       data_obj$add_doy_col()
@@ -1908,11 +1907,11 @@ climate$methods(get.windrose = function(data_list = list(), WR.type="single",
     
     #Initialise the vector which will contain the result
     day_month_col <- c()
-=======
+
     season_col = data_obj$getvname(season_label)
     month_start = 1
     monEnd = 12
->>>>>>> fb03aefdc4367d3d5cf5418528fcb2515d2610bf
+
     
     # ****Get the data frames for analysis
     curr_data_list = data_obj$get_data_for_analysis(data_list)
@@ -1921,7 +1920,7 @@ climate$methods(get.windrose = function(data_list = list(), WR.type="single",
       selRows <- curr_data[[month_col]]>=month_start & curr_data[[month_col]] <=monEnd & curr_data[[wind_speed_col]] > curr_threshold 
       ndays <- tapply(selRows, curr_data[[season_col]], sum, na.rm=na.rm)
       
-<<<<<<< HEAD
+
     for ( i in 1 : length( curr_data[[doy_col]] ) ) {
       if ( curr_data[[doy_col]][i] == 60 ) {
         day_month_col[ i ] = "29 Feb"
@@ -1931,7 +1930,7 @@ climate$methods(get.windrose = function(data_list = list(), WR.type="single",
       }
       if( curr_data[[doy_col]][i] > 60  ){
         day_month_col[i] =  format( strptime( curr_data[[doy_col]][i] - 1, format = "%j" ), format = required_format)
-=======
+
       #############################################################
       # Dataframe with the required information
       df <- data.frame(ws=curr_data[[wind_speed_col]],
@@ -1943,7 +1942,7 @@ climate$methods(get.windrose = function(data_list = list(), WR.type="single",
       
       if(WR.type=="single"){
         WR.type = "default"
->>>>>>> fb03aefdc4367d3d5cf5418528fcb2515d2610bf
+
       }
       first.date <- format(strptime(as.character(df[1,3]),"%Y-%m-%d"),"%Y%m%d")
       last.date <- format(strptime(as.character(df[length(df[,1]),3]),"%Y-%m-%d"),"%Y%m%d")
@@ -2201,7 +2200,7 @@ climate$methods(get.timeseries = function(data_list = list()){
         setwd(mainDir)
       }
     }
-<<<<<<< HEAD
+
     
     if(option == 1){
       day_month_col = format( strptime(curr_data[[date_col]], format="%Y-%m-%d"), format = required_format)
@@ -2209,7 +2208,7 @@ climate$methods(get.timeseries = function(data_list = list()){
     }else if(option == 2){
       day_month_col = format( strptime( paste( curr_data[[year_col]], curr_data[[month_col]], curr_data[[day_col]]), format = paste("%Y", month_format, "%d") ), 
                  format = required_format)
-=======
+
   }
 })
 
@@ -2395,9 +2394,60 @@ climate$methods(get.histogram = function(data_list = list()){
               line=0)
         setwd(mainDir)
       }
->>>>>>> fb03aefdc4367d3d5cf5418528fcb2515d2610bf
+
     }
   }
 })
 
-
+#=======================================================================================
+climate$methods( missing_data_table=function( data_list=list(), interest_var=rain_label,data_period_label=daily_label ){ 
+  #--------------------------------------------------------------------------------------------#
+  # This function returns a data frame with two columns, the first one containing some years and the second
+  #      one the number of missing rain obsevations per year. 
+  #-------------------------------------------------------------------------------------------#
+  
+  # rain variable is required for this method
+  data_list = add_to_data_info_required_variable_list( data_list, list(interest_var) )
+  
+  # daily data is required for this method
+  data_list=add_to_data_info_time_period( data_list, data_period_label)
+  
+  # use data_list to get the required data objects
+  climate_data_objs = get_climate_data_objects( data_list )
+  
+  # Initialise output
+  out = list()
+  j = 1
+  
+  for( data_obj in climate_data_objects ){
+    #If no column of years present
+    if( !(data_obj$is_present(year_label) ) ) {
+      data_obj$add_year_month_day_cols()
+    }
+    
+    year_col = data_obj$getvname(year_label)
+    interest_col = data_obj$getvname(interest_var)
+    
+    # Access data in methods
+    curr_data_list = data_obj$get_data_for_analysis(data_list)
+    
+    for( curr_data in curr_data_list ) {
+      # Add a column of rain to the data with a specific: "Rain" name for ddply use
+      curr_data = cbind(curr_data, new_rain=curr_data[[interest_col]])
+      
+      cm<-ddply( curr_data, c(Year = year_col), summarize, C = sum(is.na(new_rain)))
+      
+      cm1<-cm[cm$C>0,]
+      names(cm1)<-c("Year","Nos of Missing Days")
+      cm1<-as.list(cm1)
+      cm1<-as.data.frame(cm1)
+      curr_data$new_rain=NULL
+    }
+    out[[j]] = cm1
+    # Give the name of each data to each element in the list out
+    names(out)[[j]] = data_obj$get_meta( data_name_label )
+    j = j+1
+  }
+  return( out )
+}
+)
