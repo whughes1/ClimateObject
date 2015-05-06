@@ -1842,6 +1842,13 @@ climate$methods(seasonal_summary = function(data_list = list(), month_start, num
 }
 )
 
+<<<<<<< HEAD
+#=====================================================================================
+#this method Changes the format of date so that the date appear in the format day+month (i.e. "17 Apr" rather than "108")
+#given the day of year,  or year, month, and day or date.
+# it takes a specific date of the year and create a column of the date in the format day-month.
+climate$methods(change_format_day_month_col = function(data_list = list(), col_name = "Day_Month", month_format = "%m", required_format = "%d-%b", option = 1)
+=======
 
 #=============================================================================
 # WIND ROSE
@@ -1869,6 +1876,7 @@ climate$methods(get.windrose = function(data_list = list(), WR.type="single",
   data_list=add_to_data_info_required_variable_list(data_list, list(wind_speed_label,wind_direction_label))
   #  date time period is "daily" todo check it works for all time periods
   data_list=add_to_data_info_time_period(data_list, daily_label)
+>>>>>>> fb03aefdc4367d3d5cf5418528fcb2515d2610bf
   
   climate_data_objs = get_climate_data_objects(data_list)
   
@@ -1884,9 +1892,27 @@ climate$methods(get.windrose = function(data_list = list(), WR.type="single",
     year_col = data_obj$getvname(year_label)
     month_col = data_obj$getvname(month_label)
     day_col = data_obj$getvname(day_label)
+<<<<<<< HEAD
+    # must add doy column to the data if not present
+    if ( !(data_obj$is_present(doy_label))) {
+      data_obj$add_doy_col()
+    }
+    doy_col = data_obj$getvname(doy_label) 
+    
+    #Check if option is within 1,2 or 3
+    if(option < 1 || option > 3) stop("Please enter values of options whithin the range  1, 2, or 3")  
+    
+    curr_data_list = data_obj$get_data_for_analysis(data_list)
+    
+    for (curr_data in curr_data_list){
+    
+    #Initialise the vector which will contain the result
+    day_month_col <- c()
+=======
     season_col = data_obj$getvname(season_label)
     month_start = 1
     monEnd = 12
+>>>>>>> fb03aefdc4367d3d5cf5418528fcb2515d2610bf
     
     # ****Get the data frames for analysis
     curr_data_list = data_obj$get_data_for_analysis(data_list)
@@ -1895,6 +1921,17 @@ climate$methods(get.windrose = function(data_list = list(), WR.type="single",
       selRows <- curr_data[[month_col]]>=month_start & curr_data[[month_col]] <=monEnd & curr_data[[wind_speed_col]] > curr_threshold 
       ndays <- tapply(selRows, curr_data[[season_col]], sum, na.rm=na.rm)
       
+<<<<<<< HEAD
+    for ( i in 1 : length( curr_data[[doy_col]] ) ) {
+      if ( curr_data[[doy_col]][i] == 60 ) {
+        day_month_col[ i ] = "29 Feb"
+      }
+      if ( curr_data[[doy_col]][i] < 60 ){
+        day_month_col[i] =  format( strptime( curr_data[[doy_col]][i], format = "%j" ), format = required_format)
+      }
+      if( curr_data[[doy_col]][i] > 60  ){
+        day_month_col[i] =  format( strptime( curr_data[[doy_col]][i] - 1, format = "%j" ), format = required_format)
+=======
       #############################################################
       # Dataframe with the required information
       df <- data.frame(ws=curr_data[[wind_speed_col]],
@@ -1906,6 +1943,7 @@ climate$methods(get.windrose = function(data_list = list(), WR.type="single",
       
       if(WR.type=="single"){
         WR.type = "default"
+>>>>>>> fb03aefdc4367d3d5cf5418528fcb2515d2610bf
       }
       first.date <- format(strptime(as.character(df[1,3]),"%Y-%m-%d"),"%Y%m%d")
       last.date <- format(strptime(as.character(df[length(df[,1]),3]),"%Y-%m-%d"),"%Y%m%d")
@@ -1935,3 +1973,431 @@ climate$methods(get.windrose = function(data_list = list(), WR.type="single",
     }
   }
 })
+
+
+
+##############################################################################
+# TIMESERIES
+#' @title Get timeseries from the Climsoft data
+#' 
+#' @author Rafael Posada 2015 (SASSCAL/DWD)
+#' 
+#' @description 
+#' Allows plotting the data in a timeseries plot.
+#'  
+#' @return
+#' It returns a timeseries plot.
+#' 
+climate$methods(get.timeseries = function(data_list = list()){
+  
+  # Find out which variable to plot
+  var_labels <- colnames(climate_data_objects[[1]]$data)
+  variables <- climate_data_objects[[1]]$variables
+  var_labels2 <- as.data.frame(variables[variables %in% var_labels])
+  id <- which(colnames(var_labels2) != "station" & 
+                colnames(var_labels2) != "date" & 
+                colnames(var_labels2) != "element_type" &
+                colnames(var_labels2) != "date_asstring")
+  
+  var_label <- as.character(as.matrix(var_labels2[id]))
+  # Data required
+  data_list=add_to_data_info_required_variable_list(data_list, as.list(var_label))
+  # date time period is "daily" todo check it works for all time periods
+  data_list=add_to_data_info_time_period(data_list, daily_label)
+  
+  climate_data_objs = get_climate_data_objects(data_list)
+  print(climate_data_objs)
+  for(data_obj in climate_data_objs) {
+    data_name = data_obj$get_meta(data_name_label)    
+    # curr_threshold = data_obj$get_meta(wind_threshold_label,wind_threshold)
+    for (i in var_label){
+      var_col = data_obj$getvname(i)      
+      
+      station_id_col = data_obj$getvname(station_label)      
+      print(station_id_col)
+      # Create new columns
+      year_col = data_obj$getvname(year_label)
+      month_col = data_obj$getvname(month_label)
+      day_col = data_obj$getvname(day_label)
+      season_col = data_obj$getvname(season_label)
+      month_start = 1
+      monEnd = 12
+      
+      # ****Get the data frames for analysis
+      curr_data_list = data_obj$get_data_for_analysis(data_list)
+      # loop for computing 
+      for( curr_data in curr_data_list ) {
+        
+        first.date <- curr_data[[date_label]][1]
+        print(first.date)
+        last.date <- curr_data[[date_label]][nrow(curr_data)]
+        
+        print(last.date)
+        #######################################################
+        
+        #define graphic working directory
+        mainDir<-getwd()
+        
+        tperiod <- paste(first.date,"-",last.date, sep="")
+        station_id <- unique(curr_data[[station_id_col]])
+        
+        y <- curr_data[[var_col]]
+        x <- curr_data[[date_label]]
+        
+        y2 <- y
+        x2 <- as.POSIXct(strptime(x,format="%Y-%m-%d"),
+                         format="%Y-%m-%d %H:%M:%S",tz="UTC")
+        data2 <- data.frame(x2,y2)
+        
+        full <- seq.POSIXt(x2[1],x2[length(x2)],by="day")
+        all.dates.frame <- data.frame(list(x2=full))
+        
+        merged.data <- merge(all.dates.frame,data2,all=T)
+        
+        #####################################################
+        # GET THE MAX & MIN LIMITS
+        n.std <- 4
+        std.dev <- sd(y,na.rm=TRUE)
+        mean <- mean(y,na.rm=TRUE)
+        yaxis.max <- round(mean+(n.std*std.dev),digits=2)
+        yaxis.min <- round(mean-(n.std*std.dev),digits=2)
+        if (yaxis.min<0 & grepl("temp",var_col)==FALSE){
+          yaxis.min=0
+        }
+        
+        #####################################################
+        # TITLES AND LABELS
+        # title
+        tit<- paste("Station id: ",station_id," - ",
+                    var_col)
+        # subtitle
+        subtit <- paste(first.date,"-",last.date)
+        # x and y labels
+        xlabel <- paste("Time")
+        ylabel <- var_col
+        
+        
+        #######################################################
+        # LEGEND
+        # Total number of cases for the given time inverval
+        tt.total <- paste("Total Cases: ",nrow(merged.data))
+        # Number of cases above the maximum limit
+        above.max <- which(merged.data$y2>yaxis.max)
+        above.percent <- round((length(above.max)/nrow(merged.data))*100,2)
+        tt.above <- paste("Cases > ",
+                          yaxis.max,": ",
+                          length(above.max),
+                          " (",above.percent,"%)",     
+                          sep="")
+        
+        # Number of cases below the minimum limit
+        below.min <- which(merged.data$y2<yaxis.min)
+        below.percent <- round((length(below.min)/nrow(merged.data))*100,2)
+        tt.below <- paste("Cases < ",
+                          yaxis.min,": ",
+                          length(below.min),
+                          " (",below.percent,"%)",
+                          sep="")
+        
+        # Number of NA cases 
+        na.cases <- which(is.na(merged.data$y2))
+        na.percent <- round((length(na.cases)/nrow(merged.data))*100,2)
+        tt.na <- paste("'NA'-Cases: ",
+                       length(na.cases)," (",na.percent,"%)",sep="")
+        
+        # Check if the element is precipitation or not
+        if (var_col=="rain"){
+          plot.type <- "h"
+          plot.color <- "blue"
+        }else{
+          plot.type <- "o"
+          plot.color <- "red"
+        }
+        
+        ######################################################################
+        # Plot
+        Sys.sleep(0.1) # this is to avoid an error that pops up when trying 
+                       # to plot two plots at a time (something to do with
+                       # rversion in grDevices)
+        
+        plot(merged.data$x2,merged.data$y2,type=plot.type,col=plot.color,
+             #main=paste(tit,"\n",subtit),
+             cex.main=.8,
+             xlab=xlabel,
+             ylim=c(min(merged.data$y2),max(merged.data$y2)),
+             ylab=ylabel,
+             cex.lab=.8,
+             cex.axis=.8,
+             xaxt='n',# to remove the numbering on x-axis
+             yaxt="n")
+        
+        # Title
+        title(main=paste(tit," (",subtit,")"),cex.main=0.8,line =3)
+        # Change the xticks according to the date
+        x3 <- merged.data$x2
+        y3 <- merged.data$y2
+        seq.begin <- as.POSIXct(x3[1],tz ='UTC')
+        print(seq.begin)
+        seq.end <- x3[length(x3)]
+        
+        date.length <- as.numeric(round((seq.end-seq.begin)/365,0))
+        if (date.length>50){
+          seq.tick.int <- "year"
+        }
+        if (date.length>25 & date.length<=50){
+          seq.tick.int <- "6 month"
+        }
+        if (date.length>10 & date.length<=25){
+          seq.tick.int <- "3 month"
+        }
+        
+        if (date.length>1 & date.length<=10){
+          seq.tick.int <- "month"
+        }
+        
+        if (date.length>0 & date.length<=1){
+          seq.tick.int <- "day"
+        }
+        
+        if (date.length==0){
+          seq.tick.int <- "hour"
+        }
+        
+        # X ticks
+        ticks <- seq.POSIXt(from = seq.begin,to = seq.end,
+                            by=seq.tick.int) 
+        xticks <- pretty(ticks,n=15)
+        
+        axis(1,xticks,tck=-.01,lwd=.2,#las=2,
+             labels = xticks,
+             cex.axis=.8,
+             mgp=c(0,0.15,0)
+        )
+        abline(v=xticks,lty=3,lwd=.4)
+        
+        # Y Ticks
+        yaxis.min <- min(y3,na.rm=TRUE)
+        yaxis.max <- max(y3,na.rm=TRUE)
+        print(yaxis.min)
+        print(yaxis.max)
+        yticks <- pretty(c(yaxis.min,yaxis.max),n=15)
+        axis(2,yticks,
+             labels = yticks,tck=-.01,lwd=.2,# lwd=.2,
+             cex.axis=.8,
+             mgp=c(0,0.15,0)
+        )
+        abline(h=yticks,lty=3,lwd=.4)
+        
+        ###########################################################
+        # WRITE THE LEGEND
+        #Write down the legend 
+        mtext(paste(tt.total,"\n",
+                    tt.above,"\n",
+                    tt.below,"\n",
+                    tt.na),
+              cex=.6*par("cex"),
+              side=3,
+              line=0)
+        setwd(mainDir)
+      }
+    }
+<<<<<<< HEAD
+    
+    if(option == 1){
+      day_month_col = format( strptime(curr_data[[date_col]], format="%Y-%m-%d"), format = required_format)
+      
+    }else if(option == 2){
+      day_month_col = format( strptime( paste( curr_data[[year_col]], curr_data[[month_col]], curr_data[[day_col]]), format = paste("%Y", month_format, "%d") ), 
+                 format = required_format)
+=======
+  }
+})
+
+
+##############################################################################
+# HISTOGRAM
+#' @title Get histogram from a dataframe
+#' 
+#' @author Rafael Posada 2015 (SASSCAL/DWD)
+#' 
+#' @description 
+#' Allows plotting the data in a histogram plot.
+#'  
+#' @return
+#' It returns a histogram plot.
+#' 
+climate$methods(get.histogram = function(data_list = list()){
+  
+  # Find out which variable to plot
+  var_labels <- colnames(climate_data_objects[[1]]$data)
+  variables <- climate_data_objects[[1]]$variables
+  var_labels2 <- as.data.frame(variables[variables %in% var_labels])
+  id <- which(colnames(var_labels2) != "station" & 
+                colnames(var_labels2) != "date" & 
+                colnames(var_labels2) != "element_type" &
+                colnames(var_labels2) != "date_asstring")
+  
+  var_label <- as.character(as.matrix(var_labels2[id]))
+  # Data required
+  data_list=add_to_data_info_required_variable_list(data_list, as.list(var_label))
+  # date time period is "daily" todo check it works for all time periods
+  data_list=add_to_data_info_time_period(data_list, daily_label)
+  
+  climate_data_objs = get_climate_data_objects(data_list)
+  print(climate_data_objs)
+  for(data_obj in climate_data_objs) {
+    data_name = data_obj$get_meta(data_name_label)    
+    # curr_threshold = data_obj$get_meta(wind_threshold_label,wind_threshold)
+    for (i in var_label){
+      var_col = data_obj$getvname(i)      
+      
+      station_id_col = data_obj$getvname(station_label)      
+      print(station_id_col)
+      # Create new columns
+      year_col = data_obj$getvname(year_label)
+      month_col = data_obj$getvname(month_label)
+      day_col = data_obj$getvname(day_label)
+      season_col = data_obj$getvname(season_label)
+      month_start = 1
+      monEnd = 12
+      
+      # ****Get the data frames for analysis
+      curr_data_list = data_obj$get_data_for_analysis(data_list)
+      # loop for computing 
+      for( curr_data in curr_data_list ) {
+        first.date <- curr_data[[date_label]][1]
+        print(first.date)
+        last.date <- curr_data[[date_label]][nrow(curr_data)]
+        
+        print(last.date)
+        #######################################################
+        
+        #define graphic working directory
+        mainDir<-getwd()
+        
+        tperiod <- paste(first.date,"-",last.date, sep="")
+        station_id <- unique(curr_data[[station_id_col]])
+        
+        x <- curr_data[[var_col]]
+        y <- curr_data[[date_label]]
+        
+        x2 <- x
+        y2 <- as.POSIXct(strptime(y,format="%Y-%m-%d"),
+                         format="%Y-%m-%d %H:%M:%S",tz="UTC")
+        data2 <- data.frame(y2,x2)
+        
+        full <- seq.POSIXt(y2[1],y2[length(y2)],by="day")
+        all.dates.frame <- data.frame(list(y2=full))
+        
+        merged.data <- merge(all.dates.frame,data2,all=T)
+        
+        #####################################################
+        # GET THE MAX & MIN LIMITS
+        n.std <- 4
+        std.dev <- sd(x,na.rm=TRUE)
+        mean <- mean(x,na.rm=TRUE)
+        xaxis.max <- round(mean+(n.std*std.dev),digits=2)
+        xaxis.min <- round(mean-(n.std*std.dev),digits=2)
+        if (xaxis.min<0 & grepl("temp",var_col)==FALSE){
+          xaxis.min=0
+        }
+        
+        ####################################################
+        # SEQUENCE OF THE HISTOGRAM
+        # maximum value for the sequence
+        seq.max <- max(x)
+        # minimum value for the sequence
+        seq.min <- min(x)
+        # sequence
+        seq.interval <- round((abs(seq.max)-abs(seq.min))/100,digits=0)
+        if (seq.interval==0){
+          seq.interval <- round((abs(seq.max)-abs(seq.min))/100,digits=1)
+          if (seq.interval==0){
+            seq.interval <- round((abs(seq.max)-abs(seq.min))/100,digits=2)
+          }
+        }
+        sequence <- seq(from=seq.min,to=seq.max,by=seq.interval)
+        
+        #####################################################
+        # TITLES AND LABELS
+        # title
+        tit<- paste("Station id: ",station_id," - ",
+                    var_col)
+        # subtitle
+        subtit <- paste(first.date,"-",last.date)
+        # x and y labels
+        xlabel <- paste("Intervals [from ",seq.min," to ",
+                        seq.max,"; by ",seq.interval,"]",sep="")
+        ylabel <- "Number of cases"
+        
+        #######################################################
+        # LEGEND
+        # Total number of cases for the given time inverval
+        tt.total <- paste("Total Cases: ",nrow(merged.data))
+        # Number of cases above the maximum limit
+        above.max <- which(merged.data$x2>xaxis.max)
+        above.percent <- round((length(above.max)/nrow(merged.data))*100,2)
+        tt.above <- paste("Cases > ",
+                          xaxis.max,": ",
+                          length(above.max),
+                          " (",above.percent,"%)",     
+                          sep="")
+        
+        # Number of cases below the minimum limit
+        below.min <- which(merged.data$x2<xaxis.min)
+        below.percent <- round((length(below.min)/nrow(merged.data))*100,2)
+        tt.below <- paste("Cases < ",
+                          xaxis.min,": ",
+                          length(below.min),
+                          " (",below.percent,"%)",
+                          sep="")
+        
+        # Number of NA cases 
+        na.cases <- which(is.na(merged.data$x2))
+        na.percent <- round((length(na.cases)/nrow(merged.data))*100,2)
+        tt.na <- paste("'NA'-Cases: ",
+                       length(na.cases)," (",na.percent,"%)",sep="")
+        
+        
+        ######################################################################
+        # Plot
+        Sys.sleep(0.1) # this is to avoid an error that pops up when trying 
+        # to plot two plots at a time (something to do with
+        # rversion in grDevices)
+        
+        
+        # Remove the data from "x" that are above the limit in order
+        # to be able to make a histogram. If there are outsiders,
+        # the function "hist" cannot be used
+        id00 <- which(x2<=seq.max & x2>=seq.min)
+        y3 <- merged.data$y2[id00]
+        x3 <- merged.data$x2[id00]
+        
+        # Histogram plot
+        hist(x3,breaks=sequence,xlim=c(seq.min,seq.max),
+                          main="",
+                          xlab=xlabel,
+                          ylab=ylabel,cex.lab=.8,
+                          cex.axis=.8)
+        
+        # Title
+        title(main=paste(tit," (",subtit,")"),cex.main=0.8,line =3)
+        
+        ###########################################################
+        # WRITE THE LEGEND
+        #Write down the legend 
+        mtext(paste(tt.total,"\n",
+                    tt.above,"\n",
+                    tt.below,"\n",
+                    tt.na),
+              cex=.6*par("cex"),
+              side=3,
+              line=0)
+        setwd(mainDir)
+      }
+>>>>>>> fb03aefdc4367d3d5cf5418528fcb2515d2610bf
+    }
+  }
+})
+
+
