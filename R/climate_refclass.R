@@ -1,3 +1,4 @@
+#'@title balance A length-one numeric vector
 # Defining the reference class "climate"
 # This reference class can contain multiple climate_data objects
 # The fields are the properties every climate_data object will have.
@@ -6,10 +7,9 @@
 # used_data_tables     : A list of extra climate_data objects, created during use
 # meta_data            : Any information about the climate object. e.g. "name"
 
-
 climate <- setRefClass("climate", 
-                            fields = list(climate_data_objects = "list", used_data_objects = "list", 
-                                          meta_data = "list")
+                       fields = list(climate_data_objects = "list", used_data_objects = "list", 
+                                     meta_data = "list")
 )
 
 # INITIALIZE method
@@ -36,7 +36,7 @@ climate$methods(initialize = function(data_tables = list(), climate_obj_meta_dat
                                       imported_from = as.list(rep("",length(data_tables))),
                                       messages=TRUE, date_format = "%d/%m/%Y") 
 {
-
+  
   meta_data <<- climate_obj_meta_data
   used_data_objects <<- list()
   
@@ -46,7 +46,7 @@ climate$methods(initialize = function(data_tables = list(), climate_obj_meta_dat
   
   else {
     .self$import_data(data_tables,data_tables_meta_data, data_tables_variables,
-                                               imported_from, messages = messages, date_format = date_format)
+                      imported_from, messages = messages, date_format = date_format)
   }
   
 }
@@ -59,7 +59,7 @@ climate$methods(import_data = function(data_tables = list(), data_tables_meta_da
                                        data_tables_variables = rep(list(list()),length(data_tables)), 
                                        imported_from = as.list(rep("",length(data_tables))), messages=TRUE, date_format = "%d/%m/%Y")
 {
-
+  
   if (missing(data_tables) || length(data_tables) == 0) {
     stop("No data found. No climate_data objects can be created.")
   }
@@ -122,13 +122,13 @@ climate$methods(import_data = function(data_tables = list(), data_tables_meta_da
 climate$methods(get_climate_data_objects = function(data_info= list()) {
   
   climate_data_list = list()
-
+  
   if(time_period_label %in% names(data_info) ) {
     time_period=data_info[[time_period_label]]
   }
   else stop("Specify the time period the data needs to be in")
   #TO DO check that this is correct in all contexts might it be sensible to do analysis over multiple time periods?
-
+  
   for (temp in climate_data_objects) {
     if (required_variable_list_label %in% names(data_info)){
       if (!temp$is_present(data_info[[required_variable_list_label]])){
@@ -154,7 +154,7 @@ climate$methods(get_climate_data_objects = function(data_info= list()) {
               break
             }
           }
-
+          
           if(!summary_created) {
             temp_summarized <- temp$summarize_data(time_period, start_point = length(used_data_objects)+1)
             name = temp_summarized$meta_data[[data_name_label]]
@@ -166,7 +166,7 @@ climate$methods(get_climate_data_objects = function(data_info= list()) {
     }
     #TO DO think hard whether we should restrict based on stations or not my inclination is not at the data object level.
   }
-
+  
   if (merge_data_label %in% names(data_info)){
     if (data_info[[merge_data_label]]){
       if (length(climate_data_list)>1){
@@ -177,7 +177,7 @@ climate$methods(get_climate_data_objects = function(data_info= list()) {
       }
     }
   }
-
+  
   return(climate_data_list)
   
 }
@@ -266,7 +266,7 @@ climate$methods(append_climate_data_objects = function(name, obj) {
   if ( !class(obj) == "climate_data") {
     stop("obj must be a climate_data object")
   }
-
+  
   climate_data_objects[[name]] <<- obj
 }
 )
@@ -295,16 +295,16 @@ climate$methods(append_used_data_objects = function(name, obj) {
 
 
 
-  #------------------------------------------------------------------------
-  # This function plots the missing values for the rainfall amount, per year
-  # It is here to demonstrate how an output method 
-  #
-  # It has the following optional arguments:
-  # data_list: Specify the subset of the data to use. 
-  # threshold: threshold which determines if a day is dry if the rainfall amount is below it. This overrides the threshold stored in the metadata if provided.
-  # fill_col: A list of colours to use the first is for rain days the second for dry and the third for missing, missing dates are blank
-  # 
-  # ----------------------------------------------------------------------------
+#------------------------------------------------------------------------
+# This function plots the missing values for the rainfall amount, per year
+# It is here to demonstrate how an output method 
+#
+# It has the following optional arguments:
+# data_list: Specify the subset of the data to use. 
+# threshold: threshold which determines if a day is dry if the rainfall amount is below it. This overrides the threshold stored in the metadata if provided.
+# fill_col: A list of colours to use the first is for rain days the second for dry and the third for missing, missing dates are blank
+# 
+# ----------------------------------------------------------------------------
 
 climate$methods(plot_missing_values_rain = function(data_list=list(), threshold = 0.85, fill_col=c("blue","yellow","red"))
 {    
@@ -387,7 +387,7 @@ climate$methods(merge_vertical = function(climate_data_objs = climate_data_objec
                                           identifier = "Identifier", merge_name = "", 
                                           start_point = length(used_data_objects)+1) 
 {
-
+  
   # TO DO: should argument be data_list instead of climate_data_objs?
   #        do we allow to merge subsets of the data or only whole data objects?
   #        what meta data should be stored in the merged data object so it can be
@@ -411,15 +411,15 @@ climate$methods(merge_vertical = function(climate_data_objs = climate_data_objec
   
   for(used_obj in used_data_objects) {
     if(merge_time_period == used_obj$data_time_period && used_obj$is_meta_data(merged_from_label)
-      && length(used_obj$meta_data[[merged_from_label]]) == length(names(climate_data_objs))
-      && length(union(used_obj$meta_data[[merged_from_label]], names(climate_data_objs))) == length(names(climate_data_objs)) ) {
-        return(used_obj)
+       && length(used_obj$meta_data[[merged_from_label]]) == length(names(climate_data_objs))
+       && length(union(used_obj$meta_data[[merged_from_label]], names(climate_data_objs))) == length(names(climate_data_objs)) ) {
+      return(used_obj)
     }
   }
   
   # identified_variables : data frame showing which recognised variables are in each data set
   identified_variables = data.frame(data_object=names(climate_data_objs))
-
+  
   # vars : the list of variables found in the variables list for data objects
   #       some of these variables may not actually be in the data set
   vars = list()
@@ -432,9 +432,9 @@ climate$methods(merge_vertical = function(climate_data_objs = climate_data_objec
   # used_vars : the subset of vars containing only the variables that appear in at least 
   #             one of the data sets
   used_vars = list()
-
+  
   for(curr_var in vars) {
-
+    
     new_col = c()
     
     # new_col : logical vector showing which data sets contain curr_var
@@ -453,7 +453,7 @@ climate$methods(merge_vertical = function(climate_data_objs = climate_data_objec
   print(used_vars)
   
   #######################################################################
-
+  
   i = 1
   data_to_merge = list()
   for(data_obj in climate_data_objs) {
@@ -478,39 +478,39 @@ climate$methods(merge_vertical = function(climate_data_objs = climate_data_objec
           old_col_name = data_obj$getvname(var_name)
           names(curr_data)[names(curr_data) == old_col_name] <- var_name
         }
-    
+        
         # If the variable is not present, but can be generated from other columns
         # create that column. e.g. year can be created from date column
-          
+        
         else if( var_name == year_label ) {
           curr_data[[var_name]] <- year(curr_data[[date_label]]) 
         }
-    
+        
         else if( var_name == month_label ) {
           curr_data[[var_name]] <- month(curr_data[[date_label]]) 
         }
-    
+        
         else if( var_name == day_label ) {
           curr_data[[var_name]] <- month(curr_data[[date_label]]) 
         }
-          
+        
       }
-    data_to_merge[[length(data_to_merge)+1]] <- curr_data
+      data_to_merge[[length(data_to_merge)+1]] <- curr_data
     }
     i = i + 1
   }
   merge = rbind.fill(data_to_merge)
-
+  
   merged_obj = climate_data$new(data = merge, data_name = merge_name, start_point = start_point,
-                                  data_time_period = merge_time_period)
-    
+                                data_time_period = merge_time_period)
+  
   merged_obj$append_to_meta_data(merged_from_label, names(climate_data_objs))
-    
+  
   .self$append_used_data_objects(merged_obj$meta_data[[data_name_label]],merged_obj)
   
   # return the merged object
-    used_data_objects[[ merged_obj$get_meta(data_name_label) ]]
-
+  used_data_objects[[ merged_obj$get_meta(data_name_label) ]]
+  
 }
 )
 
@@ -540,12 +540,12 @@ climate$methods(get_summary_name = function(time_period, data_obj)
       name = summarized_obj$meta_data[[data_name_label]]
       .self$append_used_data_objects(name, summarized_obj)
     }
-#    return(summarized_obj$meta_data[[data_name_label]])
+    #    return(summarized_obj$meta_data[[data_name_label]])
     return(summarized_obj)
   }
   
   else stop("Cannot create a summary for these time periods.")
-    
+  
 }
 )
 
@@ -580,7 +580,7 @@ climate$methods(append_to_summary = function(time_period, data_obj, col_data, co
       name = summarized_obj$meta_data[[data_name_label]]
       .self$append_used_data_objects(name, summarized_obj)
     }
-
+    
     if( !missing(label) && summarized_obj$is_present(label) ) {
       if(replace) {
         col_name = summarized_obj$getvname(label)
@@ -597,14 +597,14 @@ climate$methods(append_to_summary = function(time_period, data_obj, col_data, co
     }
   }
   else stop(paste0(data_name, " cannot be summarized to ",time_period,"."))
-
+  
   
 }
 )
 
 climate$methods(add_end_rain = function(data_list=list(), earliest_day = 228, water_balance_col_name = "Water Balance", 
-                                               col_name = "End of the rains", capacity_max = 100, evaporation = 5,
-                                               replace=FALSE) {
+                                        col_name = "End of the rains", capacity_max = 100, evaporation = 5,
+                                        replace=FALSE) {
   
   
   # We don't restrict the years when calculating end of rain. We calculate for the
@@ -617,7 +617,7 @@ climate$methods(add_end_rain = function(data_list=list(), earliest_day = 228, wa
   
   
   for(data_obj in climate_data_objs) {
-
+    
     end_rain = list()
     
     summary_obj <- get_summary_name(yearly_label, data_obj)
@@ -654,12 +654,12 @@ climate$methods(add_end_rain = function(data_list=list(), earliest_day = 228, wa
       # Complete dates needed for calculations
       data_obj$missing_dates_check()
       
-
+      
       #if doy or year/dos season is not in the data frame, create it.
       if( !( data_obj$is_present(dos_label) && data_obj$is_present(season_label) ) ) {
         data_obj$add_doy_col()
       }
-
+      
       season_col = data_obj$getvname(season_label)
       dos_col = data_obj$getvname(dos_label)
       
@@ -688,7 +688,7 @@ climate$methods(add_end_rain = function(data_list=list(), earliest_day = 228, wa
         for (single_season in  seasons_split)  {
           
           single_season <- single_season[single_season[[dos_col]] >= earliest_day,c(dos_col,waterbalance_col, season_col)]
-
+          
           # default value if end of season not found
           end_rain[i] = NA
           
@@ -721,8 +721,8 @@ climate$methods(add_end_rain = function(data_list=list(), earliest_day = 228, wa
 
 
 climate$methods(add_start_rain = function(data_list=list(), earliest_day=92, total_days=2, rain_total=20, dry_length=30,
-                                              dry_days=10, dry_spell_condition=FALSE, threshold = 0.85, col_name = "Start of Rain",
-                                              replace=FALSE) {
+                                          dry_days=10, dry_spell_condition=FALSE, threshold = 0.85, col_name = "Start of Rain",
+                                          replace=FALSE) {
   
   data_list=add_to_data_info_required_variable_list(data_list, list(rain_label))
   data_list=add_to_data_info_time_period(data_list, daily_label)
@@ -731,7 +731,7 @@ climate$methods(add_start_rain = function(data_list=list(), earliest_day=92, tot
   for(data_obj in climate_data_objs) {
     
     summary_obj <- get_summary_name(yearly_label, data_obj)
-
+    
     # use get_meta to determine the correct threshold value to use
     threshold = data_obj$get_meta_new(threshold_label,missing(threshold),threshold)
     
@@ -753,7 +753,7 @@ climate$methods(add_start_rain = function(data_list=list(), earliest_day=92, tot
     curr_definition = list(earliest_day = earliest_day, total_days = total_days, 
                            rain_total = rain_total, dry_spell_condition = dry_spell_condition, 
                            threshold = threshold)
-
+    
     if( continue && summary_obj$is_definition(rain_label,start_of_label,curr_definition)) {
       message("A column with this defintion already exists in the data.
               The column will not be added again.")
@@ -761,7 +761,7 @@ climate$methods(add_start_rain = function(data_list=list(), earliest_day=92, tot
     }
     
     if(continue) {
-    
+      
       #if doy or year/dos is not in the data frame, create it.
       if( !( data_obj$is_present(dos_label) && data_obj$is_present(season_label) ) ) {
         data_obj$add_doy_col()
@@ -952,15 +952,15 @@ climate$methods(display_water_balance = function(data_list = list(), print_table
 )
 
 climate$methods(new_plot = function() {
-
+  
 }
 )
 
 
 climate$methods(cumulative_exceedance_graphs = function(data_list=list(),interest_var,cumulative_graph =TRUE, legend_bty="n",
-                                                 color=rainbow(12),percent=TRUE, main="", xlabel="",ylabel="",line_type="o",
-                                                 convert=TRUE, data_period_label=daily_label, legend_position="center",
-                                                 legend_label=c("plot1","plot2"),station_name=TRUE, plot_window=FALSE,gpar=par(mfrow=c(2,4)))
+                                                        color=rainbow(12),percent=TRUE, main="", xlabel="",ylabel="",line_type="o",
+                                                        convert=TRUE, data_period_label=daily_label, legend_position="center",
+                                                        legend_label=c("plot1","plot2"),station_name=TRUE, plot_window=FALSE,gpar=par(mfrow=c(2,4)))
 {  
   
   if (!is.list(interest_var)){
@@ -973,11 +973,11 @@ climate$methods(cumulative_exceedance_graphs = function(data_list=list(),interes
   data_list=c(data_list,convert_data=convert)
   
   climate_data_objs_list = get_climate_data_objects(data_list)
-    
+  
   for(data_obj in climate_data_objs_list) {
     
     if (station_name){    
-    data_name = data_obj$get_meta(data_name_label)
+      data_name = data_obj$get_meta(data_name_label)
     }else {
       data_name=NULL
     }
@@ -986,7 +986,7 @@ climate$methods(cumulative_exceedance_graphs = function(data_list=list(),interes
     curr_data_list = data_obj$get_data_for_analysis(data_list)
     
     #-----------------------------------------------------------------------------------#
-        
+    
     for( curr_data in curr_data_list ) {
       #---------------------------------------------------------------------------------#
       
@@ -1003,30 +1003,30 @@ climate$methods(cumulative_exceedance_graphs = function(data_list=list(),interes
       for (i in 1:length(interest_var)) {
         
         interest_col=data_obj$getvname(interest_var[[i]])
-      
-          # sort the data
+        
+        # sort the data
         sort_col[[i]]=sort(curr_data[[interest_col]])
         #---------------------------------------------------------------------------------#
         #calculate the proportions
         #---------------------------------------------------------------------------------#      
         prop_col[[i]]=(1:length(sort_col[[i]]))/length(sort_col[[i]])
-      
+        
         if (percent == TRUE){     
-        #--------------------------------------------------------------------------------#
-     
-        #calculate the percentage of the cumulative proportions
-        #--------------------------------------------------------------------------------#
+          #--------------------------------------------------------------------------------#
+          
+          #calculate the percentage of the cumulative proportions
+          #--------------------------------------------------------------------------------#
           cum_perc_col[[i]]= prop_col[[i]]*100 
           #------------------------------------------------------------------------------
           #=====Add the values for plotting the exceedance graph==========================
           #--------------------------------------------------------------------------------#
           exceedance_col[[i]]=100-cum_perc_col[[i]]        
-         }else {
-           
+        }else {
+          
           #Values for exceedance graph using the probabilities     
           exceedance_prop[[i]]=1-prop_col[[i]] 
-          }
         }
+      }
       
       if (plot_window){
         par=gpar
@@ -1052,52 +1052,52 @@ climate$methods(cumulative_exceedance_graphs = function(data_list=list(),interes
             plot(sort_col[[i]], cum_perc_col[[i]],
                  main=c(data_name,main), xlab=xlabel, ylab=ylabel,type=line_type, col=color[i],
                  xlim=range(sort_col),ylim=range(cum_perc_col))
-            }else{
-              if (ylabel==""){
-                ylabel= " Proportion of days" 
-              }
-              plot(sort_col[[i]], prop_col[[i]],main=c(data_name,main), xlab=xlabel, 
-                   ylab=ylabel,type=line_type, col=color[i],
-                   xlim=range(sort_col),ylim=range(prop_col))
-              }
+          }else{
+            if (ylabel==""){
+              ylabel= " Proportion of days" 
+            }
+            plot(sort_col[[i]], prop_col[[i]],main=c(data_name,main), xlab=xlabel, 
+                 ylab=ylabel,type=line_type, col=color[i],
+                 xlim=range(sort_col),ylim=range(prop_col))
+          }
           par(new=TRUE)
+        }
+      }else{
+        par(new=FALSE)
+        #====Plotting the exceedance graph  when true======================================== 
+        for (i in 1:length(sort_col)){
+          #--------------------------------------------------------------------------------#
+          if (main==""){
+            main="Exceedance graph"
           }
-        }else{
-          par(new=FALSE)
-          #====Plotting the exceedance graph  when true======================================== 
-          for (i in 1:length(sort_col)){
-            #--------------------------------------------------------------------------------#
-            if (main==""){
-              main="Exceedance graph"
-            }
-            if (xlabel==""){
-              xlabel= "Variable of interest"
-            }
-            if(percent == TRUE){
-              # Plotting the exceedance graph
-              if (ylabel==""){
-                ylabel= " Pencent of days" 
-              }
-              plot(sort_col[[i]], exceedance_col[[i]],xlab=xlabel,ylab=ylabel,xlim=range(sort_col),
-                   ylim=range(exceedance_col),col=color[i], main=c(data_name,main),type=line_type)
-              #         par(new=TRUE)
-              }else{
-                if (ylabel==""){
-                  ylabel= " Proportion of days" 
-                }
-                plot(sort_col[[i]], exceedance_prop[[i]],xlab=xlabel,ylab=ylabel,xlim=range(sort_col),
-                     ylim=range(exceedance_prop),col=color[i],main=c(data_name,main),type=line_type)
-                }
-            par(new=TRUE)
-            }
+          if (xlabel==""){
+            xlabel= "Variable of interest"
           }
+          if(percent == TRUE){
+            # Plotting the exceedance graph
+            if (ylabel==""){
+              ylabel= " Pencent of days" 
+            }
+            plot(sort_col[[i]], exceedance_col[[i]],xlab=xlabel,ylab=ylabel,xlim=range(sort_col),
+                 ylim=range(exceedance_col),col=color[i], main=c(data_name,main),type=line_type)
+            #         par(new=TRUE)
+          }else{
+            if (ylabel==""){
+              ylabel= " Proportion of days" 
+            }
+            plot(sort_col[[i]], exceedance_prop[[i]],xlab=xlabel,ylab=ylabel,xlim=range(sort_col),
+                 ylim=range(exceedance_prop),col=color[i],main=c(data_name,main),type=line_type)
+          }
+          par(new=TRUE)
+        }
+      }
       if (length(interest_var)>1){
         legend(legend_position,legend_label,fill = color, bty = legend_bty)
-        }
-      }    
-    }
-  par(mfrow=c(1,1))
+      }
+    }    
   }
+  par(mfrow=c(1,1))
+}
 )#To Do: same plot window. Add line type as arguement. Add sensible defaults to the plot.
 
 #===================================================================================================
@@ -1121,7 +1121,7 @@ climate$methods(yearly_vertical_line = function(data_list=list(), all=list(), yl
   
   climate_data_objs_list = get_climate_data_objects(data_list)
   
-  #print(climate_data_objs_list)
+  print(climate_data_objs_list)
   
   for(data_obj in climate_data_objs_list) {
     
@@ -1133,9 +1133,9 @@ climate$methods(yearly_vertical_line = function(data_list=list(), all=list(), yl
       #print(col_var1)
     }
     
-   # col_var1 = data_obj$getvname(all[[1]])
+    # col_var1 = data_obj$getvname(all[[1]])
     #col_var2 = data_obj$getvname(all[[2]])
-   
+    
     
     
     data_obj$date_col_check(date_format = "%d/%m/%Y", convert = TRUE, create = TRUE, messaging=TRUE)
@@ -1168,7 +1168,7 @@ climate$methods(yearly_vertical_line = function(data_list=list(), all=list(), yl
 )
 #===========================================================================================
 climate$methods(yearly_trellis_plot = function(data_list = list(),interest_variable,xlab = "Year",ylab,layout = c(6, 2),fac_column,
-                                                    main_title = "Plot - Trellis Plot")
+                                               main_title = "Plot - Trellis Plot")
 {  
   require(lattice)
   
@@ -1187,7 +1187,7 @@ climate$methods(yearly_trellis_plot = function(data_list = list(),interest_varia
   for(data_obj in climate_data_objs_list) {
     data_name = data_obj$get_meta(data_name_label)
     
-   
+    
     interest_col = data_obj$getvname(interest_variable)
     
     factor_col = data_obj$getvname(fac_column)
@@ -1205,7 +1205,7 @@ climate$methods(yearly_trellis_plot = function(data_list = list(),interest_varia
     if(missing(ylab)){
       ylab = data_obj$getvname(interest_variable)
     }
-        
+    
     curr_data_list = data_obj$get_data_for_analysis(data_list)
     
     for( curr_data in curr_data_list ) {
@@ -1225,14 +1225,14 @@ climate$methods(yearly_trellis_plot = function(data_list = list(),interest_varia
     }  
   } 
   #fitted line by month.  
-#   # this gives 12 month intercept and one gradient.
-#   summary(lm(curr_data[[ interest_col]]  ~ curr_data[[year_col]]+curr_data[[factor_col]]/curr_data[[factor_col]]))
-
-#   # this gives the common intercept. 
-#  summary(lm(curr_data[[ interest_col]]  ~ curr_data[[year_col]]/curr_data[[factor_col]]))
-# I think this is not useful.
-# The coefficients in both cases cannot be interpreted as a simple gradient and intercept for each month: 
-# the gradients for month2 and so on are modelled as an additive increment on the first month gradient.
+  #   # this gives 12 month intercept and one gradient.
+  #   summary(lm(curr_data[[ interest_col]]  ~ curr_data[[year_col]]+curr_data[[factor_col]]/curr_data[[factor_col]]))
+  
+  #   # this gives the common intercept. 
+  #  summary(lm(curr_data[[ interest_col]]  ~ curr_data[[year_col]]/curr_data[[factor_col]]))
+  # I think this is not useful.
+  # The coefficients in both cases cannot be interpreted as a simple gradient and intercept for each month: 
+  # the gradients for month2 and so on are modelled as an additive increment on the first month gradient.
 }
 )
 
@@ -1259,19 +1259,19 @@ climate$methods(Plot_yearly_sumamry = function (data_list=list(), col1="blue",yl
       data_obj$add_year_col() 
     }
     year_col = data_obj$getvname(year_label)
-        
+    
     interset_var_col = data_obj$getvname (interest_var) 
     
     if(missing(ylab)){
       ylab = data_obj$getvname(interest_var)
     }
-        
+    
     curr_data_list = data_obj$get_data_for_analysis(data_list)
     # loop for plotting 
     for( curr_data in curr_data_list ) { 
       plot_yearly_summary <- plot( curr_data[[year_col]], curr_data[[interset_var_col]],type=type,pch=pch,xlab=xlab, col=col1,ylim= c(ylim, max(curr_data[[interset_var_col]], na.rm=na.rm)),
-                          xlim = c( min(curr_data[[year_col]], na.rm=na.rm), max( curr_data[[year_col]], na.rm=na.rm)),
-                          ylab=ylab, main= c( data_name, main_title))
+                                   xlim = c( min(curr_data[[year_col]], na.rm=na.rm), max( curr_data[[year_col]], na.rm=na.rm)),
+                                   ylab=ylab, main= c( data_name, main_title))
       #abline(h = mean(curr_data[[interset_var_col]]),lty=lty,col=col2) 
       grid(length(curr_data[[year_col]]),0, lwd = lwd)
       
@@ -1290,9 +1290,9 @@ climate$methods(Plot_yearly_sumamry = function (data_list=list(), col1="blue",yl
 
 #====================================================================================================
 climate$methods(Boxplot = function(data_list= list(), fill_col="blue",interest_var,factor=month_label,
-                                                             whisker_col="red", convert=TRUE,data_period_label=daily_label,
-                                                             title="Rain Amount boxplot",whisklty=1,xlab="Months",
-                                                             ylab=interest_var,horizontal=FALSE){
+                                   whisker_col="red", convert=TRUE,data_period_label=daily_label,
+                                   title="Rain Amount boxplot",whisklty=1,xlab="Months",
+                                   ylab=interest_var,horizontal=FALSE){
   #--------------------------------------------------------------------------------------------#
   # This function plots the boxplot for the variable of interest i.e interest_var
   # To Do: how to handle threshold    
@@ -1314,17 +1314,17 @@ climate$methods(Boxplot = function(data_list= list(), fill_col="blue",interest_v
     
     # Access data in methods
     curr_data_list = data_obj$get_data_for_analysis(data_list)
-   
+    
     for( curr_data in curr_data_list ) {
       interest_col=data_obj$getvname(interest_var)
       
       # Get the title of the column of factors
-     
+      
       factor_col = data_obj$getvname(factor) 
       #print(curr_data[[factor_col]])
       # Draw the boxplot
       boxplot(as.formula(paste(interest_col,"~",factor_col)), data=curr_data, whiskcol=whisker_col,col=fill_col, xlab=xlab,ylab=ylab,
-               main= c( data_name, title), whisklty=whisklty,horizontal=horizontal)
+              main= c( data_name, title), whisklty=whisklty,horizontal=horizontal)
     } 
   }
 }
@@ -1355,71 +1355,71 @@ climate$methods(summary_statistics = function(data_list=list(),interest_var, Pro
       #Check if the column of interest is inputted
       #---------------------------------------------------------------------------------#      
       for (j in 1:length(interest_var)){
-      interest_col=data_obj$getvname(interest_var[[j]])
-      
-      #---------------------------------------------------------------------------------#
-      #Check if the vector of proportions is inputted
-      #---------------------------------------------------------------------------------#
-   
-      sink(output_name,append=append,type="output")
-      
-      print(paste("summary statistics for",interest_col,"in",data_name,"data"))
-      
-       if (statistics==TRUE){
-        #-------------------------------------------------------------------------------#
-        #get the number of observations 
-        #-------------------------------------------------------------------------------#
-        print(paste(" data No. of observations:",  nrow(curr_data)))
-        
-        #-------------------------------------------------------------------------------#
-        #get the minimum, mean, median and the maximum from the column of interest
-        #-------------------------------------------------------------------------------#
-        print(summary(curr_data[[interest_col]]))
-        
-        #------------------------------------------------------------------------------#
-        #get the range of the data
-        #------------------------------------------------------------------------------#
-        print(paste("Range:", max(curr_data[[interest_col]], na.rm = na.rm) - min(curr_data[[interest_col]], na.rm = na.rm) ))
-        
-        #-------------------------------------------------------------------------------#
-        #calculate the standard deviation
-        #-------------------------------------------------------------------------------#
-        print(paste("sd.deviation:", round(sd(curr_data[[interest_col]], na.rm = na.rm), digits =digits )))
-        
-        #-------------------------------------------------------------------------------#
-        #calculate the percentiles
-        #-------------------------------------------------------------------------------#
-        if( !(length( percentiles ) == 0 ) ) {
-          print(quantile(curr_data[[interest_col]], percentiles,na.rm=na.rm))
-        }
-      }
-      
-      #---------------------------------------------------------------------------------#
-      #Initializing empty vectors and looping to get the counts and percentages 
-      #---------------------------------------------------------------------------------#
-      count=c()
-      percent=c()
-      for (i in 1:length(Proportions)){
+        interest_col=data_obj$getvname(interest_var[[j]])
         
         #---------------------------------------------------------------------------------#
-        #returns count only if true
+        #Check if the vector of proportions is inputted
         #---------------------------------------------------------------------------------#
-        if (counts==TRUE){
-          count[i]=sum(curr_data[[interest_col]]<=Proportions[i], na.rm = na.rm)
-          print(paste("count <=", Proportions[i], "is", count[i]))
+        
+        sink(output_name,append=append,type="output")
+        
+        print(paste("summary statistics for",interest_col,"in",data_name,"data"))
+        
+        if (statistics==TRUE){
+          #-------------------------------------------------------------------------------#
+          #get the number of observations 
+          #-------------------------------------------------------------------------------#
+          print(paste(" data No. of observations:",  nrow(curr_data)))
+          
+          #-------------------------------------------------------------------------------#
+          #get the minimum, mean, median and the maximum from the column of interest
+          #-------------------------------------------------------------------------------#
+          print(summary(curr_data[[interest_col]]))
+          
+          #------------------------------------------------------------------------------#
+          #get the range of the data
+          #------------------------------------------------------------------------------#
+          print(paste("Range:", max(curr_data[[interest_col]], na.rm = na.rm) - min(curr_data[[interest_col]], na.rm = na.rm) ))
+          
+          #-------------------------------------------------------------------------------#
+          #calculate the standard deviation
+          #-------------------------------------------------------------------------------#
+          print(paste("sd.deviation:", round(sd(curr_data[[interest_col]], na.rm = na.rm), digits =digits )))
+          
+          #-------------------------------------------------------------------------------#
+          #calculate the percentiles
+          #-------------------------------------------------------------------------------#
+          if( !(length( percentiles ) == 0 ) ) {
+            print(quantile(curr_data[[interest_col]], percentiles,na.rm=na.rm))
+          }
         }
         
-        #----------------------------------------------------------------------------------#
-        #returns percents only if true
-        #----------------------------------------------------------------------------------#
-        if (percents==TRUE){
-          percent[i]=round((count[i]/nrow(curr_data))*100,digits=digits)
-          print(paste("% of data <=", Proportions[i], "is", percent[i]))
+        #---------------------------------------------------------------------------------#
+        #Initializing empty vectors and looping to get the counts and percentages 
+        #---------------------------------------------------------------------------------#
+        count=c()
+        percent=c()
+        for (i in 1:length(Proportions)){
+          
+          #---------------------------------------------------------------------------------#
+          #returns count only if true
+          #---------------------------------------------------------------------------------#
+          if (counts==TRUE){
+            count[i]=sum(curr_data[[interest_col]]<=Proportions[i], na.rm = na.rm)
+            print(paste("count <=", Proportions[i], "is", count[i]))
+          }
+          
+          #----------------------------------------------------------------------------------#
+          #returns percents only if true
+          #----------------------------------------------------------------------------------#
+          if (percents==TRUE){
+            percent[i]=round((count[i]/nrow(curr_data))*100,digits=digits)
+            print(paste("% of data <=", Proportions[i], "is", percent[i]))
+          }
         }
       }
-    }
-    sink()
-#     unlink("my_output.txt")
+      sink()
+      #     unlink("my_output.txt")
     }
   }
 }
@@ -1442,9 +1442,9 @@ climate$methods(vertical_line = function(data_list=list(), all, data_period_labe
   data_list = add_to_data_info_required_variable_list(data_list, all) 
   # we should be able to specify any time period. we need to fix this. Danny is working on it. 
   data_list = add_to_data_info_time_period(data_list, data_period_label) 
-    
+  
   climate_data_objs_list = get_climate_data_objects(data_list)
-    
+  
   for(data_obj in climate_data_objs_list) {
     
     # we need to get the column of interest for the plot.
@@ -1454,7 +1454,7 @@ climate$methods(vertical_line = function(data_list=list(), all, data_period_labe
       
       interest_variable[[i]] <- data_obj$getvname(all[[i]]) 
     }
-   #print(interest_variable)
+    #print(interest_variable)
     
     
     date_col = data_obj$getvname(date_label)
@@ -1473,20 +1473,20 @@ climate$methods(vertical_line = function(data_list=list(), all, data_period_labe
       print(head(dat))
       #Melt the data into a form suitable for easy casting
       dat2 <- melt(dat ,  id = 'Year')
-#       print(head(dat2))
-#       print(names(dat2))
+      #       print(head(dat2))
+      #       print(names(dat2))
       dat2$Year <-as.factor(dat2$Year) # factor
       dat2$value <- as.integer(dat2$value) # integer
-#       print(class(dat2$Year))
-#       print(class(dat2$variable))
-#       print(class(dat2$value))
-     #"Year"     "variable" "value"
+      #       print(class(dat2$Year))
+      #       print(class(dat2$variable))
+      #       print(class(dat2$value))
+      #"Year"     "variable" "value"
       # plot all variables on the same graph
       # Need to read more about ggplot bcse here it is not plotting.
       #?ggplot() is typically used to construct a plot incrementally.
-     ggplot(data = d2, aes(x = Year, y = value, group=1)) + geom_line(aes(colour = variable))+
-       ggtitle("Start of the Rain by Year")
-     
+      ggplot(data = d2, aes(x = Year, y = value, group=1)) + geom_line(aes(colour = variable))+
+        ggtitle("Start of the Rain by Year")
+      
     }
     
   }
@@ -1523,11 +1523,11 @@ climate$methods(compute_raindays = function(data_list = list(), month_start, mon
     curr_threshold = data_obj$get_meta(threshold_label,threshold)
     
     rain_col  = data_obj$getvname(rain_label)
-        
+    
     # Must add these columns if not present to compute raindays
-#     if( !(data_obj$is_present(year_label) && data_obj$is_present(month_label)) ) {
-#       data_obj$add_year_month_day_cols()
-#     }
+    #     if( !(data_obj$is_present(year_label) && data_obj$is_present(month_label)) ) {
+    #       data_obj$add_year_month_day_cols()
+    #     }
     if ( !(data_obj$is_present(season_label))) {
       data_obj$add_doy_col()
     }
@@ -1550,19 +1550,19 @@ climate$methods(compute_raindays = function(data_list = list(), month_start, mon
       ndays <- tapply(selRows, curr_data[[season_col]], sum, na.rm=na.rm)
       return(ndays)        
     }
-
+    
   }
 }
-
+                
 ) #To Do: better way to present the output. Flexibility of the months- 1 or Jan or J or January
 
 #=============================================================================================
 climate$methods(compute_seasonal_summary = function(data_list = list(), month_start, number_month = 3,  print_season = FALSE, 
                                                     na.rm = FALSE, threshold = 0.85, col_name = "season_tot_JFM",
                                                     col_name2 = "season_raindays_JFM",replace = FALSE)
-
+  
 {
- 
+  
   # rain required
   data_list = add_to_data_info_required_variable_list(data_list, list(rain_label))
   # date time period is "daily"
@@ -1571,12 +1571,12 @@ climate$methods(compute_seasonal_summary = function(data_list = list(), month_st
   climate_data_objs = get_climate_data_objects(data_list)
   
   for(data_obj in climate_data_objs) {
-          
+    
     curr_threshold = data_obj$get_meta(threshold_label,threshold)
-
+    
     rain_col  = data_obj$getvname(rain_label) 
-#     new_rain=data_obj$rename_column_in_data(rain_col,"rain") 
-#     print(new_rain)
+    #     new_rain=data_obj$rename_column_in_data(rain_col,"rain") 
+    #     print(new_rain)
     if(missing(month_start)){
       curr_season_start_day = data_obj$get_meta(season_start_day_label)
       year=1952
@@ -1593,7 +1593,7 @@ climate$methods(compute_seasonal_summary = function(data_list = list(), month_st
     }
     # month to be summed for the season.
     sub_month = 1+(((month_start:(month_start+number_month-1)) -1) %% 12)
-
+    
     summary_obj <- get_summary_name(yearly_label, data_obj)
     
     continue = TRUE
@@ -1608,7 +1608,7 @@ climate$methods(compute_seasonal_summary = function(data_list = list(), month_st
                          To replace to column, re run this function and specify replace = TRUE."))
       continue = FALSE
     }
-
+    
     
     if(col_name %in% names(summary_obj$get_data()) && replace){
       message(paste("A column named", col_name, "already exists. The column will replaced 
@@ -1631,7 +1631,7 @@ climate$methods(compute_seasonal_summary = function(data_list = list(), month_st
               The column will not be added again.")
       continue = FALSE
     }
-     
+    
     if(continue) {
       # Must add this column if not present
       if( !( data_obj$is_present(month_label)) ) {
@@ -1643,7 +1643,7 @@ climate$methods(compute_seasonal_summary = function(data_list = list(), month_st
       # If  year column is not in the data frame, create it.
       if ( !(data_obj$is_present(season_label))) {
         data_obj$add_doy_col()
-        }
+      }
       season_col = data_obj$getvname(season_label) 
       
       if(missing(month_start)){
@@ -1651,43 +1651,43 @@ climate$methods(compute_seasonal_summary = function(data_list = list(), month_st
         year=1952
         date = doy_as_date(curr_season_start_day, year) 
         month_start = month(date)
-        }
+      }
       
       if (is.character(month_start)){
         if (!month_start %in% c(month.abb, month.name,tolower(c(month.abb, month.name)))){
           stop("Enter the correct name of the month e.g Jan,January,jan,january")
         }
         month_start= 1 + ((match(tolower(month_start), tolower(c(month.abb, month.name))) - 1) %% 12)
-        }else {
-          month_start = month_start
-          }
+      }else {
+        month_start = month_start
+      }
       # month to be summed for the season.
       sub_month = 1+(((month_start:(month_start+number_month-1)) -1) %% 12)
       
-    
+      
       curr_data_list = data_obj$get_data_for_analysis(data_list)
       
-    # loop for computing seasonal rain totals and number of rain days
-    for( curr_data in curr_data_list ) {
+      # loop for computing seasonal rain totals and number of rain days
+      for( curr_data in curr_data_list ) {
+        
+        curr_data =  curr_data[ curr_data[[month_col]] %in% c(sub_month),]      
+        # Add a column of rain to the data with a specific: "Rain" name for ddply use
+        curr_data = cbind(curr_data, new_rain_col=curr_data[[rain_col]], season_col = curr_data[[season_col]] )
+        #Get summaries for each year and season in each year  
+        season.rain<-ddply(curr_data,.( season_col ),here(summarize),sum( new_rain_col, na.rm = na.rm), sum(new_rain_col > curr_threshold,na.rm=na.rm))
+        names(season.rain)<-c("Year","season_total", "season_rain_days")
+        # Delete the new rain column added
+        season.rain$new_rain_col=NULL
+        # Only print if requested
+        if(print_season) {print(season.rain)}
+      }
+      summary_obj$append_column_to_data(season.rain$season_total, col_name)
+      summary_obj$append_column_to_data(season.rain$season_rain_days, col_name2)
+      label = summary_obj$get_summary_label(rain_label, seasonal_total_label,curr_definition)
+      label2 = summary_obj$get_summary_label(rain_label, seasonal_raindays_label,curr_definition)
+      summary_obj$append_to_variables(label, col_name)
+      summary_obj$append_to_variables(label2,col_name2)
       
-      curr_data =  curr_data[ curr_data[[month_col]] %in% c(sub_month),]      
-      # Add a column of rain to the data with a specific: "Rain" name for ddply use
-      curr_data = cbind(curr_data, new_rain_col=curr_data[[rain_col]], season_col = curr_data[[season_col]] )
-      #Get summaries for each year and season in each year  
-      season.rain<-ddply(curr_data,.( season_col ),here(summarize),sum( new_rain_col, na.rm = na.rm), sum(new_rain_col > curr_threshold,na.rm=na.rm))
-      names(season.rain)<-c("Year","season_total", "season_rain_days")
-      # Delete the new rain column added
-      season.rain$new_rain_col=NULL
-      # Only print if requested
-      if(print_season) {print(season.rain)}
-    }
-    summary_obj$append_column_to_data(season.rain$season_total, col_name)
-    summary_obj$append_column_to_data(season.rain$season_rain_days, col_name2)
-    label = summary_obj$get_summary_label(rain_label, seasonal_total_label,curr_definition)
-    label2 = summary_obj$get_summary_label(rain_label, seasonal_raindays_label,curr_definition)
-    summary_obj$append_to_variables(label, col_name)
-    summary_obj$append_to_variables(label2,col_name2)
-
     }
   }
 }
@@ -1698,7 +1698,7 @@ climate$methods(compute_seasonal_summary = function(data_list = list(), month_st
 climate$methods(seasonal_summary = function(data_list = list(), month_start, number_month = 3, threshold = 0.85, 
                                             col_name = "Rain Total JFM", season_rain_total=FALSE, season_rain_days=FALSE,
                                             col_name2 = "Number Raindays JFM", print_season = FALSE, 
-                                                    na.rm = FALSE, replace = FALSE)
+                                            na.rm = FALSE, replace = FALSE)
   
 {  
   # rain required
@@ -1709,7 +1709,7 @@ climate$methods(seasonal_summary = function(data_list = list(), month_start, num
   climate_data_objs = get_climate_data_objects(data_list)
   
   for(data_obj in climate_data_objs) {
-      
+    
     curr_threshold = data_obj$get_meta(threshold_label,threshold)
     
     rain_col  = data_obj$getvname(rain_label) 
@@ -1784,59 +1784,150 @@ climate$methods(seasonal_summary = function(data_list = list(), month_start, num
         continue = FALSE
       }
     }    
-  
+    
     if(continue) {
-    
-    curr_data_list = data_obj$get_data_for_analysis(data_list)
-    
-    for( curr_data in curr_data_list ) {
-      month_tot=matrix(NA,length(unique(curr_data[[season_col]])),12)
-      rownames(month_tot)=as.character(unique(curr_data[[season_col]]))
-      colnames(month_tot)=c(month.abb)
-      raindays=month_tot
-      #   loop over months and years to get summary statistics
-      for (mon in months) {
-        rain.season = curr_data[curr_data[month_col]==mon,c(season_col,rain_col)]   
-        for (yr in unique(curr_data[[season_col]])) {
-          if(season_rain_total || !season_rain_days){
-          month_tot[yr-min(unique(curr_data[[season_col]])-1),mon]=sum(rain.season[rain.season[,season_col]==yr,rain_col])
-          }
-          if(season_rain_days || !season_rain_total){
-          raindays[yr-min(unique(curr_data[[season_col]])-1),mon]=sum(rain.season[rain.season[,season_col]==yr,rain_col]>threshold)
+      
+      curr_data_list = data_obj$get_data_for_analysis(data_list)
+      
+      for( curr_data in curr_data_list ) {
+        month_tot=matrix(NA,length(unique(curr_data[[season_col]])),12)
+        rownames(month_tot)=as.character(unique(curr_data[[season_col]]))
+        colnames(month_tot)=c(month.abb)
+        raindays=month_tot
+        #   loop over months and years to get summary statistics
+        for (mon in months) {
+          rain.season = curr_data[curr_data[month_col]==mon,c(season_col,rain_col)]   
+          for (yr in unique(curr_data[[season_col]])) {
+            if(season_rain_total || !season_rain_days){
+              month_tot[yr-min(unique(curr_data[[season_col]])-1),mon]=sum(rain.season[rain.season[,season_col]==yr,rain_col])
+            }
+            if(season_rain_days || !season_rain_total){
+              raindays[yr-min(unique(curr_data[[season_col]])-1),mon]=sum(rain.season[rain.season[,season_col]==yr,rain_col]>threshold)
+            }
           }
         }
+        month_tot <- rowSums(month_tot[,months], na.rm = na.rm) 
+        raindays <-  rowSums(raindays[,months], na.rm = na.rm)
+        
+        if(season_rain_total && print_season){
+          print(month_tot)
+        }
+        if(season_rain_days && print_season){
+          print(raindays)
+        }
+        # Only print if requested
+        if(print_season && !season_rain_total && !season_rain_days) {
+          rain_tot <- data.frame(cbind(month_tot, raindays )) 
+          colnames(rain_tot) <- c(col_name,col_name2)
+          print(rain_tot)
+        }
+        
       }
-      month_tot <- rowSums(month_tot[,months], na.rm = na.rm) 
-      raindays <-  rowSums(raindays[,months], na.rm = na.rm)
-      
-      if(season_rain_total && print_season){
-        print(month_tot)
+      if (season_rain_total || !season_rain_days){
+        summary_obj$append_column_to_data(month_tot, col_name)
+        label = summary_obj$get_summary_label(rain_label, seasonal_total_label,curr_definition)
+        summary_obj$append_to_variables(label, col_name)      
       }
-      if(season_rain_days && print_season){
-        print(raindays)
+      if (season_rain_days || !season_rain_total){
+        summary_obj$append_column_to_data(raindays, col_name2)
+        label2 = summary_obj$get_summary_label(rain_label, seasonal_raindays_label,curr_definition)
+        summary_obj$append_to_variables(label2,col_name2)      
       }
-      # Only print if requested
-      if(print_season && !season_rain_total && !season_rain_days) {
-        rain_tot <- data.frame(cbind(month_tot, raindays )) 
-        colnames(rain_tot) <- c(col_name,col_name2)
-        print(rain_tot)
-      }
-      
-    }
-    if (season_rain_total || !season_rain_days){
-      summary_obj$append_column_to_data(month_tot, col_name)
-      label = summary_obj$get_summary_label(rain_label, seasonal_total_label,curr_definition)
-      summary_obj$append_to_variables(label, col_name)      
-    }
-    if (season_rain_days || !season_rain_total){
-      summary_obj$append_column_to_data(raindays, col_name2)
-      label2 = summary_obj$get_summary_label(rain_label, seasonal_raindays_label,curr_definition)
-      summary_obj$append_to_variables(label2,col_name2)      
-    }
     }
   }
 }
 )
 
 
+#=============================================================================
+# WIND ROSE
+#' @title Windrose plots with the openair package
+#' @author Jens Riede 2015
 
+#' @description \code{get.windrose} 
+#'  Creates windrose given a climate object
+#' 
+#' @param data_list list. 
+#' 
+#' @param WR.type character. Type of windrose to plot. It can be either
+#' "single", "weekday", "season", "year". Default value: "single" 
+#'  
+#' @examples
+#' climObj <- climate(data_tables=list(data),date_format="%Y-%m-%d")
+#' # where "data" is a data.frame containing the desired data to be plotted.
+#' climObj$get.windrose()
+#' 
+climate$methods(get.windrose = function(data_list = list(), WR.type="single", 
+                                        wind_threshold=0.3){  
+  # Libraries
+  library(openair)
+  # Wind required
+  data_list=add_to_data_info_required_variable_list(data_list, list(wind_speed_label,wind_direction_label))
+  #  date time period is "daily" todo check it works for all time periods
+  data_list=add_to_data_info_time_period(data_list, daily_label)
+  
+  climate_data_objs = get_climate_data_objects(data_list)
+  
+  for(data_obj in climate_data_objs) {
+    data_name = data_obj$get_meta(data_name_label)    
+    curr_threshold = data_obj$get_meta(wind_threshold_label,wind_threshold)
+    wind_speed_col  = data_obj$getvname(wind_speed_label)      
+    wind_direction_col= data_obj$getvname(wind_direction_label)      
+    
+    station_id_col = data_obj$getvname(station_label)      
+    print(station_id_col)
+    # Create new columns
+    year_col = data_obj$getvname(year_label)
+    month_col = data_obj$getvname(month_label)
+    day_col = data_obj$getvname(day_label)
+    season_col = data_obj$getvname(season_label)
+    month_start = 1
+    monEnd = 12
+    
+    # ****Get the data frames for analysis
+    curr_data_list = data_obj$get_data_for_analysis(data_list)
+    # loop for computing 
+    for( curr_data in curr_data_list ) {
+      selRows <- curr_data[[month_col]]>=month_start & curr_data[[month_col]] <=monEnd & curr_data[[wind_speed_col]] > curr_threshold 
+      ndays <- tapply(selRows, curr_data[[season_col]], sum, na.rm=na.rm)
+      
+      #############################################################
+      # Dataframe with the required information
+      df <- data.frame(ws=curr_data[[wind_speed_col]],
+                       wd=curr_data[[wind_direction_col]],
+                       date = curr_data[[date_label]])
+      
+      #######################################################
+      # graphic settings Windrose plot
+      
+      if(WR.type=="single"){
+        WR.type = "default"
+      }
+      first.date <- format(strptime(as.character(df[1,3]),"%Y-%m-%d"),"%Y%m%d")
+      last.date <- format(strptime(as.character(df[length(df[,1]),3]),"%Y-%m-%d"),"%Y%m%d")
+      
+      
+      #######################################################
+      # plot four different typ of windrose depending on choosen type
+      
+      #define graphic working directory
+      mainDir<-getwd()
+      
+      tperiod <- paste(first.date,"-",last.date, sep="")
+      station_id <- unique(curr_data[[station_id_col]])
+      graphic.settings<-(key = list(header=paste("Station.ID:",station_id,"/ WR.type =", WR.type,
+                                                 "/ period: ",tperiod), 
+                                    footer=paste(paste("Creation date:", date())),
+                                    #plot.style = C("paddle"),
+                                    par.settings=list(fontsize=list(text=16)),            
+                                    plot.style = c("border", "ticks"),
+                                    fit = "all", height = 1,
+                                    space = "top"))
+      
+      pollutionRose(df, pollutant = "ws", key = graphic.settings,
+                    annotate = FALSE,auto.text = FALSE, 
+                    type = WR.type) 
+      setwd(mainDir)
+    }
+  }
+})
