@@ -8,3 +8,4 @@ Maintainer: <d.a.stern@reading.ac.uk>
 Description: A reference class based climate object
 License: GPL-3
 Depends: lubridate
+Import: openair
