@@ -1842,13 +1842,49 @@ climate$methods(seasonal_summary = function(data_list = list(), month_start, num
 }
 )
 
-
+<<<<<<< HEAD
 #=====================================================================================
 #this method Changes the format of date so that the date appear in the format day+month (i.e. "17 Apr" rather than "108")
 #given the day of year,  or year, month, and day or date.
 # it takes a specific date of the year and create a column of the date in the format day-month.
 climate$methods(change_format_day_month_col = function(data_list = list(), col_name = "Day_Month", month_format = "%m", required_format = "%d-%b", option = 1)
-
+  # Must add doy column to the data if not present
+  if ( !(data_obj$is_present(doy_label))) {
+    data_obj$add_doy_col()
+  }
+  doy_col = data_obj$getvname(doy_label) 
+  
+  #Check if option is within 1,2 or 3
+  if(option < 1 || option > 3) stop("Please enter values of options whithin the range  1, 2, or 3")  
+  
+  curr_data_list = data_obj$get_data_for_analysis(data_list)
+  
+  for (curr_data in curr_data_list){
+    
+    #Initialise the vector which will contain the result
+    day_month_col <- c()
+    for ( i in 1 : length( curr_data[[doy_col]] ) ) {
+      if ( curr_data[[doy_col]][i] == 60 ) {
+        day_month_col[ i ] = "29 Feb"
+      }
+      if ( curr_data[[doy_col]][i] < 60 ){
+        day_month_col[i] =  format( strptime( curr_data[[doy_col]][i], format = "%j" ), format = required_format)
+      }
+      if( curr_data[[doy_col]][i] > 60  ){
+        day_month_col[i] =  format( strptime( curr_data[[doy_col]][i] - 1, format = "%j" ), format = required_format)
+      } # end brace added   
+      if(option == 1){
+        day_month_col = format( strptime(curr_data[[date_col]], format="%Y-%m-%d"), format = required_format)      
+      }else if(option == 2){
+        day_month_col = format( strptime( paste( curr_data[[year_col]], curr_data[[month_col]], curr_data[[day_col]]), format = paste("%Y", month_format, "%d") ), 
+                                format = required_format)
+      } # end brace added
+    
+    }
+  }
+})
+    
+  
 #=============================================================================
 # WIND ROSE
 #' @title Windrose plots with the openair package
@@ -1875,7 +1911,6 @@ climate$methods(get.windrose = function(data_list = list(), WR.type="single",
   data_list=add_to_data_info_required_variable_list(data_list, list(wind_speed_label,wind_direction_label))
   #  date time period is "daily" todo check it works for all time periods
   data_list=add_to_data_info_time_period(data_list, daily_label)
-
   
   climate_data_objs = get_climate_data_objects(data_list)
   
@@ -1892,26 +1927,10 @@ climate$methods(get.windrose = function(data_list = list(), WR.type="single",
     month_col = data_obj$getvname(month_label)
     day_col = data_obj$getvname(day_label)
 
-    # must add doy column to the data if not present
-    if ( !(data_obj$is_present(doy_label))) {
-      data_obj$add_doy_col()
-    }
-    doy_col = data_obj$getvname(doy_label) 
     
-    #Check if option is within 1,2 or 3
-    if(option < 1 || option > 3) stop("Please enter values of options whithin the range  1, 2, or 3")  
-    
-    curr_data_list = data_obj$get_data_for_analysis(data_list)
-    
-    for (curr_data in curr_data_list){
-    
-    #Initialise the vector which will contain the result
-    day_month_col <- c()
-
-    season_col = data_obj$getvname(season_label)
-    month_start = 1
-    monEnd = 12
-
+    #season_col = data_obj$getvname(season_label)
+    #month_start = 1
+    #monEnd = 12
     
     # ****Get the data frames for analysis
     curr_data_list = data_obj$get_data_for_analysis(data_list)
@@ -1920,17 +1939,6 @@ climate$methods(get.windrose = function(data_list = list(), WR.type="single",
       selRows <- curr_data[[month_col]]>=month_start & curr_data[[month_col]] <=monEnd & curr_data[[wind_speed_col]] > curr_threshold 
       ndays <- tapply(selRows, curr_data[[season_col]], sum, na.rm=na.rm)
       
-
-    for ( i in 1 : length( curr_data[[doy_col]] ) ) {
-      if ( curr_data[[doy_col]][i] == 60 ) {
-        day_month_col[ i ] = "29 Feb"
-      }
-      if ( curr_data[[doy_col]][i] < 60 ){
-        day_month_col[i] =  format( strptime( curr_data[[doy_col]][i], format = "%j" ), format = required_format)
-      }
-      if( curr_data[[doy_col]][i] > 60  ){
-        day_month_col[i] =  format( strptime( curr_data[[doy_col]][i] - 1, format = "%j" ), format = required_format)
-
       #############################################################
       # Dataframe with the required information
       df <- data.frame(ws=curr_data[[wind_speed_col]],
@@ -1942,7 +1950,6 @@ climate$methods(get.windrose = function(data_list = list(), WR.type="single",
       
       if(WR.type=="single"){
         WR.type = "default"
-
       }
       first.date <- format(strptime(as.character(df[1,3]),"%Y-%m-%d"),"%Y%m%d")
       last.date <- format(strptime(as.character(df[length(df[,1]),3]),"%Y-%m-%d"),"%Y%m%d")
@@ -2200,15 +2207,6 @@ climate$methods(get.timeseries = function(data_list = list()){
         setwd(mainDir)
       }
     }
-
-    
-    if(option == 1){
-      day_month_col = format( strptime(curr_data[[date_col]], format="%Y-%m-%d"), format = required_format)
-      
-    }else if(option == 2){
-      day_month_col = format( strptime( paste( curr_data[[year_col]], curr_data[[month_col]], curr_data[[day_col]]), format = paste("%Y", month_format, "%d") ), 
-                 format = required_format)
-
   }
 })
 
@@ -2394,10 +2392,10 @@ climate$methods(get.histogram = function(data_list = list()){
               line=0)
         setwd(mainDir)
       }
-
     }
   }
 })
+
 
 #=======================================================================================
 climate$methods( missing_data_table=function( data_list=list(), interest_var=rain_label,data_period_label=daily_label ){ 
