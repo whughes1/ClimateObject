@@ -1842,7 +1842,6 @@ climate$methods(seasonal_summary = function(data_list = list(), month_start, num
 }
 )
 
-<<<<<<< HEAD
 #=====================================================================================
 #this method Changes the format of date so that the date appear in the format day+month (i.e. "17 Apr" rather than "108")
 #given the day of year,  or year, month, and day or date.
