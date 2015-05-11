@@ -18,7 +18,7 @@
 #' climObj$get.windrose()
 #' @return Windrose plot
 #' 
-climate$methods(get.windrose = function(data_list = list(), WR.type="single", 
+climate$methods(windrose = function(data_list = list(), WR.type="single", 
                                         wind_threshold=0.3){  
   # Libraries
   library(openair)
