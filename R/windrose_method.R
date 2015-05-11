@@ -35,8 +35,8 @@ climate$methods(windrose = function(data_list = list(), WR.type="single",
     wind_speed_col  = data_obj$getvname(wind_speed_label)
     wind_direction_col= data_obj$getvname(wind_direction_label)      
     
-    # station_id_col = data_obj$getvname(station_label)
-    station_id_col = station_label
+    station_id_col = data_obj$getvname(station_label)
+    # station_id_col = station_label
     print(station_id_col)
     # Create new columns
     year_col = data_obj$getvname(year_label)
