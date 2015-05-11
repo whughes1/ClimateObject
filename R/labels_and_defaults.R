@@ -21,6 +21,8 @@ evaporation_label="evaporation"
 element_factor_label="element_type"
 identifier_label = "identifier"
 capacity_label = "capacity_max"
+wind_speed_label="wind_speed"
+wind_direction_label="wind_direction"
 
 total_label="total"
 number_of_label="number_of"
@@ -52,6 +54,7 @@ max_evaporation_label = "max_exaporation"
 data_name_label="data_name"
 constructor_label="constructor"
 threshold_label="threshold"
+wind_threshold_label="wind_threshold"
 season_start_day_label="season_start_day"
 day_start_time_label="day_start_time"
 station_meta_data_label="station_meta_data"
@@ -184,6 +187,26 @@ ident_var <- function (data,variables) {
       } 
     }
   }
+  # Wind speed 
+  if(!(wind_speed_label %in% names(merged))) {
+    for (label in c("Windsp","windsp","wind_speed")){
+      if (label %in% names(data)){
+        merged[[wind_speed_label]]<-label
+        break
+      } 
+    }
+  }
+  # Wind direction
+  if(!(wind_direction_label %in% names(merged))) {
+    for (label in c("Winddir","winddir","wind_direction")){
+      if (label %in% names(data)){
+        merged[[wind_direction_label]]<-label
+        break
+      } 
+    }
+  }
+  
+  
   return(merged)    
   
 }
@@ -221,6 +244,8 @@ add_defaults <- function (imported_from,user) {
     if(!(temp_min_label %in% names(merged))) merged[[temp_min_label]]<-"Temp min"
     if(!(temp_max_label %in% names(merged))) merged[[temp_max_label]]<-"Temp max"
     if(!(evaporation_label %in% names(merged))) merged[[evaporation_label]]<-"Evaporation"
+    if(!(wind_speed_label %in% names(merged))) merged[[wind_speed_label]]<-"Wind speed"
+    if(!(wind_direction_label %in% names(merged))) merged[[wind_direction_label]]<-"Wind direction"
     return(merged)    
   }
 
@@ -243,6 +268,7 @@ add_defaults_meta <- function (imported_from,user) {
                      Default values for variables will be used."))
     }
     if(!(threshold_label %in% names(merged))) merged[[threshold_label]]<- 0.85
+    if(!(wind_threshold_label %in% names(merged))) merged[[wind_threshold_label]]<- 0.3
     if(!(season_start_day_label %in% names(merged))) merged[[season_start_day_label]]<-1
     if(!(day_start_time_label %in% names(merged))) merged[[day_start_time_label]]<-0
     if(!(complete_dates_label %in% names(merged))) merged[[complete_dates_label]]<-FALSE
