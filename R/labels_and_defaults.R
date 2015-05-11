@@ -464,3 +464,15 @@ dry_spell_check <- function(rain_col, period=length(rain_col), dry_days=10, thre
   }
   return(dry_spell)
 }
+doy_as_date <- function(doy, year) {
+  if(missing(doy) || missing(year)) stop("Provide a day of year and year to convert.")
+  
+  if(doy==60 && !leap_year(year)) return(NA)
+  
+  if(!leap_year(year) && doy > 60) {
+    return(as.Date(paste(year,doy-1), format="%Y %j"))
+  }
+  
+  else return(as.Date(paste(year,doy), format="%Y %j"))
+  
+}
