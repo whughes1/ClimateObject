@@ -1,12 +1,13 @@
 library(reshape2)
 library(lubridate)
 library(plyr)
-
 #Labels for variables which will be recognised by the Climate objects
 rain_label="rain"
 date_label="date"
 doy_label="doy"
 year_label="year"
+year_month_label="year_month"
+date_time_label="date_time"
 dos_label="dos"
 season_label="season"
 month_label="month"
@@ -70,6 +71,8 @@ merged_from_label="merged_from"
 summarized_from_label="summarized_from"
 complete_dates_label="complete_dates"
 summary_statistics_label="summary_statistics"
+data_start_date_label="data_start_date"
+data_end_date_label="data_end_date"
 
 #Labels to specify data in function specification list
 station_list_label="station_list"
@@ -114,7 +117,7 @@ ident_var <- function (data,variables) {
     }
   }
   if(!(date_label %in% names(merged))) {
-    for (label in c("Date","date", "Date.D")){
+    for (label in c("Date","date", "Date.D", "DATE")){
       if (label %in% names(data)){
         merged[[date_label]]<-label
         break
@@ -173,6 +176,14 @@ ident_var <- function (data,variables) {
     for (label in c("Time","time")){
       if (label %in% names(data)){
         merged[[time_label]]<-label
+        break
+      } 
+    }
+  }
+  if(!(year_month_label %in% names(merged))) {
+    for (label in c("Year Month","YearMonth")){
+      if (label %in% names(data)){
+        merged[[year_month_label]]<-label
         break
       } 
     }
@@ -241,11 +252,11 @@ add_defaults <- function (imported_from,user) {
     if(!(date_asstring_label %in% names(merged))) merged[[date_asstring_label]]<-"Date as string"
     if(!(rain_label %in% names(merged))) merged[[rain_label]]<-"Rain"
     if(!(year_label %in% names(merged))) merged[[year_label]]<-"Year"
-    if(!(season_label %in% names(merged))) merged[[season_label]]<-merged[[year_label]]
+#    if(!(season_label %in% names(merged))) merged[[season_label]]<-merged[[year_label]]
     if(!(month_label %in% names(merged))) merged[[month_label]]<-"Month"
     if(!(day_label %in% names(merged))) merged[[day_label]]<-"Day"
     if(!(doy_label %in% names(merged))) merged[[doy_label]]<-"DOY"
-    if(!(dos_label %in% names(merged))) merged[[dos_label]]<-merged[[doy_label]]
+#    if(!(dos_label %in% names(merged))) merged[[dos_label]]<-merged[[doy_label]]
     if(!(time_label %in% names(merged))) merged[[time_label]]<-"Time"
     if(!(temp_min_label %in% names(merged))) merged[[temp_min_label]]<-"Temp min"
     if(!(temp_max_label %in% names(merged))) merged[[temp_max_label]]<-"Temp max"
@@ -470,6 +481,7 @@ dry_spell_check <- function(rain_col, period=length(rain_col), dry_days=10, thre
   }
   return(dry_spell)
 }
+
 doy_as_date <- function(doy, year) {
   if(missing(doy) || missing(year)) stop("Provide a day of year and year to convert.")
   
@@ -481,4 +493,9 @@ doy_as_date <- function(doy, year) {
   
   else return(as.Date(paste(year,doy), format="%Y %j"))
   
+}
+
+mode_stat <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
 }
