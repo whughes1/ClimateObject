@@ -1,8 +1,16 @@
-#=================================================================================
+#  yearly summaries
+#' @title plot yearly summaries
+#' @name plot_yearly_summary
+#' @author Frederic Ntirenganya 2015 (AMI)
+#' 
+#' @description \code{yearly summaries plot}
+#' plot yearly summaries of interest from climate object
+#'  
+#' @return it returns a timesies plot of the summary
+
 climate$methods(plot_yearly_summary = function (data_list=list(), col1="blue",ylab,xlab="Year",na.rm=TRUE, pch=20,ylim=0,type="b",lty=2,col2="red",lwd = 2,lwd2 = 1.5,
                                                 interest_var,var_label = rain_label,plot_line = FALSE,ygrid=0, graph_parameter = par(mfrow=c(2,2)),plot_window = FALSE,
-                                                main_title="Plot - Summary per Year",grid=FALSE)
-{
+                                                main_title="Plot - Summary per Year",grid=FALSE){
   # rain required
   data_list = add_to_data_info_required_variable_list(data_list, list(var_label))
   # convert data 

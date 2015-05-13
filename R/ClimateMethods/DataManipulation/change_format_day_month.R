@@ -1,3 +1,13 @@
+# change format of the date
+#' @title Get the format of date as day+month
+#' @name change_format_day_month
+#' @author Frederic Ntirenganya 2015 (AMI)
+#' 
+#' @description \code{change format of date to be day+month }
+#' create a date column in the format day-month
+#'  
+#' @return It adds a day-month column on the data_obj
+ 
 
 climate$methods(change_format_day_month = function(data_list = list(), col_name = "Day_Month", month_format = "%m", required_format = "%d-%b", option = 1){
   
@@ -57,6 +67,7 @@ climate$methods(change_format_day_month = function(data_list = list(), col_name 
           } # end brace added
           
         }
+        print(class(day_month_col))
       }# curr_data
     }#data_obj
   
