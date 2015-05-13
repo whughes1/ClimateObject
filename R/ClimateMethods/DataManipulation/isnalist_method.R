@@ -1,3 +1,13 @@
+# number of NAs in a vector
+#' @title Get the number of nAs in a particular vector
+#' @name isna.list
+#' @author Frederic Ntirenganya 2015 (AMI)
+#' 
+#' @description \code{NAs in a vector }
+#' find out how many NAs are in a particular vector
+#'  
+#' @return It returs the number of NAs.
+
 climate$methods(isna.list = function(data_list = list(), var, period = daily_label ){
   #=======================================================
   #this method find out how many NAs are in a particular vector

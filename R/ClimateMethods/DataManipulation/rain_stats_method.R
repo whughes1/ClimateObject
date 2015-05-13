@@ -1,4 +1,14 @@
-climate$methods(rain_stats = function(data_list = list(),thresholds=c(0.85,2.5),col_name = "rainday",thresh_amount=0.85){
+# rainfall statistics
+#' @title Get rain days, dry day and rain amount statistics 
+#' @name rain_stats
+#' @author Frederic Ntirenganya 2015 (AMI)
+#' 
+#' @description \code{make rainfall statistics }
+#' It makes rainfall statistics for the dataset
+#'  
+#' @return It adds columns of rain day, dry day and rain amount statistics on the data_obj
+
+climate$methods(rain_stats = function(data_list = list(),thresholds=c(0.85,2.5),col_name = "rainday", col_name2 = "dryday", col_name3 = "RainAmount", thresh_amount=0.85){
   #=========================================================================#
   # This method makes rainfall statistics for the dataset             
   # You can choose some thresholds for different rain day statistics
@@ -20,12 +30,11 @@ climate$methods(rain_stats = function(data_list = list(),thresholds=c(0.85,2.5),
   curr_data_list = data_obj$get_data_for_analysis(data_list)
 
   for( curr_data in curr_data_list ) {
-      rainday <- curr_data[[rain_col]]
+      rainday <- as.character(curr_data[[rain_col]])
       rainday[(curr_data[[rain_col]] > 0)] <- 1
       rainday[(curr_data[[rain_col]] <= 0)] <- 0
-      print(rainday)
       
-      dryday <- curr_data[[rain_col]]
+      dryday <- as.character(curr_data[[rain_col]])
       dryday[(curr_data[[rain_col]] > 0)] <- 0
       dryday[(curr_data[[rain_col]] <= 0)] <- 1
       
@@ -37,13 +46,17 @@ climate$methods(rain_stats = function(data_list = list(),thresholds=c(0.85,2.5),
         curr_data[((is.na(curr_data[[rain_col]])==FALSE)&(curr_data[[rain_col]] > thresholds[n])),dim(curr_data)[2]] <- 1
       }
       
-        curr_data$RainAmount <- curr_data[[rain_col]]
-        curr_data$RainAmount[(curr_data[[rain_col]] <= thresh_amount)] <- NA
+        RainAmount <- as.character(curr_data[[rain_col]])
+        RainAmount[(curr_data[[rain_col]] <= thresh_amount)] <- NA
         
-        #return(curr_data)
       }
   }
-data_obj$append_column_to_data(rainday, col_name)
- 
+  data_obj$append_column_to_data(rainday, col_name)
+  data_obj$append_column_to_data(dryday, col_name2)
+  data_obj$append_column_to_data(RainAmount, col_name3)
+  data_obj$append_to_variables(rd_label, col_name) 
+  data_obj$append_to_variables(dd_label, col_name2) 
+  data_obj$append_to_variables(rain_amount_label, col_name3) 
+
 }
 )

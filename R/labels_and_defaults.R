@@ -23,8 +23,8 @@ identifier_label = "identifier"
 capacity_label = "capacity_max"
 wind_speed_label="wind_speed"
 wind_direction_label="wind_direction"
-rain_day_label = "rain_day"
-d_day_label = "dry_day"
+rd_label = "rain_day"
+dd_label = "dry_day"
 rain_amount_label = "rain_amount"
 
 
