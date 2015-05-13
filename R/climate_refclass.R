@@ -47,9 +47,9 @@ climate$methods(initialize = function(data_tables = list(), climate_obj_meta_dat
   }
   
   else {
-    .self$import_data(data_tables,data_tables_meta_data, data_tables_variables, 
-                      imported_from, data_time_periods, messages = messages, 
-                      date_formats = date_formats)
+    .self$import_data(data_tables=data_tables,data_tables_meta_data=data_tables_meta_data, data_tables_variables=data_tables_variables, 
+                      imported_from=imported_from, data_time_periods=data_time_periods, messages=messages, convert=convert, create=create,
+                      date_formats=date_formats)
   }
   
 }
@@ -393,7 +393,7 @@ climate$methods(date_col_check = function(data_list=list(), date_format = "%d/%m
   climate_data_objs = get_climate_data_objects(data_list)
   
   for(data_obj in climate_data_objs){
-    data_obj$date_col_check( date_format, convert, create)
+    data_obj$date_col_check(date_format= date_format, convert=convert, create=create)
     
   }
 }

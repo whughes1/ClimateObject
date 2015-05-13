@@ -34,7 +34,7 @@ climate_data$methods(initialize = function(data = data.frame(), data_name = "", 
   
     .self$set_changes(list())
     .self$set_data(data, messages)
-    .self$set_meta (add_defaults_meta(imported_from, meta_data))
+    .self$set_meta(add_defaults_meta(imported_from, meta_data))
     if (identify_variables) {
       .self$set_variables(add_defaults(imported_from, ident_var(data,variables)))
     }
@@ -62,7 +62,7 @@ climate_data$methods(initialize = function(data = data.frame(), data_name = "", 
     if (check_dates){
       .self$date_col_check(date_format=date_format, convert=convert, create = create, messages=messages)
     }
-    
+
     if (check_missing_dates){
       .self$missing_dates_check()
     }
@@ -182,9 +182,7 @@ climate_data$methods(set_data = function(new_data, messages=TRUE) {
 climate_data$methods(set_meta = function(new_meta) {
     if( ! is.list(new_meta) ) {
       stop("Meta data must be of type: list")
-    }
-    
-    else {
+    } else {
       meta_data <<- new_meta
       .self$append_to_changes(list(Set_property, "meta data"))
     }
@@ -524,6 +522,7 @@ climate_data$methods(get_split_data = function(return_data) {
 # Added date_format as arguement
 # Date column name is not changed if date column is already there
 # Created replace_column_in_data method for climate_data to use to change class of date column
+# TODO implement full range of options particularly for subdaily data
 
 climate_data$methods(date_col_check = function(date_format = "%d/%m/%Y", convert = TRUE, create = TRUE, messages=TRUE)
   { 
@@ -535,7 +534,7 @@ climate_data$methods(date_col_check = function(date_format = "%d/%m/%Y", convert
       date_col = variables[[date_label]]
       if (!is.Date(data[[date_col]])) {
         if (messages) message("date column is not stored as Date class.")
-        if (convert == TRUE) {
+        if (convert) {
           if (messages) message("Attempting to convert date column to Date class.")
           new_col = as.Date(as.character(data[[date_col]]), format = date_format)
           .self$replace_column_in_data(date_col,new_col)
@@ -745,12 +744,14 @@ climate_data$methods(add_doy_col = function(YearLabel="Year", DOYLabel="DOY", Se
       .self$append_column_to_data (TEMPDOY, DOYLabel) 
       .self$append_to_variables(doy_label, DOYLabel)
     }
-    if (!(.self$is_present(dos_label)||.self$is_present(season_label))){
+    if (is_meta_data(season_start_day_label)){
+      print("in here")
       #--------------------------------------------------------------#
       # find the specified start date of the year in 366 form
       #--------------------------------------------------------------#
-      if (is_meta_data(season_start_day_label)){
+      if (((dos_label==doy_label)||(year_label==season_label))||!(.self$is_present(dos_label)||.self$is_present(season_label))){
         if (1<meta_data[[season_start_day_label]] & meta_data[[season_start_day_label]]<367){
+          print("here")
           TEMPDOY <- data[[variables[[doy_label]]]]
           TEMPDOS <- TEMPDOY - meta_data[[season_start_day_label]] + 1
           #TO DO allow flexibility for how season is written.
@@ -1128,7 +1129,6 @@ climate_data$methods(get_data_start_end_dates = function() {
 climate_data$methods(time_period_check = function(messages=TRUE) {
 
   date_col = data[[getvname(date_label)]]
-  print(date_col)
   diff_values = difftime(tail(date_col,-1),head(date_col,-1), units="days")
   min_diff = min(diff_values)
   median_diff = median(diff_values)
