@@ -6,7 +6,7 @@
 #' @description \code{cumulative_exceedance_graphs} 
 #' Enables plotting cumulative and exceedance graphs given a climate object
 
-#' @return cumulative graph or exceedance graph or both. the default is exceedance graph
+#' @return cumulative graph or exceedance graph. the default is cumulative graph
 
 
 climate$methods(cumulative_exceedance_graphs = function(data_list=list(),interest_var,cumulative_graph =TRUE, legend_bty="n",
