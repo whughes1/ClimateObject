@@ -537,7 +537,12 @@ climate_data$methods(date_col_check = function(date_format = "%d/%m/%Y", convert
         if (convert) {
           if (messages) message("Attempting to convert date column to Date class.")
           new_col = as.Date(as.character(data[[date_col]]), format = date_format)
-          .self$replace_column_in_data(date_col,new_col)
+          #if the two digit year format is used then by default R makes dates into the future whereas it makes more sense in our context to assume dates are in the past. 
+          if (grepl("%y",date_format)) {
+            .self$replace_column_in_data(date_col,as.Date(ifelse(new_col > Sys.Date(),format(new_col, "19%y-%m-%d"), format(new_col))))
+          } else {
+            .self$replace_column_in_data(date_col,new_col)
+          }
         }
       }
     }
@@ -745,13 +750,11 @@ climate_data$methods(add_doy_col = function(YearLabel="Year", DOYLabel="DOY", Se
       .self$append_to_variables(doy_label, DOYLabel)
     }
     if (is_meta_data(season_start_day_label)){
-      print("in here")
       #--------------------------------------------------------------#
       # find the specified start date of the year in 366 form
       #--------------------------------------------------------------#
       if (((dos_label==doy_label)||(year_label==season_label))||!(.self$is_present(dos_label)||.self$is_present(season_label))){
         if (1<meta_data[[season_start_day_label]] & meta_data[[season_start_day_label]]<367){
-          print("here")
           TEMPDOY <- data[[variables[[doy_label]]]]
           TEMPDOS <- TEMPDOY - meta_data[[season_start_day_label]] + 1
           #TO DO allow flexibility for how season is written.
