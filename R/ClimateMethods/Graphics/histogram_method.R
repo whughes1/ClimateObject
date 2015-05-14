@@ -31,7 +31,8 @@ climate$methods(histogram = function(data_list = list()){
 #  data_list=add_to_data_info_required_variable_list(data_list, as.list(var_label))
 
   # date time period is "daily" todo check it works for all time periods
-  data_list=add_to_data_info_time_period(data_list, daily_label)
+  # Removing this should allow the function to work with all types of data
+#  data_list=add_to_data_info_time_period(data_list, daily_label)
   
   climate_data_objs = get_climate_data_objects(data_list)
 #  print(climate_data_objs) I'm removing th print statments so that Ian can test with large data through the front end
@@ -48,7 +49,7 @@ climate$methods(histogram = function(data_list = list()){
     if (data_obj$is_present(wind_direction_label)) var_label[[wind_direction_label]]=wind_direction_label
     for (i in var_label){
       var_col = data_obj$getvname(i)      
-      
+      date_col = data_obj$getvname(date_label)      
       station_id_col = data_obj$getvname(station_label)      
 #      print(station_id_col)
       # Create new columns Not used in the code
@@ -63,9 +64,9 @@ climate$methods(histogram = function(data_list = list()){
       curr_data_list = data_obj$get_data_for_analysis(data_list)
       # loop for computing 
       for( curr_data in curr_data_list ) {
-        first.date <- curr_data[[date_label]][1]
+        first.date <- curr_data[[date_col]][1]
 #        print(first.date)
-        last.date <- curr_data[[date_label]][nrow(curr_data)]
+        last.date <- curr_data[[date_col]][nrow(curr_data)]
         
 #        print(last.date)
         #######################################################
@@ -77,7 +78,7 @@ climate$methods(histogram = function(data_list = list()){
         station_id <- unique(curr_data[[station_id_col]])
         
         x <- curr_data[[var_col]]
-        y <- curr_data[[date_label]]
+        y <- curr_data[[date_col]]
         
 # This part of the code is causing errors so I have comment it out and fixed as follows 
 # Replaced merged.data and merged.data$x2 with x and one incidence of merged.data$y2 with y
