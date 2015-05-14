@@ -6,7 +6,7 @@
 #' package \code{tcltk})
 #' @author Rafael Posada, 2015 (SASSCAL/DWD)
 
-graphics_frontend = function(climObj){
+climate$methods(graphics_frontend = function(){
   
   # Required libraries
   library(tcltk)
@@ -20,7 +20,7 @@ graphics_frontend = function(climObj){
   tl<-tklistbox(tt,height=4,selectmode="single",
                 background="white",selectmode = "extended",
                 exportselection = 0,width = 50, height = 5)
-  tkgrid(tklabel(tt,text="List of available plots"))
+  tkgrid(tklabel(tt,text="List of available plots") )
   tkgrid(tl)
   for (i in c(1:length(name.plots)))
   {
@@ -36,15 +36,15 @@ graphics_frontend = function(climObj){
     
       if (choice=="Wind Rose"){
         WR.type <-typeWR()
-        climObj$windrose(list(),WR.type)
+        .self$windrose(list(),WR.type)
       }
       
       if (choice=="Timeseries"){
-        climObj$timeseries()
+        .self$timeseries()
       }
       
       if (choice=="Histogram"){
-        climObj$histogram()
+        .self$histogram()
       }
       tkdestroy(tt)
       
@@ -66,6 +66,7 @@ graphics_frontend = function(climObj){
   tkgrid(CANCEL.but)
   tkfocus(tt)
 }
+)
 
 #################################################################
 # SELECT TYPE OF WINDROSE 
