@@ -141,9 +141,9 @@ climate$methods(get_climate_data_objects = function(data_info= list()) {
 
   if(time_period_label %in% names(data_info) ) {
     time_period=data_info[[time_period_label]]
-  }
-  else stop("Specify the time period the data needs to be in")
-  #TO DO check that this is correct in all contexts might it be sensible to do analysis over multiple time periods?
+  } else {
+    time_period="any"
+  } 
 
   for (temp in climate_data_objects) {
     if (required_variable_list_label %in% names(data_info)){
@@ -152,7 +152,7 @@ climate$methods(get_climate_data_objects = function(data_info= list()) {
       }
     }
     name = temp$meta_data[[data_name_label]]
-    if (time_period==temp$data_time_period){
+    if (time_period==temp$data_time_period||time_period=="any"){
       climate_data_list[[name]] <- temp 
     }
     else if (convert_data_label %in% names(data_info)){
