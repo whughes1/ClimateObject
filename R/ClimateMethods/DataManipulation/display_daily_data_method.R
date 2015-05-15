@@ -1,14 +1,26 @@
+# Display daily
+#' @title Get the tables of daily data
+#' @name Display_daily
+#' @author Frederic Ntirenganya 2015 (AMI)
+#' 
+#' @description \code{Display daily data in tables }
+#' Display daily data in tables for any variable 
+#'  
+#' @return It returns tables list
+
 climate$methods(display_daily = function(data_list = list(), print_tables = FALSE, variable = rain_label, months_list = month.abb, day_display = "Day"){
     
+  #required variable
   data_list = add_to_data_info_required_variable_list(data_list, list(variable))
+  # data time period is daily
   data_list = add_to_data_info_time_period(data_list, daily_label)
   climate_data_objs = get_climate_data_objects(data_list)
   
   for(data_obj in climate_data_objs) {
-    
+    #get requied variable name
     interest_var = data_obj$getvname(variable)
     
-    # Must add these columns if not present 
+    # must add these columns if not present for displaying
     if( !(data_obj$is_present( year_label ) && data_obj$is_present( month_label ) && data_obj$is_present( day_label )) ) {
       data_obj$add_year_month_day_cols()
     }
@@ -23,7 +35,7 @@ climate$methods(display_daily = function(data_list = list(), print_tables = FALS
       # initialize tables as a list
       tables = list()
       # Split curr_data into single data frames for each year
-      # It returns a list of data.frames, split by year 
+      # It returns a list of data.frames, splited by year 
       # This is much faster (6x faster when checked) than subsetting
       # Split is not always appropriate but it is in this case
       years_split <- split( curr_data, list( as.factor( curr_data[[year_col]] ) ) )
@@ -45,49 +57,8 @@ climate$methods(display_daily = function(data_list = list(), print_tables = FALS
     }
     # Only print if requested
     if( print_tables ) {print( tables) }
-    # Always return the tables list because If we don't return and don't print then the method does nothing!
+    # Always return the tables list because If we don't return and don't print then the method does nothing!    
     return( tables )
-    
-  }  
+    }  
 }
 )
-
-
-
-
-# Kibos1952<-subset(kibos,Year==1952)
-# 
-# #produce table with data
-# Kb52<-dcast(Kibos1952,Day~Month,value.var="obs_value")
-# #add column names as months
-# colnames(Kb52)[2:13]<-month.abb[1:12]
-# 
-# #create quick function to count number of obs larger than a certain value which can be run in an apply
-# largerthan<-function(x,val){
-#   length(na.omit(x[x>val]))
-# }
-# 
-# #produce second table with summary stats
-# Kb52_2<-rbind(colSums(Kb52[,-1],na.rm=T),apply(Kb52[,-1],2,max,na.rm=T),apply(Kb52[,-1],2,largerthan,val=0.85))
-# 
-# ## add dimnames
-# Kb52_3<-cbind(c("Total","Maximum","Number >0.85"),Kb52_2)
-# 
-# ## Making dataframe for second table
-# Kb52_4=data.frame(Kb52_3)
-# 
-# #add dimnames for the first column.
-# colnames(Kb52_4)[1]<-("Day")
-# 
-# # #add overall totals
-# # Kb52_2<-cbind(Kb52_2,c(sum(Kb52[,-1],na.rm=T),max(Kb52[,-1],na.rm=T),largerthan(Kb52[,-1],val=0.85)))
-# 
-# ### merge the tables
-# Kb52_5<-rbind(Kb52,Kb52_4)
-# 
-# ###
-# ## making overall totals
-# Overall_totals<-c(rep("",31),addmargins((Kb52_2),2)[,13])
-# 
-# ## combining tables with overall totals
-# Kb52_7<-cbind(Kb52_5,Overall_totals)
