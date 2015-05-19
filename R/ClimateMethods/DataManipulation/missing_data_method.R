@@ -1,7 +1,9 @@
-climate$methods( missing_data_table=function( data_list=list(), interest_var=rain_label,data_period_label=daily_label ){ 
+
+climate$methods(Number_missing_values=function( data_list=list(), interest_var=rain_label,data_period_label=daily_label,colname_year="Year",
+                                              colname_missing="Nos of Missing observations",period=year_label){ 
   #--------------------------------------------------------------------------------------------#
   # This function returns a data frame with two columns, the first one containing  years and the second
-  #      one the number of missing rain obsevations per year. 
+  #      one the number of missing obsevations per year. 
   #-------------------------------------------------------------------------------------------#
   
   # rain variable is required for this method
@@ -12,6 +14,7 @@ climate$methods( missing_data_table=function( data_list=list(), interest_var=rai
   
   # use data_list to get the required data objects
   climate_data_objs = get_climate_data_objects( data_list )
+  #print(climate_data_objs)
   # Initialise output
   out = list()
   j = 1
@@ -22,22 +25,18 @@ climate$methods( missing_data_table=function( data_list=list(), interest_var=rai
       data_obj$add_year_month_day_cols()
     }
     
-    year_col = data_obj$getvname(year_label)
+    period_col = data_obj$getvname(period)
     interest_col = data_obj$getvname(interest_var)
-        
+    print(period_col);print(interest_col)  
     # Access data in methods
     curr_data_list = data_obj$get_data_for_analysis(data_list)
     
     for( curr_data in curr_data_list ) {
-      # Add a column of rain to the data with a specific: "Rain" name for ddply use
-      curr_data = cbind(curr_data, new_rain=curr_data[[interest_col]])
-      
-      missing_data<-ddply( curr_data, c(Year = year_col), summarize, days = sum(is.na(new_rain)))
-      missing_data<-missing_data[missing_data$days>0,]
-      names(missing_data)<-c("Year","Nos of Missing Days")
-      missing_data<-as.list(missing_data)
-      missing_data<-as.data.frame(missing_data)
-      curr_data$new_rain=NULL
+      #getting the number of missing values per year
+      missing_data <- aggregate(is.na(curr_data[[interest_col]]), by=list(curr_data[[c(period_col)]]), FUN=sum)
+     
+      #Name the columns
+      names(missing_data)<-c(colname_year,colname_missing)      
     }
     out[[j]] = missing_data
     # Give the name of each data to each element in the list out
