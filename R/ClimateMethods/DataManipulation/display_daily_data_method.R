@@ -13,12 +13,12 @@ climate$methods(display_daily = function(data_list = list(), print_tables = FALS
   #required variable
   data_list = add_to_data_info_required_variable_list(data_list, list(variable))
   # data time period is daily
-  data_list = add_to_data_info_time_period(data_list, daily_label)
-  climate_data_objs = get_climate_data_objects(data_list)
+  data_list = add_to_data_info_time_period( data_list, daily_label )
+  climate_data_objs = get_climate_data_objects( data_list )
   
-  for(data_obj in climate_data_objs) {
-    #get requied variable name
-    interest_var = data_obj$getvname(variable)
+  for( data_obj in climate_data_objs ) {
+    #get required variable name
+    interest_var = data_obj$getvname( variable )
     
     # must add these columns if not present for displaying
     if( !(data_obj$is_present( year_label ) && data_obj$is_present( month_label ) && data_obj$is_present( day_label )) ) {
