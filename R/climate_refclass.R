@@ -99,7 +99,7 @@ climate$methods(import_data = function(data_tables = list(), data_tables_meta_da
     }
 
     if ( !(class(date_formats) == "list") || ! (length(date_formats) == length(data_tables))  ) { 
-      stop("data_formats must be a list of the same length as data_tables")
+      stop("date_formats must be a list of the same length as data_tables")
     }
     # loop through the data_tables list and create a climate_data object for each
     # data.frame given
