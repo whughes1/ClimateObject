@@ -9,14 +9,14 @@
 #' @return It adds a day-month column on the data_obj
  
 
-climate$methods(change_format_day_month = function(data_list = list(), col_name = "Day_Month", month_format = "%m", required_format = "%d-%b", option = 1){
+climate$methods(change_format_day_month = function(data_list = list(), periods = daily_label, col_name = "Day_Month", month_format = "%m", required_format = "%d-%b", option = 1){
   
   #this method Changes the format of date so that the date appear in the format day+month (i.e. "17 Apr" rather than "108")
   #given the day of year,  or year, month, and day or date.
   # it takes a specific date of the year and create a column of the date in the format day-month.
   #==============================================================================================
   # data time period is "daily"
-  data_list = add_to_data_info_time_period(data_list, daily_label)
+  data_list = add_to_data_info_time_period(data_list, periods)
   # a list of climate data objects
   climate_data_objs = get_climate_data_objects(data_list)
   
