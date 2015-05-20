@@ -64,7 +64,7 @@ climate_data$methods(initialize = function(data = data.frame(), data_name = "", 
     }
 
     if (check_missing_dates){
-      .self$missing_dates_check()
+      .self$missing_dates_check(messages)
     }
 
     .self$check_multiple_data()
@@ -665,14 +665,24 @@ climate_data$methods(date_col_check = function(date_format = "%d/%m/%Y", convert
   }
 )
 
-climate_data$methods(missing_dates_check = function()
+climate_data$methods(missing_dates_check = function(messages = TRUE)
 {    
-  # TO DO fill in missing dates for other time periods.
+  # TO DO fill in missing dates for other time periods. Also check for DOY DOS ...
   
+  if(data_time_period == daily_label) {
+    date_col = getvname(date_label)
+    if(anyNA(data[[date_col]])){
+      if (messages){
+        warning("The following data has been removed from your dataset because the date column was missing")
+        warning(subset(data,is.na(data[[date_col]])))
+      }
+      .self$set_data(subset(data,!is.na(data[[date_col]])), messages)
+    }
+  }
+
   if(!get_meta(complete_dates_label)) {
     if(data_time_period == daily_label) {
       by = "day"
-      date_col = getvname(date_label)
       
       start_end_dates = .self$get_data_start_end_dates()
       
@@ -701,7 +711,7 @@ climate_data$methods(missing_dates_check = function()
       append_to_meta_data(complete_dates_label,TRUE)
     }
   }
-}
+} 
 )
 
 #add_year_month_day_cols simply converts a date column to Year month and day if they don't exist.
