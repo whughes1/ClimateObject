@@ -17,7 +17,7 @@ climate$methods(timeseries = function(data_list = list()){
   
   # This is required, because the "get_climate_data_objects" needs to know the
   # type of time period of the data
-  data_list=add_to_data_info_time_period(data_list, daily_label)
+  data_list=add_to_data_info_time_period(data_list,time_label)
   
   climate_data_objs = get_climate_data_objects(data_list)
 #  print(climate_data_objs)
