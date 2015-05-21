@@ -23,7 +23,9 @@ climate$methods(windrose = function(data_list = list(), WR.type="single",
   # Libraries
   library(openair)
   # Wind required
-  data_list=add_to_data_info_required_variable_list(data_list, list(wind_speed_label,wind_direction_label))
+  data_list=add_to_data_info_required_variable_list(data_list, 
+                                                    list(wind_speed_label,
+                                                         wind_direction_label))
   #  date time period is "daily" todo check it works for all time periods
   data_list=add_to_data_info_time_period(data_list, daily_label)
   
@@ -39,10 +41,6 @@ climate$methods(windrose = function(data_list = list(), WR.type="single",
     # station_id_col = station_label
     print(station_id_col)
     # Create new columns
-    year_col = data_obj$getvname(year_label)
-    month_col = data_obj$getvname(month_label)
-    day_col = data_obj$getvname(day_label)
-    season_col = data_obj$getvname(season_label)
     month_start = 1
     monEnd = 12
     
@@ -50,8 +48,6 @@ climate$methods(windrose = function(data_list = list(), WR.type="single",
     curr_data_list = data_obj$get_data_for_analysis(data_list)
     # loop for computing 
     for( curr_data in curr_data_list ) {
-      selRows <- curr_data[[month_col]]>=month_start & curr_data[[month_col]] <=monEnd & curr_data[[wind_speed_col]] > curr_threshold 
-      ndays <- tapply(selRows, curr_data[[season_col]], sum, na.rm=na.rm)
       
       #############################################################
       # Dataframe with the required information
@@ -64,10 +60,11 @@ climate$methods(windrose = function(data_list = list(), WR.type="single",
       
       if(WR.type=="single"){
         WR.type = "default"
+        WRtype = "single"
       }
-      first.date <- format(strptime(as.character(df[1,3]),"%Y-%m-%d"),"%Y%m%d")
-      last.date <- format(strptime(as.character(df[length(df[,1]),3]),"%Y-%m-%d"),"%Y%m%d")
       
+      first.date <- curr_data[[date_label]][1]
+      last.date <- curr_data[[date_label]][nrow(curr_data)]
       
       #######################################################
       # plot four different typ of windrose depending on choosen type
@@ -75,16 +72,18 @@ climate$methods(windrose = function(data_list = list(), WR.type="single",
       #define graphic working directory
       mainDir<-getwd()
       
-      tperiod <- paste(first.date,"-",last.date, sep="")
+      tperiod <- paste(first.date," to ",last.date, sep="")
       station_id <- unique(curr_data[[station_id_col]])
-      graphic.settings<-(key = list(header=paste("Station.ID:",station_id,"/ WR.type =", WR.type,
+      graphic.settings<-list(header=paste("Station.ID:",
+                                          station_id[which(!is.na(station_id))],
+                                          "/ WR.type =", WRtype,
                                                  "/ period: ",tperiod), 
                                     footer=paste(paste("Creation date:", date())),
                                     #plot.style = C("paddle"),
                                     par.settings=list(fontsize=list(text=16)),            
                                     plot.style = c("border", "ticks"),
                                     fit = "all", height = 1,
-                                    space = "top"))
+                                    space = "top")
       
       pollutionRose(df, pollutant = "ws", key = graphic.settings,
                     annotate = FALSE,auto.text = FALSE, 
