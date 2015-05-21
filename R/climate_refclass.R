@@ -122,8 +122,23 @@ climate$methods(import_data = function(data_tables = list(), data_tables_meta_da
   }
 }
 )
+#TODO this is just a temporary function for abib to use while we understand the clidata formate
+climate$methods(import_clidata = function(data_table, dataname="Clidata")
+{
 
+  temp<-melt(data_table,id=1:5,variable.name="Day",value.name="Rain")
+  temp$Day= as.numeric(substr(temp$Day, 4, 5))
 
+  #---------------------------------------------------------#
+  # And write to climate data object
+  #---------------------------------------------------------#
+  new_data = climate_data$new(data=temp, data_name = dataname)
+  
+  # Add this new climate_data object to our list of climate_data objects
+  .self$append_climate_data_objects( new_data$meta_data[[data_name_label]],new_data)
+  
+}
+)
 
 # Getter methods
 ###############################################################################################
