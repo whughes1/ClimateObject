@@ -63,11 +63,11 @@ climate_data$methods(initialize = function(data = data.frame(), data_name = "", 
       .self$date_col_check(date_format=date_format, convert=convert, create = create, messages=messages)
     }
 
+    .self$check_multiple_data()
+
     if (check_missing_dates){
       .self$missing_dates_check(messages)
     }
-
-    .self$check_multiple_data()
     
 
   }
@@ -672,11 +672,14 @@ climate_data$methods(missing_dates_check = function(messages = TRUE)
   if(data_time_period == daily_label) {
     date_col = getvname(date_label)
     if(anyNA(data[[date_col]])){
+      print(length(data[[date_col]]))
       if (messages){
         warning("The following data has been removed from your dataset because the date column was missing")
-        warning(subset(data,is.na(data[[date_col]])))
+        warning(summary(subset(data,is.na(data[[date_col]]))))
       }
       .self$set_data(subset(data,!is.na(data[[date_col]])), messages)
+      print("test")
+      print(length(data[[date_col]]))
     }
   }
 
@@ -689,8 +692,8 @@ climate_data$methods(missing_dates_check = function(messages = TRUE)
   #     append_to_meta_data(data_start_date_label,start_date)
   #     append_to_meta_data(data_end_date_label,end_date)
       full_dates = seq(start_end_dates[[1]], start_end_dates[[2]], by = by)
-      
-      if(length(full_dates) != nrow(data)) {
+      #TODO in missing data check need to get it working for multiple stations!
+      if(length(full_dates) > nrow(data)) {
         dates_table = data.frame(full_dates)
         names(dates_table) <- date_col
         if(is_present(year_label)) {
@@ -711,6 +714,7 @@ climate_data$methods(missing_dates_check = function(messages = TRUE)
       append_to_meta_data(complete_dates_label,TRUE)
     }
   }
+  print(length(data[[date_col]]))
 } 
 )
 

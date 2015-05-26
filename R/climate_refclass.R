@@ -197,7 +197,7 @@ climate$methods(get_climate_data_objects = function(data_info= list()) {
     }
     #TO DO think hard whether we should restrict based on stations or not my inclination is not at the data object level.
   }
-
+  #TODO Merge within Time tevels when any is selected.
   if (merge_data_label %in% names(data_info)){
     if (data_info[[merge_data_label]]){
       if (length(climate_data_list)>1){
@@ -363,16 +363,9 @@ climate$methods(plot_missing_values_rain = function(data_list=list(), threshold 
     for( curr_data in curr_data_list ) {
       a2<-subset(curr_data, curr_data[[rain_col]] > curr_threshold)
       a3<-subset(curr_data, curr_data[[rain_col]] <= curr_threshold)
-      a1<-curr_data[!complete.cases(curr_data),]
+      a1<-curr_data[is.na(curr_data[[rain_col]]),]
       plot2<-plot.new()
-      
-      #print(unique(curr_data[[season_col]]))
-      #print(curr_data[[dos_col]])
-      #print(c(min(curr_data[[season_col]]),max(curr_data[[season_col]]))
-      # #       
-      #       plot(unique(curr_data[[season_col]]),ylim=c(0,500))
-      
-      # plot(unique(curr_data[[season_col]]),curr_data[[dos_col]], log = "", asp = NA)
+
       plot(curr_data[[season_col]],curr_data[[dos_col]], ylim=c(0,500), log = "", asp = NA, xlab="Year",ylab="Day of Year", main="Rain Present")
       #plot.window(xlim=c(min(curr_data[[season_col]]),max(curr_data[[season_col]])),ylim=c(0,500), log = "", asp = NA) #TO DO Tidy up graphical parameters
       #title(xlab="Year",ylab="Day of Year", main="Rain Present") #TO DO Need to think hard about how display name are stored
