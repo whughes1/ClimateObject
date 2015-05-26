@@ -149,6 +149,16 @@ climate_data$methods(get_meta = function(label="", overrider="") {
 }
 )
 
+climate_data$methods(Get_Station_Data = function(currdata, label) {
+  
+  if (is_present(label)) {
+    return (currdata[[getvname(label)]][[1]])
+  } else{
+    print("TODO!!!")
+  }
+}
+)
+
 climate_data$methods(get_meta_new= function(label="", value_missing = FALSE, overrider="") {
   
   if (label=="") return(meta_data)
@@ -672,14 +682,11 @@ climate_data$methods(missing_dates_check = function(messages = TRUE)
   if(data_time_period == daily_label) {
     date_col = getvname(date_label)
     if(anyNA(data[[date_col]])){
-      print(length(data[[date_col]]))
       if (messages){
         warning("The following data has been removed from your dataset because the date column was missing")
-        warning(summary(subset(data,is.na(data[[date_col]]))))
+        warning(subset(data,is.na(data[[date_col]])))
       }
       .self$set_data(subset(data,!is.na(data[[date_col]])), messages)
-      print("test")
-      print(length(data[[date_col]]))
     }
   }
 
@@ -714,7 +721,6 @@ climate_data$methods(missing_dates_check = function(messages = TRUE)
       append_to_meta_data(complete_dates_label,TRUE)
     }
   }
-  print(length(data[[date_col]]))
 } 
 )
 
