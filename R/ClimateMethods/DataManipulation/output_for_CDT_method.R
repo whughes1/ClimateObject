@@ -32,11 +32,14 @@ climate$methods(output_for_CDT = function(data_list = list(), filename, interest
         outmetadata[[data_obj$Get_Station_Data(curr_data, station_label)]]=c(data_obj$Get_Station_Data(curr_data, station_label),data_obj$Get_Station_Data(curr_data, lat_label),data_obj$Get_Station_Data(curr_data, lon_label))
         temp<-subset(curr_data , select=c(date_col, var_col))		
         names(temp)<-c("Date",data_obj$Get_Station_Data(curr_data, station_label))
+#        temp[["Date"]]=as.character(temp[["Date"]])	
+#        print(dim(temp))
         if (first) {
           outdata<-temp
           first=FALSE
         } else {
-          outdata<-merge(outdata,temp,by="Date",all=TRUE)
+#          print(dim(outdata))
+          outdata<-merge(outdata,temp,by="Date", all=TRUE)
         }
       }
     }

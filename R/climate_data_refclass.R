@@ -152,7 +152,7 @@ climate_data$methods(get_meta = function(label="", overrider="") {
 climate_data$methods(Get_Station_Data = function(currdata, label) {
   
   if (is_present(label)) {
-    return (currdata[[getvname(label)]][[1]])
+    return (as.character(currdata[[getvname(label)]][[1]]))
   } else{
     print("TODO!!!")
   }
