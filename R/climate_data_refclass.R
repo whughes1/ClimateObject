@@ -622,109 +622,106 @@ climate_data$methods(date_col_check = function(date_format = "%d/%m/%Y", convert
       .self$append_column_to_data(new_col,getvname(date_time_label))
     }
   }
-  if(data_time_period!=subdaily_label) {
-    if (.self$is_present(date_label)) {
-      date_col = getvname(date_label)
-      if (!is.Date(data[[date_col]])) {
-        if (messages) message("date column is not stored as Date class.")
-        if (convert) {
-          if (messages) message("Attempting to convert date column to Date class.")
-          new_col = as.Date(as.character(data[[date_col]]), format = date_format)
-          #if the two digit year format is used then by default R makes dates into the future whereas it makes more sense in our context to assume dates are in the past. 
-          if (grepl("%y",date_format)) {
-            .self$replace_column_in_data(date_col,as.Date(ifelse(new_col > Sys.Date(),format(new_col, "19%y-%m-%d"), format(new_col))))
-          } else {
-            .self$replace_column_in_data(date_col,new_col)
-          }
+  if (.self$is_present(date_label)) {
+    date_col = getvname(date_label)
+    if (!is.Date(data[[date_col]])) {
+      if (messages) message("date column is not stored as Date class.")
+      if (convert) {
+        if (messages) message("Attempting to convert date column to Date class.")
+        new_col = as.Date(as.character(data[[date_col]]), format = date_format)
+        #if the two digit year format is used then by default R makes dates into the future whereas it makes more sense in our context to assume dates are in the past. 
+        if (grepl("%y",date_format)) {
+          .self$replace_column_in_data(date_col,as.Date(ifelse(new_col > Sys.Date(),format(new_col, "19%y-%m-%d"), format(new_col))))
+        } else {
+          .self$replace_column_in_data(date_col,new_col)
         }
       }
     }
-    
-    
-    # Else if date string column is there and create == TRUE create date column
-    else if (create && is_present(date_asstring_label)) 
-    {
-      date_string_col = getvname(date_asstring_label)
-      new_col = as.Date(data[[date_string_col]], format = date_format)
-      .self$append_column_to_data(new_col,getvname(date_label))
-    }
+  }
+  
+  
+  # Else if date string column is there and create == TRUE create date column
+  else if (create && is_present(date_asstring_label)) 
+  {
+    date_string_col = getvname(date_asstring_label)
+    new_col = as.Date(data[[date_string_col]], format = date_format)
+    .self$append_column_to_data(new_col,getvname(date_label))
+  }
 
-    # Else if date time column is there and create == TRUE create date column
-    else if (create && is_present(date_time_label)) 
-    {
-      date_string_col = getvname(date_time_label)
-      new_col = as.Date(data[[date_string_col]], format = date_format)
-      .self$append_column_to_data(new_col,getvname(date_label))
+  # Else if date time column is there and create == TRUE create date column
+  else if (create && is_present(date_time_label)) 
+  {
+    date_string_col = getvname(date_time_label)
+    new_col = as.Date(data[[date_string_col]], format = date_format)
+    .self$append_column_to_data(new_col,getvname(date_label))
+  }
+  
+  # If the year, month, day column are there and create == TRUE create date column
+  else if (create && is_present(year_label) && is_present(month_label) && is_present(day_label))
+  {
+    day_col = data[[getvname(day_label)]]
+    month_col = data[[getvname(month_label)]]
+    year_col = data[[getvname(year_label)]]
+    
+    if(all(month.abb %in% month_col)) {
+      month_col = match(month_col,month.abb)
     }
     
-    # If the year, month, day column are there and create == TRUE create date column
-    else if (create && is_present(year_label) && is_present(month_label) && is_present(day_label))
-    {
-      day_col = data[[getvname(day_label)]]
-      month_col = data[[getvname(month_label)]]
+    if(all(month.name %in% month_col)) {
+      month_col = match(month_col,month.abb)
+    }
+    
+    new_col = as.Date(paste(year_col, month_col, day_col, sep="-"))
+    .self$append_column_to_data(new_col, getvname(date_label))
+  }
+  
+  else if (create && is_present(year_label) && is_present(doy_label)) {
+    year_col = data[[getvname(year_label)]]
+    doy_col = data[[getvname(doy_label)]]
+    new_col = do.call(c,mapply(doy_as_date,as.list(doy_col),as.list(year_col), SIMPLIFY=FALSE))
+    .self$append_column_to_data(new_col,getvname(date_label))
+  }
+  
+  # Else check time period specific cases
+  else if (data_time_period==subdaily_label || data_time_period==daily_label) {
+    warning("Cannot create or edit a date column. There is insufficient information in the
+                  data frame to have a date column.")
+  }
+  
+  else if (data_time_period==subyearly_label) {
+    
+    if (create == TRUE && is_present(year_month_label)) {
+      year_month_col = data[[getvname(year_month_label)]]
+      new_col = as.Date(paste(year_month_col,"1"), format = paste(date_format,"%d"))
+      .self$append_column_to_data(new_col,variables[[date_label]])
+    }
+    
+    else if (create && is_present(year_label) && is_present(month_label)) {
       year_col = data[[getvname(year_label)]]
-      
+      month_col = data[[getvname(month_label)]]
       if(all(month.abb %in% month_col)) {
         month_col = match(month_col,month.abb)
       }
-      
       if(all(month.name %in% month_col)) {
         month_col = match(month_col,month.abb)
       }
-      
-      new_col = as.Date(paste(year_col, month_col, day_col, sep="-"))
-      .self$append_column_to_data(new_col, getvname(date_label))
+      new_col = as.Date(paste(year_col,month_col,"1"), format = "%Y %m %d")
+      .self$append_column_to_data(new_col,variables[[date_label]])
     }
     
-    else if (create && is_present(year_label) && is_present(doy_label)) {
-      year_col = data[[getvname(year_label)]]
-      doy_col = data[[getvname(doy_label)]]
-      new_col = do.call(c,mapply(doy_as_date,as.list(doy_col),as.list(year_col), SIMPLIFY=FALSE))
-      .self$append_column_to_data(new_col,getvname(date_label))
+    else {warning("Cannot create or edit a date column. There is insufficient information in the
+                  data frame to have a date column.")}
+  }
+  
+  else if (data_time_period==yearly_label) {
+    if (create && is_present(year_label)) {
+      year_col = variables[[year_label]]
+      new_col = as.Date(paste(data[[year_col]],1,1), format = "%Y %m %d")
+      .self$append_column_to_data(new_col,variables[[date_label]])
     }
     
-    # Else check time period specific cases
-    else if (data_time_period==subdaily_label || data_time_period==daily_label) {
-      warning("Cannot create or edit a date column. There is insufficient information in the
-                    data frame to have a date column.")
-    }
-    
-    else if (data_time_period==subyearly_label) {
-      
-      if (create == TRUE && is_present(year_month_label)) {
-        year_month_col = data[[getvname(year_month_label)]]
-        new_col = as.Date(paste(year_month_col,"1"), format = paste(date_format,"%d"))
-        .self$append_column_to_data(new_col,variables[[date_label]])
-      }
-      
-      else if (create && is_present(year_label) && is_present(month_label)) {
-        year_col = data[[getvname(year_label)]]
-        month_col = data[[getvname(month_label)]]
-        if(all(month.abb %in% month_col)) {
-          month_col = match(month_col,month.abb)
-        }
-        if(all(month.name %in% month_col)) {
-          month_col = match(month_col,month.abb)
-        }
-        new_col = as.Date(paste(year_col,month_col,"1"), format = "%Y %m %d")
-        .self$append_column_to_data(new_col,variables[[date_label]])
-      }
-      
-      else {warning("Cannot create or edit a date column. There is insufficient information in the
-                    data frame to have a date column.")}
-    }
-    
-    else if (data_time_period==yearly_label) {
-      if (create && is_present(year_label)) {
-        year_col = variables[[year_label]]
-        new_col = as.Date(paste(data[[year_col]],1,1), format = "%Y %m %d")
-        .self$append_column_to_data(new_col,variables[[date_label]])
-      }
-      
-      else {warning("Cannot create or edit a date column. There is insufficient information in the
-                    data frame to have a date column.")}
-    }
-    
+    else {warning("Cannot create or edit a date column. There is insufficient information in the
+                  data frame to have a date column.")}
   }
 }
 )
