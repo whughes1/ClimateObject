@@ -10,17 +10,11 @@
 #' @return It returns a histogram plot.
 
 climate$methods(histogram = function(data_list = list()){
-  
-  # date time period is "daily" todo check it works for all time periods
-  # Removing this should allow the function to work with all types of data
-  
-  # This is required, because the "get_climate_data_objects" needs to know the
-  # type of time period of the data
-  data_list=add_to_data_info_time_period(data_list,time_label)
-  
+  #######################################################################
+  # CLIMATE DATA OBJS
   climate_data_objs = get_climate_data_objects(data_list)
   for(data_obj in climate_data_objs) {
-    data_name = data_obj$get_meta(data_name_label)    
+    data_name = data_obj$get_meta(data_name_label)
     #####################################################################
     # FIND OUT WHICH VARIABLE TO PLOT
     # Rain

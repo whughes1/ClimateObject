@@ -10,19 +10,13 @@
 #' @return It returns a timeseries plot.
 #' 
 #' 
-climate$methods(timeseries = function(data_list = list()){
-  
-  # date time period is "daily" todo check it works for all time periods
-  # Removing this should allow the function to work with all types of data
-  
-  # This is required, because the "get_climate_data_objects" needs to know the
-  # type of time period of the data
-  data_list=add_to_data_info_time_period(data_list,time_label)
-  
+climate$methods(timeseries = function(data_list = list(),plot_type="normal"){
+  #######################################################################
+  # CLIMATE DATA OBJS
   climate_data_objs = get_climate_data_objects(data_list)
-#  print(climate_data_objs)
+  
   for(data_obj in climate_data_objs) {
-    data_name = data_obj$get_meta(data_name_label)    
+    data_name = data_obj$get_meta(data_name_label)   
     
     #####################################################################
     # FIND OUT WHICH VARIABLE TO PLOT
@@ -48,27 +42,36 @@ climate$methods(timeseries = function(data_list = list()){
       var_label[[wind_direction_label]]=wind_direction_label
     }
     
-    # Create one plot for each variable
-    date_col = data_obj$getvname(date_label)
+    # Name of station_id column
     station_id_col = data_obj$getvname(station_label)
-    # Get the data frames for analysis
+    # Get date_time_period ("daily","subdaily",etc.)
+    data_time_period = data_obj$data_time_period
+    # Get the data frame for analysis
     curr_data_list = data_obj$get_data_for_analysis(data_list)
-    for (i in var_label){
-      # Get the variable 
-      var_col = data_obj$getvname(as.character(i))
-      # loop for computing 
-      for( curr_data in curr_data_list ) {
+    # loop for computing 
+    for( curr_data in curr_data_list ) {
+      # Begin and end dates of dataset
+      
+      if(data_time_period!="subdaily"){
+        date_col = data_obj$getvname(date_label)
+      }else{
+        date_col = data_obj$getvname(date_time_label)
+      }
+      
+      first.date <- curr_data[[date_col]][1]
+      last.date <- curr_data[[date_col]][nrow(curr_data)]
+      
+      # define graphic working directory
+      mainDir<-getwd()
+      
+      tperiod <- paste(first.date,"-",last.date, sep="")
+      station_id <- unique(curr_data[[station_id_col]])
+      
+      # Get the data of each variable
+      for (i in var_label){
+        # Get the variable 
+        var_col = data_obj$getvname(as.character(i))
         
-        # Begin and end dates of dataset
-        first.date <- curr_data[[date_col]][1]
-        last.date <- curr_data[[date_col]][nrow(curr_data)]
-        
-        #define graphic working directory
-        mainDir<-getwd()
-        
-        tperiod <- paste(first.date,"-",last.date, sep="")
-        station_id <- unique(curr_data[[station_id_col]])
-
         y <- curr_data[[var_col]]
         x <- curr_data[[date_col]]
         
@@ -76,22 +79,54 @@ climate$methods(timeseries = function(data_list = list()){
         # CREATE TIMESERIES DATAFRAME
         # a) Using "as.Date"
         y2 <- y
-        x2 <- as.Date(x,format="%Y-%m-%d")
+        x2 <- x 
+        
+        if (data_time_period=="daily"){
+          interval <- "day"
+          plot_style <- "normal"
+        }
+        
+        if (data_time_period=="subdaily"){
+          # Make sure to use always the same time format:
+          x2 <- as.POSIXct(as.character(x2),tz="UTC")
+          # Get the time period stamp of the dataset
+          time_diff <- diff(x2)
+          # Count cases with the same time stamp
+          time_stamp <- table(diff(x2))
+          
+          # a) get the time difference units (minutes, hours, etc.)
+          time_units <- units(time_diff)
+          if(time_units=="hours"){
+            id <- which(time_stamp==max(time_stamp))
+            time_interval <- names(time_stamp)[id]
+            interval <- paste(time_interval,"hour")
+            if (time_interval>1){
+              plot_style <- "subplots" # One plot with subplots, each for each
+              # time stamp
+            }else{
+              plot_style <- "normal"  
+            }
+          }
+        }
+        
+        if (date_time=="yearly"){
+          interval <- "year"
+        }
+        if (date_time=="subyearly"){
+          interval <- "month"
+        }
+        
         data2 <- data.frame(x2,y2)
-        full <- seq.Date(x2[1],x2[length(x2)],by="day")
+        if (class(data2$x2)[1]=="Date"){        
+          full <- seq.Date(x2[1],x2[length(x2)],by=interval)
+        }
+        if (class(data2$x2)[1]=="POSIXct"){
+          full <- seq.POSIXt(x2[1],x2[length(x2)],by=interval)
+        }
         all.dates.frame <- data.frame(list(x2=full))
         merged.data <- merge(all.dates.frame,data2,all=T)     
         
-#         # b) Using "as.POSIXct"
-#         y2 <- y
-#         x2 <- as.POSIXct(strptime(x,format="%Y-%m-%d"),
-#                          format="%Y-%m-%d %H:%M:%S",tz="UTC")
-#         data2 <- data.frame(x2,y2)
-#         full <- seq.POSIXt(x2[1],x2[length(x2)],by="day")
-#         all.dates.frame <- data.frame(list(x2=full))
-#         merged.data <- merge(all.dates.frame,data2,all=T)
-        
-        #####################################################
+        ######################################################################
         # GET THE MAX & MIN LIMITS
         n.std <- 4
         std.dev <- sd(y,na.rm=TRUE)
@@ -102,7 +137,8 @@ climate$methods(timeseries = function(data_list = list()){
           yaxis.min=0
         }
         
-        # Check if the element is precipitation or not
+        ######################################################################
+        # CHECK IF THE ELEMENT IS RAIN OR NOT
         if (var_col=="rain"){
           plot.type <- "h"
           plot.color <- "blue"
@@ -111,100 +147,25 @@ climate$methods(timeseries = function(data_list = list()){
           plot.color <- "red"
         }
         
-        ######################################################################
-        # Plot
         Sys.sleep(0.1) # this is to avoid an error that pops up when trying 
         # to plot two plots at a time (something to do with
         # rversion in grDevices)
         x3 <- merged.data$x2
         y3 <- merged.data$y2
         
-        plot(x3,y3,type=plot.type,col=plot.color,
-             cex.main=.8,
-             xlab= paste("Time"),
-             ylim=c(min(y,na.rm=TRUE),max(y,na.rm=TRUE)),
-             ylab=var_col,
-             cex.lab=.8,
-             cex.axis=.8,
-             xaxt='n',# to remove the numbering on x-axis
-             yaxt="n")
-        
-        ##############################################################
-        # XTICKS        
-        
-        # Sequence - Change the xticks according to the date
-        # a) as.Date
-        seq.begin <- as.Date(x3[1])
-        # b) as. POSIXct
-        # seq.begin <- as.POSIXct(x3[1],tz ='UTC')
-        seq.end <- x3[length(x3)]
-        
-        date.length <- as.numeric(round((year(seq.end)-year(seq.begin)),0))
-        if (date.length>50){
-          seq.tick.int <- 366 #"year"
-        }
-        if (date.length>25 & date.length<=50){
-          seq.tick.int <-  183 #"6 month"
-        }
-        if (date.length>10 & date.length<=25){
-          seq.tick.int <- 91 #"3 month"
-        }
-        
-        if (date.length>1 & date.length<=10){
-          seq.tick.int <- 30 #"month"
-        }
-        
-        if (date.length>0 & date.length<=1){
-          seq.tick.int <- 1 #"day"
-        }
-        
-        if (date.length==0){
-          seq.tick.int <- 1/24 #"hour"
-        }
-        
-        # a) With "as.Date"
-        ticks <- seq.Date(from = as.Date(seq.begin),to = as.Date(seq.end),
-                            by=seq.tick.int) 
-        xticks <- pretty(ticks,n=15)
-
-        axis(1,xticks,tck=-.01,lwd=.2,#las=2,
-             labels = xticks,
-             cex.axis=.8,
-             mgp=c(0,-0.15,0)
-        )
-        abline(v=xticks,lty=3,lwd=.4)
-        
-        # b) With "POSIXt"
-#         ticks <- seq.POSIXt(from = seq.begin,to = seq.end,
-#                             by=seq.tick.int) 
-#         xticks <- pretty(ticks,n=15)
-#         
-#         axis(1,xticks,tck=-.01,lwd=.2,#las=2,
-#              labels = xticks,
-#              cex.axis=.4,mgp=c(0,-0.35,0))
-#         abline(v=xticks,lty=3,lwd=.4)
-        
-        ##############################################################
-        # YTICKS
+        #######################################################
+        # COMMON VARIABLES
+        # xticks and yticks
+        xticks <- pretty(x3,20)
         yaxis.min <- min(y3,na.rm=TRUE)
         yaxis.max <- max(y3,na.rm=TRUE)
         yticks <- pretty(c(yaxis.min,yaxis.max),n=15)
-        axis(2,yticks,
-             labels = yticks,
-             tck=-.01,lwd=.2,# lwd=.2,
-             cex.axis=.8,
-             mgp=c(0,0.15,0)
-        )
-        abline(h=yticks,lty=3,lwd=.4)
         
-        ###########################################################
-        # TITLE & SUBTITLE
+        # Title and subtitle
         tit<- paste("Station id: ",station_id," - ",var_col)
         subtit <- paste(first.date,"-",last.date)
-        title(main=paste(tit," (",subtit,")"),cex.main=0.8,line =3)
         
-        ###########################################################
-        # LEGEND
+        # Legend
         # Total number of cases for the given time inverval
         tt.total <- paste("Total Cases: ",length(y))
         
@@ -226,15 +187,107 @@ climate$methods(timeseries = function(data_list = list()){
         tt.na <- paste("'NA'-Cases: ",length(na.cases),
                        " (",na.percent,"%)",sep="")
         
+        #######################################################
+        # NORMAL PLOT
+        if (plot_style=="normal"){
+          plot(x3,y3,type=plot.type,col=plot.color,
+               cex.main=.8,
+               xlab= paste("Time"),
+               ylim=c(min(y,na.rm=TRUE),max(y,na.rm=TRUE)),
+               ylab=var_col,
+               cex.lab=.8,
+               cex.axis=.8,
+               xaxt='n',# to remove the numbering on x-axis
+               yaxt="n")
+          
+          # Place grid
+          abline(v=xticks,lty=3,lwd=.4) # xaxis
+          abline(h=yticks,lty=3,lwd=.4) # yaxis
+        }
+        
+        #######################################################
+        # SUBPLOTS WITHIN THE PLOT 
+        if (plot_style=="subplots"){
+          time_cases <- table(strftime(format(x3),format="%H:%M:%S"))
+          
+        par(mfrow=c(length(time_cases),1)) #to create subplots
+        
+        #  par(mar=c(0.5, 2.5, 0.5, 0.2))
+          par(mfrow=c(length(time_cases),1),oma = c(.5, .5, 5, .5))
+          
+          #title(main=paste(tit," (",subtit,")",sep=""),cex.main=0.8)
+          for (ii in c(1:length(time_cases))){
+            id1 <- grep(names(time_cases[ii]),x3,invert=TRUE)
+            x4 <- x3
+            y4 <- y3
+            y4[id1] <- NA
+            
+            if (length(which(is.na(y4)==TRUE))==length(y4)){
+            }else{
+              
+              plot(x4,y4,type=plot.type,col=plot.color,
+                   cex.main=.8,
+                   xlab= "",
+                   xlim=c(min(x3),max(x3)),
+                   ylim=c(min(y,na.rm=TRUE),max(y,na.rm=TRUE)),
+                   ylab=var_col,
+                   cex.lab=.8,
+                   cex.axis=.8,
+                   xaxt='n',# to remove the numbering on x-axis
+                   yaxt="n"
+              )
+              # title(main=paste(tit," (",subtit,")",sep=""),cex.main=0.8)
+              usr <- par( "usr" )
+              abline(v=xticks,lty=3,lwd=.4)
+              abline(h=yticks,lty=3,lwd=.4)
+              legend("topleft",inset=c(0,-0.3),
+                     legend=names(time_cases[ii]),
+                     xpd=TRUE,cex=1,bty="n")
+              # legend("topleft",names(time_cases[ii]),bty="n",inset=c(.1,-.1))
+                      #adj = c( 0, 1 )) 
+                      # bg="white")
+              
+              # YTICKS
+              axis(2,yticks,
+                   labels = yticks,
+                   tck=-.01,lwd=.2,# lwd=.2,
+                   cex.axis=1,
+                   mgp=c(0,0.15,0)
+              )
+            }
+          }
+        }
+        
+        ##############################################################
+        # PLACE TITLE, SUBTITLE AND LEGEND
+        mtext(paste(tit," (",subtit,")",sep=""),outer= TRUE, cex=0.8,line=4)
         #Write down the legend 
         mtext(paste(tt.total,"\n",
                     tt.above,"\n",
                     tt.below,"\n",
                     tt.na),
-              cex=.6*par("cex"),
+              cex=.6,
               side=3,
-              line=0)
+              line=0,
+              outer=TRUE)
         setwd(mainDir)
+        
+        ##############################################################
+        # XTICKS
+        axis(1,xticks,tck=-.01,lwd=.2,#las=2,
+             labels = xticks,
+             cex.axis=1,
+             mgp=c(0,-0.15,0)
+        )
+        
+        ##############################################################
+        # YTICKS
+        axis(2,yticks,
+             labels = yticks,
+             tck=0,lwd=.2,# lwd=.2,
+             cex.axis=1,
+             mgp=c(0,0.15,0)
+        )
       }
     }
   }
