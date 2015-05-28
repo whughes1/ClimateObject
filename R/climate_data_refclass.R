@@ -9,7 +9,7 @@
 climate_data <- setRefClass("climate_data", 
                             fields = list(data = "data.frame", meta_data = "list", 
                                           variables = "list", changes = "list", data_time_period="character")
-                            ) #, split_data = "list", is_data_split = "logical" removed for now this may have speed implications but can be adressed later if thhat is the case
+) #, split_data = "list", is_data_split = "logical" removed for now this may have speed implications but can be adressed later if thhat is the case
 
 
 
@@ -28,49 +28,49 @@ climate_data$methods(initialize = function(data = data.frame(), data_name = "", 
                                            messages = TRUE, convert=TRUE, create = TRUE, identify_variables = TRUE, 
                                            start_point=1, check_dates=TRUE, check_missing_dates = TRUE, 
                                            date_format = "%m/%d/%Y", data_time_period = "daily")
-  {
-
-    # Set up the Climate data object
+{
   
-    .self$set_changes(list())
-    .self$set_data(data, messages)
-    .self$set_meta(add_defaults_meta(imported_from, meta_data))
-    if (identify_variables) {
-      .self$set_variables(add_defaults(imported_from, ident_var(data,variables)))
-    }
-    else{
-      .self$set_variables(add_defaults(imported_from, variables))
-    }
-    
-    # If no name for the data.frame has been given in the list we create a default one.
-    # Decide how to choose default name index
-    if (!.self$is_meta_data(data_name_label)) {    
-      if ( ( is.null(data_name) || data_name == "" || missing(data_name))) {
-        meta_data[[data_name_label]] <<- paste0("data_set_",sprintf("%03d", start_point))
-        if (messages) {
-          message(paste0("No name specified in data_tables list for data frame ", start_point, ". 
-                         Data frame will have default name: ", "data_set_",sprintf("%03d", start_point)))
-        }
-      }
-      else meta_data[[data_name_label]] <<- data_name      
-    }
-    
-    .self$set_data_time_period(data_time_period)
-    
-    .self$date_format_check(convert=convert, messages=messages)
-    
-    if (check_dates){
-      .self$date_col_check(date_format=date_format, convert=convert, create = create, messages=messages)
-    }
-
-    .self$check_multiple_data()
-
-    if (check_missing_dates){
-      .self$missing_dates_check(messages)
-    }
-    
-
+  # Set up the Climate data object
+  
+  .self$set_changes(list())
+  .self$set_data(data, messages)
+  .self$set_meta(add_defaults_meta(imported_from, meta_data))
+  if (identify_variables) {
+    .self$set_variables(add_defaults(imported_from, ident_var(data,variables)))
   }
+  else{
+    .self$set_variables(add_defaults(imported_from, variables))
+  }
+  
+  # If no name for the data.frame has been given in the list we create a default one.
+  # Decide how to choose default name index
+  if (!.self$is_meta_data(data_name_label)) {    
+    if ( ( is.null(data_name) || data_name == "" || missing(data_name))) {
+      meta_data[[data_name_label]] <<- paste0("data_set_",sprintf("%03d", start_point))
+      if (messages) {
+        message(paste0("No name specified in data_tables list for data frame ", start_point, ". 
+                         Data frame will have default name: ", "data_set_",sprintf("%03d", start_point)))
+      }
+    }
+    else meta_data[[data_name_label]] <<- data_name      
+  }
+  
+  .self$set_data_time_period(data_time_period)
+  
+  .self$date_format_check(convert=convert, messages=messages)
+  
+  if (check_dates){
+    .self$date_col_check(date_format=date_format, convert=convert, create = create, messages=messages)
+  }
+  
+  .self$check_multiple_data()
+  
+  if (check_missing_dates){
+    .self$missing_dates_check(messages)
+  }
+  
+  
+}
 )
 
 
@@ -83,14 +83,14 @@ climate_data$methods(initialize = function(data = data.frame(), data_name = "", 
 # Notice that no input is needed.
 
 climate_data$methods(get_data = function() {
-    return(data)
-  }
+  return(data)
+}
 )
 
 climate_data$methods(get_data_for_analysis = function(data_info) {
-#TO DO error checking
-#This method for returning the subsets of the data is not optermised! It can be improved in a number of ways but should work very solidly and reliably in it's current form.
-
+  #TO DO error checking
+  #This method for returning the subsets of the data is not optermised! It can be improved in a number of ways but should work very solidly and reliably in it's current form.
+  
   merged_data=FALSE
   if (merge_data_label %in% names(data_info)){
     if (data_info[[merge_data_label]]){
@@ -98,11 +98,11 @@ climate_data$methods(get_data_for_analysis = function(data_info) {
     }
   }
   return_data = data
-#  if (merged_data) return_data = data
-#  else{
-#    .self$check_split_data()
-#    return_data = split_data
-#  }
+  #  if (merged_data) return_data = data
+  #  else{
+  #    .self$check_split_data()
+  #    return_data = split_data
+  #  }
   if (station_list_label %in% names(data_info) & .self$is_present(station_label)) {
     return_data=return_data[return_data[[.self$getvname(station_label)]]==data_info[[station_list_label]],] #TO DO check this syntax is correct
   }
@@ -115,13 +115,13 @@ climate_data$methods(get_data_for_analysis = function(data_info) {
   }  
   if (!merged_data) return_data = .self$get_split_data(return_data)
   return (return_data)
-
+  
 }
 )
 
 climate_data$methods(get_variables = function() {
-    return(variables)
-  }
+  return(variables)
+}
 )
 
 #TO DO replace all direct calls with this? Or remove this
@@ -135,8 +135,8 @@ climate_data$methods(getvname = function(label) {
 )
 
 climate_data$methods(get_changes = function() {
-    return(changes)
-  }
+  return(changes)
+}
 )
 
 climate_data$methods(get_data_time_period = function() {
@@ -145,7 +145,7 @@ climate_data$methods(get_data_time_period = function() {
 )
 
 climate_data$methods(get_meta = function(label="", overrider="") {
-
+  
   if (label=="") return(meta_data)
   else if ( !(is.na(overrider)||(overrider=="")||missing(overrider) )) return(overrider)
   else if (.self$is_meta_data(label)) return(meta_data[[label]])
@@ -185,63 +185,63 @@ climate_data$methods(get_meta_new= function(label="", value_missing = FALSE, ove
 #TO DO these setting methods are very dangerous if called directly, we need to either be much more carefull or make them private
 
 climate_data$methods(set_data = function(new_data, messages=TRUE) {
-    if( ! is.data.frame(new_data) ) {
-      stop("Data set must be of type: data.frame")
-    }
-    else {
-      if ( length(new_data) == 0 && messages) {
-        message("data of object:is empty. data will be an empty data frame.")
-      }
-      data <<- new_data
-      .self$append_to_changes(list(Set_property, "data"))
-#      is_data_split<<-FALSE
-    }
+  if( ! is.data.frame(new_data) ) {
+    stop("Data set must be of type: data.frame")
   }
+  else {
+    if ( length(new_data) == 0 && messages) {
+      message("data of object:is empty. data will be an empty data frame.")
+    }
+    data <<- new_data
+    .self$append_to_changes(list(Set_property, "data"))
+    #      is_data_split<<-FALSE
+  }
+}
 )
 
 climate_data$methods(set_meta = function(new_meta) {
-    if( ! is.list(new_meta) ) {
-      stop("Meta data must be of type: list")
-    } else {
-      meta_data <<- new_meta
-      .self$append_to_changes(list(Set_property, "meta data"))
-    }
+  if( ! is.list(new_meta) ) {
+    stop("Meta data must be of type: list")
+  } else {
+    meta_data <<- new_meta
+    .self$append_to_changes(list(Set_property, "meta data"))
   }
+}
 )
 
 
 climate_data$methods(set_variables = function(new_variables) {
-    if( ! is.list(new_variables) ) {
-      stop("Variables must be of type: list")
-    }
-    
-    else {
-      variables <<- new_variables
-      .self$append_to_changes(list(Set_property, "variables"))
-    }
+  if( ! is.list(new_variables) ) {
+    stop("Variables must be of type: list")
   }
+  
+  else {
+    variables <<- new_variables
+    .self$append_to_changes(list(Set_property, "variables"))
+  }
+}
 )
 
 climate_data$methods(set_changes = function(new_changes) {
-    if( ! is.list(new_changes) ) {
-      stop("Changes must be of type: list")
-    }
-    
-    else {
-      changes <<- new_changes
-      .self$append_to_changes(list(Set_property, "changes"))  }
+  if( ! is.list(new_changes) ) {
+    stop("Changes must be of type: list")
   }
+  
+  else {
+    changes <<- new_changes
+    .self$append_to_changes(list(Set_property, "changes"))  }
+}
 )
 
 climate_data$methods(set_data_time_period = function(new_data_time_period) {
-    if( ! is.character(new_data_time_period) ) {
-      stop("Changes must be of type: character")
-    }
-    
-    else {
-      data_time_period <<- new_data_time_period
-      .self$append_to_changes(list(Set_property, "data_time_period"))  }
+  if( ! is.character(new_data_time_period) ) {
+    stop("Changes must be of type: character")
   }
+  
+  else {
+    data_time_period <<- new_data_time_period
+    .self$append_to_changes(list(Set_property, "data_time_period"))  }
+}
 )
 
 ############################################################################################
@@ -251,55 +251,55 @@ climate_data$methods(set_data_time_period = function(new_data_time_period) {
 
 climate_data$methods(append_column_to_data = function(column_data, col_name = "", label) {
   
-    # Column name must be character
-    if( ! is.character(col_name) ) {
-      stop("Column name must be of type: character")
-    }
-    
-    # Column data length must match number of rows of data.
-    else if ( !( length(column_data) == nrow(data) ) )
-      stop(paste("Number of rows in new column does not match the number of rows in the data set.
-                 There must be", nrow(data), "entries in the new column."))
-    
-    else {
-      # If no name given, generate a default column name.
-      if (col_name == "") {
-        col_name = paste0("column_",sprintf("%02d", length(names(data))+1))
-      }
-      column_data <- unlist(column_data)
-      data[[col_name]] <<- column_data
-      .self$append_to_changes(list(Added_col, col_name))
-      
-      if(!missing(label)) {
-        .self$append_to_variables(label,col_name)
-      }
-
-    }
+  # Column name must be character
+  if( ! is.character(col_name) ) {
+    stop("Column name must be of type: character")
   }
+  
+  # Column data length must match number of rows of data.
+  else if ( !( length(column_data) == nrow(data) ) )
+    stop(paste("Number of rows in new column does not match the number of rows in the data set.
+                 There must be", nrow(data), "entries in the new column."))
+  
+  else {
+    # If no name given, generate a default column name.
+    if (col_name == "") {
+      col_name = paste0("column_",sprintf("%02d", length(names(data))+1))
+    }
+    column_data <- unlist(column_data)
+    data[[col_name]] <<- column_data
+    .self$append_to_changes(list(Added_col, col_name))
+    
+    if(!missing(label)) {
+      .self$append_to_variables(label,col_name)
+    }
+    
+  }
+}
 )
 
 climate_data$methods(replace_column_in_data = function(col_name = "", column_data) {
-    
-    # Column name must be character
-    if( ! is.character(col_name) ) {
-      stop("Column name must be of type: character")
-    }
-    
-    else if (!(col_name %in% names(data))) {
-      stop(paste0("Cannot replace column: ",col_name,". Column was not found in the data."))
-    }
-    
-    # Column data length must match number of rows of data.
-    else if ( !( length(column_data) == nrow(data) ) )
-      stop(paste("Number of rows in new column does not match the number of rows in the data set.
-                 There must be", nrow(data), "entries in the new column."))
-    
-    else {
-      data[[col_name]] <<- column_data
-      .self$append_to_changes(list(Replaced_col, col_name))
-#      is_data_split<<-FALSE
-    }
+  
+  # Column name must be character
+  if( ! is.character(col_name) ) {
+    stop("Column name must be of type: character")
   }
+  
+  else if (!(col_name %in% names(data))) {
+    stop(paste0("Cannot replace column: ",col_name,". Column was not found in the data."))
+  }
+  
+  # Column data length must match number of rows of data.
+  else if ( !( length(column_data) == nrow(data) ) )
+    stop(paste("Number of rows in new column does not match the number of rows in the data set.
+                 There must be", nrow(data), "entries in the new column."))
+  
+  else {
+    data[[col_name]] <<- column_data
+    .self$append_to_changes(list(Replaced_col, col_name))
+    #      is_data_split<<-FALSE
+  }
+}
 )
 
 climate_data$methods(rename_column_in_data = function(curr_col_name = "", new_col_name="") {
@@ -316,7 +316,7 @@ climate_data$methods(rename_column_in_data = function(curr_col_name = "", new_co
   else if (! is.character(new_col_name)) {
     stop("New column name must be of type: character")
   }
-
+  
   else {
     if(sum(names(data) == curr_col_name) > 1) {
       warning(paste0("Multiple columns have name: '", curr_col_name,"'. All such columns will be 
@@ -327,7 +327,7 @@ climate_data$methods(rename_column_in_data = function(curr_col_name = "", new_co
     if(curr_col_name %in% variables) {
       .self$append_to_variables(names(which(variables==curr_col_name)), new_col_name)
     }
-
+    
   }
 }
 )
@@ -384,49 +384,49 @@ climate_data$methods(replace_value_in_data = function(col_name = "", index, new_
 
 climate_data$methods(append_to_meta_data = function(name, value) {
   
-    if( missing(name) || missing(value) ) {
-      stop("name and value arguements must be specified.")
-    } 
-          
-          
-    else if ( ! is.character(name) ) {
-      stop("name must be of type: character")
-    }
-    
-    # Remember double brackets must be used when dealing with variable names.
-    else {
-      meta_data[[name]] <<- value 
-      .self$append_to_changes(list(Added_metadata, name))
-    }
+  if( missing(name) || missing(value) ) {
+    stop("name and value arguements must be specified.")
+  } 
+  
+  
+  else if ( ! is.character(name) ) {
+    stop("name must be of type: character")
   }
+  
+  # Remember double brackets must be used when dealing with variable names.
+  else {
+    meta_data[[name]] <<- value 
+    .self$append_to_changes(list(Added_metadata, name))
+  }
+}
 )
 
 climate_data$methods(append_to_variables = function(label = "", value) {
   
-    if( missing(label) || missing(value) ) {
-      stop("label and value arguements must be specified.")
-    } 
-    
-    
-    else if ( ! is.character(label) ) {
-      stop("label must be of type: character")
-    }
-    else {
-      variables[[label]] <<- value 
-      .self$append_to_changes(list(Added_col_label, label))
-    }
+  if( missing(label) || missing(value) ) {
+    stop("label and value arguements must be specified.")
+  } 
+  
+  
+  else if ( ! is.character(label) ) {
+    stop("label must be of type: character")
   }
+  else {
+    variables[[label]] <<- value 
+    .self$append_to_changes(list(Added_col_label, label))
+  }
+}
 )
 
 climate_data$methods(append_to_changes = function(value) {
   
-    if( missing(value) ) {
-      stop(" value arguements must be specified.")
-    } 
-    else {
-      changes[[length(changes)+1]] <<- value 
-    }
+  if( missing(value) ) {
+    stop(" value arguements must be specified.")
+  } 
+  else {
+    changes[[length(changes)+1]] <<- value 
   }
+}
 )
 
 
@@ -497,7 +497,7 @@ climate_data$methods(is_meta_data = function(str) {
   out = FALSE
   
   if(str %in% names(meta_data) ) {
-      out = TRUE
+    out = TRUE
   }
   return(out)
 }
@@ -507,7 +507,7 @@ climate_data$methods(is_meta_data = function(str) {
 # This will be used to know if the data needs to be subsetted or not.
 
 climate_data$methods(check_multiple_data = function() {
-
+  
   if(!(.self$is_meta_data(multiple_station_label))) {
     if (.self$is_present(station_label)){
       if (nlevels(as.factor(data[[.self$getvname(station_label)]]))>1) meta_data[[multiple_station_label]]<<-TRUE
@@ -575,54 +575,54 @@ climate_data$methods(get_split_data = function(return_data) {
 # TODO implement full range of options particularly for subdaily data
 
 climate_data$methods(date_col_check = function(date_format = "%d/%m/%Y", convert = TRUE, create = TRUE, messages=TRUE)
-  { 
-    # Check if there is a date column already
-    # Check if the date is in the Date class
-    # If convert == TRUE
-    # Convert class to date class
-
-    if(data_time_period==subdaily_label) {
-      
-      if (.self$is_present(date_time_label)) {
-        date_time_col = getvname(date_time_label)
-        if (!is.POSIXct(data[[date_time_col]])) {
-          if (messages) message("date-time column is not stored as POSIXct class.")
-          if (convert) {
-            if (messages) message("Attempting to convert date column to POSIXct class.")
-            new_col = as.POSIXct(data[[date_time_col]], format = date_format)
-            .self$replace_column_in_data(date_time_col,new_col)
-          }
+{ 
+  # Check if there is a date column already
+  # Check if the date is in the Date class
+  # If convert == TRUE
+  # Convert class to date class
+  
+  if(data_time_period==subdaily_label) {
+    
+    if (.self$is_present(date_time_label)) {
+      date_time_col = getvname(date_time_label)
+      if (!is.POSIXct(data[[date_time_col]])) {
+        if (messages) message("date-time column is not stored as POSIXct class.")
+        if (convert) {
+          if (messages) message("Attempting to convert date column to POSIXct class.")
+          new_col = as.POSIXct(data[[date_time_col]], format = date_format)
+          .self$replace_column_in_data(date_time_col,new_col)
         }
-      }
-      else if(create && is_present(date_label) && is_present(time_label)) {
-        time_col = getvname(time_label)
-        if(grepl(":",data[[time_col]][[1]])) {
-          if(nchar(data[[time_col]][[1]]==5)) time_format = "%H:%M"
-          else if(nchar(data[[time_col]][[1]]==7)) time_format = "%H:%M:%S"
-          else stop("Cannot recognise the format of time column.")
-        }
-        else if(nchar(data[[time_col]][[1]]==4)) time_format = "%H%M"
-        else if(nchar(data[[time_col]][[1]]==6)) time_format = "%H%M%S"
-        else stop("Cannot recognise the format of time column.")
-        date_col = getvname(date_label)
-        new_col = as.POSIXct(paste(data[[date_col]],data[[time_col]]),
-                             format = paste("%Y-%m-%d",time_format))
-        .self$append_column_to_data(new_col, getvname(date_time_label))        
-      }
-      else if (create && is_present(date_asstring_label)) 
-      {
-        date_string_col = getvname(date_asstring_label)
-        new_col = as.POSIXct(data[[date_string_col]], format = date_format)
-        .self$append_column_to_data(new_col,getvname(date_time_label))
-      }
-      else if (create && is_present(date_label)) 
-      {
-        date_col = getvname(date_label)
-        new_col = as.POSIXct(data[[date_col]], format = date_format)
-        .self$append_column_to_data(new_col,getvname(date_time_label))
       }
     }
-  
+    else if(create && is_present(date_label) && is_present(time_label)) {
+      time_col = getvname(time_label)
+      if(grepl(":",data[[time_col]][[1]])) {
+        if(nchar(data[[time_col]][[1]]==5)) time_format = "%H:%M"
+        else if(nchar(data[[time_col]][[1]]==7)) time_format = "%H:%M:%S"
+        else stop("Cannot recognise the format of time column.")
+      }
+      else if(nchar(data[[time_col]][[1]]==4)) time_format = "%H%M"
+      else if(nchar(data[[time_col]][[1]]==6)) time_format = "%H%M%S"
+      else stop("Cannot recognise the format of time column.")
+      date_col = getvname(date_label)
+      new_col = as.POSIXct(paste(data[[date_col]],data[[time_col]]),
+                           format = paste("%Y-%m-%d",time_format))
+      .self$append_column_to_data(new_col, getvname(date_time_label))        
+    }
+    else if (create && is_present(date_asstring_label)) 
+    {
+      date_string_col = getvname(date_asstring_label)
+      new_col = as.POSIXct(data[[date_string_col]], format = date_format)
+      .self$append_column_to_data(new_col,getvname(date_time_label))
+    }
+    else if (create && is_present(date_label)) 
+    {
+      date_col = getvname(date_label)
+      new_col = as.POSIXct(data[[date_col]], format = date_format)
+      .self$append_column_to_data(new_col,getvname(date_time_label))
+    }
+  }
+  if(data_time_period!=subdaily_label) {
     if (.self$is_present(date_label)) {
       date_col = variables[[date_label]]
       if (!is.Date(data[[date_col]])) {
@@ -639,6 +639,7 @@ climate_data$methods(date_col_check = function(date_format = "%d/%m/%Y", convert
         }
       }
     }
+    
     
     # Else if date string column is there and create == TRUE create date column
     else if (create && is_present(date_asstring_label)) 
@@ -717,6 +718,7 @@ climate_data$methods(date_col_check = function(date_format = "%d/%m/%Y", convert
     }
     
   }
+}
 )
 
 climate_data$methods(missing_dates_check = function(messages = TRUE)
@@ -733,15 +735,15 @@ climate_data$methods(missing_dates_check = function(messages = TRUE)
       .self$set_data(subset(data,!is.na(data[[date_col]])), messages)
     }
   }
-
+  
   if(!get_meta(complete_dates_label)) {
     if(data_time_period == daily_label) {
       by = "day"
       
       start_end_dates = .self$get_data_start_end_dates()
       
-  #     append_to_meta_data(data_start_date_label,start_date)
-  #     append_to_meta_data(data_end_date_label,end_date)
+      #     append_to_meta_data(data_start_date_label,start_date)
+      #     append_to_meta_data(data_end_date_label,end_date)
       full_dates = seq(start_end_dates[[1]], start_end_dates[[2]], by = by)
       #TODO in missing data check need to get it working for multiple stations!
       if(length(full_dates) > nrow(data)) {
@@ -776,17 +778,17 @@ climate_data$methods(add_year_month_day_cols = function(date_format="%d/%m/%Y", 
   if (.self$is_present( date_label)){
     date_col = variables[[date_label]]
     if (!.self$is_present(year_label)){
-#      append_column_to_data (as.numeric(format(as.POSIXlt(strptime(data[[date_col]], date_format)), format = "%Y")), YearLabel) this should not need more than strptime
+      #      append_column_to_data (as.numeric(format(as.POSIXlt(strptime(data[[date_col]], date_format)), format = "%Y")), YearLabel) this should not need more than strptime
       .self$append_column_to_data (year(data[[date_col]]), YearLabel) 
       .self$append_to_variables(year_label, YearLabel)
     }
     if (!.self$is_present(month_label)){
-#      append_column_to_data (as.numeric(format(as.POSIXlt(strptime(data[[date_col]], date_format)), format = "%m")), MonthLabel) 
+      #      append_column_to_data (as.numeric(format(as.POSIXlt(strptime(data[[date_col]], date_format)), format = "%m")), MonthLabel) 
       .self$append_column_to_data (month(data[[date_col]]), MonthLabel) 
       .self$append_to_variables(month_label, MonthLabel)
     }    
     if (!.self$is_present(day_label)){
-#      append_column_to_data (as.numeric(format(as.POSIXlt(strptime(data[[date_col]], date_format)), format = "%d")), DayLabel) 
+      #      append_column_to_data (as.numeric(format(as.POSIXlt(strptime(data[[date_col]], date_format)), format = "%d")), DayLabel) 
       .self$append_column_to_data (day(data[[date_col]]), DayLabel) 
       .self$append_to_variables(day_label, DayLabel)
     }
@@ -858,7 +860,7 @@ climate_data$methods(summarize_data = function(new_time_period, summarize_name =
   if(missing(new_time_period)) {
     stop("Specify the time period you want the summarized data to be in.")
   }
-
+  
   if(!compare_time_periods(new_time_period,data_time_period)) {
     stop("Cannot summarize data to a shorter time period.")
   }
@@ -889,7 +891,7 @@ climate_data$methods(summarize_data = function(new_time_period, summarize_name =
     #TO DO allow to summarize to subyearly by using the factor_col argument
     #      need to think how date column will be created for subyearly summary
   }
-
+  
   else if(new_time_period == yearly_label) {
     
     start_date = .self$get_data_start_end_dates()[[1]]
@@ -920,7 +922,7 @@ climate_data$methods(summarize_data = function(new_time_period, summarize_name =
   
   summ_date_col_name = summary_obj$getvname(date_label)
   summ_split_col = summary_obj$data[[split_col]]
-
+  
   if(new_time_period != yearly_label) {
     if( !summary_obj$is_present(month_label) && .self$is_present(month_label) ) {
       summary_obj$append_column_to_data(month(summ_date_col_name),getvname(month_label))
@@ -930,8 +932,8 @@ climate_data$methods(summarize_data = function(new_time_period, summarize_name =
   
   if( new_time_period == daily_label ) {
     if( !summary_obj$is_present(season_label) && .self$is_present(day_label) ) {
-    summary_obj$append_column_to_data(day(summ_date_col_name),getvname(day_label))
-    summary_obj$append_to_variables(day_label,getvname(day_label))
+      summary_obj$append_column_to_data(day(summ_date_col_name),getvname(day_label))
+      summary_obj$append_to_variables(day_label,getvname(day_label))
     }
   }
   
@@ -939,15 +941,15 @@ climate_data$methods(summarize_data = function(new_time_period, summarize_name =
     #TO DO how to work out seasons from the dates
     #      do we need a season function similar to year()?
   }
-
+  
   if( !summary_obj$is_present(year_label) && .self$is_present(year_label) ) {
     summary_obj$append_column_to_data(year(summ_date_col_name),getvname(year_label))
     summary_obj$append_to_variables(year_label,getvname(year_label))
   }
   
-
+  
   summarized_row_num = nrow(summary_obj$data)
-
+  
   for(var in c(rain_label, temp_min_label, temp_max_label, evaporation_label)) {
     # For the variables that are present we create summaries    
     if(is_present(var)) {
@@ -979,10 +981,10 @@ climate_data$methods(summarize_data = function(new_time_period, summarize_name =
           mean_rain_label = summary_obj$get_summary_label(var, mean_label, list(na.rm=na.rm, threshold = threshold))
           summary_obj$append_to_variables(mean_rain_label, mean_rain_name)
           
-  
+          
           num_rain_days_data = as.vector(by(data[[curr_col_name]] > threshold, 
                                             data[[split_col]], sum, na.rm=na.rm))
-  
+          
           summary_obj$append_column_to_data(num_rain_days_data, num_rain_days_col)
           rain_days_label = summary_obj$get_summary_label(var, number_of_label, list(na.rm=na.rm, threshold=threshold))
           summary_obj$append_to_variables(rain_days_label,num_rain_days_col)
@@ -998,28 +1000,28 @@ climate_data$methods(summarize_data = function(new_time_period, summarize_name =
         mean_var_label = summary_obj$get_summary_label(var, mean_label, list(na.rm=na.rm))
         summary_obj$append_to_variables(mean_var_label, mean_var_name)
       }  
-          
+      
       
     }
   }
-
+  
   summary_obj$append_to_meta_data(summarized_from_label, curr_data_name)
-
+  
   summary_obj
-
+  
 }
 )
 
 climate_data$methods(add_water_balance_col = function(col_name = "Water Balance", capacity_max = 100, evaporation = 5)
 {
-
+  
   # Complete dates needed for calculations
   missing_dates_check()
-
+  
   # Always use the methods to get value from objects. Never access directly.
   rain_col = getvname(rain_label)
   date_col = getvname(date_label)
-
+  
   # Do all data_object level checks before calling get_data_for_analysis
   evap_present = is_present(evaporation_label)
   if(evap_present) evaporation_col = getvname(evaporation_label)
@@ -1177,7 +1179,7 @@ climate_data$methods(get_data_start_end_dates = function() {
   else {
     start_date = temp_start_date      
   }
-    
+  
   final_year = year(max(data[[date_col]]))
   final_month = month(start_date-1)
   final_day = day(start_date-1)
@@ -1194,7 +1196,7 @@ climate_data$methods(get_data_start_end_dates = function() {
 )
 
 climate_data$methods(time_period_check = function(messages=TRUE) {
-
+  
   date_col = data[[getvname(date_label)]]
   diff_values = difftime(tail(date_col,-1),head(date_col,-1), units="days")
   min_diff = min(diff_values)
@@ -1239,7 +1241,7 @@ climate_data$methods(date_format_check = function(convert = TRUE, messages=TRUE)
     
     else if(convert && all(month.name %in% month_col)) {
       if(messages) message("Converting month column to ordered factor.")
-        replace_column_in_data(getvname(month_label),factor(data[[getvname(month_label)]], month.name, ordered=TRUE))
+      replace_column_in_data(getvname(month_label),factor(data[[getvname(month_label)]], month.name, ordered=TRUE))
     }
   }
   
