@@ -24,6 +24,9 @@ identifier_label = "identifier"
 capacity_label = "capacity_max"
 wind_speed_label="wind_speed"
 wind_direction_label="wind_direction"
+lat_label="lat"
+lon_label="lon"
+
 rd_label = "rain_day"
 dd_label = "dry_day"
 rain_amount_label = "rain_amount"
@@ -109,7 +112,7 @@ ident_var <- function (data,variables) {
   
   merged <- variables 
   if(!(station_label %in% names(merged))){
-    for (label in c("Station","station","Station_id","station_id","ID","ID.")){
+    for (label in c("Station","station","Station_id","station_id","ID","ID.", "Name", "name")){
       if (label %in% names(data)){
         merged[[station_label]]<-label
         break
@@ -218,6 +221,22 @@ ident_var <- function (data,variables) {
     for (label in c("Winddir","winddir","wind_direction")){
       if (label %in% names(data)){
         merged[[wind_direction_label]]<-label
+        break
+      } 
+    }
+  }
+  if(!(lat_label %in% names(merged))) {
+    for (label in c("lat","Lat","Latitude")){
+      if (label %in% names(data)){
+        merged[[lat_label]]<-label
+        break
+      } 
+    }
+  }
+  if(!(lon_label %in% names(merged))) {
+    for (label in c("lon","Lon","Longitude")){
+      if (label %in% names(data)){
+        merged[[lon_label]]<-label
         break
       } 
     }
