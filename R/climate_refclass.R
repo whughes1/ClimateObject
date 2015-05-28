@@ -315,6 +315,21 @@ climate$methods(append_used_data_objects = function(name, obj) {
 }
 )
 
+# is_present_or_meta can check if a given variable name (or list of variable names) is in the data.frame or the meta_data or neither.
+# This will be used by other functions particularly related to station level data such as latitude, longditude etc. 
+# TO DO check functionality for missing cols and if there are multiple elements in long format (currently will return true even if there are no instances possibly correct as like returning true when all values are missing?)
+
+climate$methods(is_present_or_meta = function(str, require_all=TRUE, require_in_all=TRUE) {
+  out = FALSE
+  for (temp in climate_data_objects) {
+    out=temp$is_present_or_meta(str,require_all)
+    if (require_in_all) if (!out) break
+    if (!require_in_all) if (out) break
+  }
+  return(out)
+}
+)
+
 
 # Other methods
 #############################################################################################

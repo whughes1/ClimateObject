@@ -1,23 +1,24 @@
-# Output data for CDT
-#' @title Output data in the form needed for CDT.
-#' @name output_for_CDT
+# Output data for CPT
+#' @title Output data in the form needed for CPT.
+#' @name output_for_CPT
 #' @author David Stern 2015
 
-#' @description \code{output_for_CDT} 
-#' creates a file with data in the format required for CDT (IRI format needed for Tufa's quality control functions). 
+#' @description \code{output_for_CPT} 
+#' creates a file with data in the format required for CPT (IRI format needed for seasonal forcast). 
 
 
 
-climate$methods(output_for_CDT = function(data_list = list(), filename, interested_variables=list(rain_label))
+climate$methods(output_for_CPT = function(data_list = list(), filename, interested_variables)
 {  
   if (!is.list(interested_variables)) interested_variables=list(interested_variables)
   # interested variables required
-  data_list = add_to_data_info_required_variable_list(data_list, interested_variables)
-  # date time period is "daily"
-  data_list = add_to_data_info_time_period(data_list, daily_label)
+#  data_list = add_to_data_info_required_variable_list(data_list, interested_variables)
+  # date time period is "yearly"
+  data_list = add_to_data_info_time_period(data_list, yearly_label)
   # a list of climate data objects
+  data_list[[convert_data_label]]=TRUE
   climate_data_objs = get_climate_data_objects(data_list)
-
+  
   for(interested_var in interested_variables) {
     first=TRUE
     #availmeta used to state which meta data to use with the data 0 is no station data available, 1 is just station name 2 is lat and lon and 3 also includes alt  
@@ -49,7 +50,7 @@ climate$methods(output_for_CDT = function(data_list = list(), filename, interest
         } else if (availmeta==1){
           outmetadata[[data_obj$get_station_data(curr_data, station_label)]]=data_obj$get_station_data(curr_data, station_label)
         }
-        temp<-subset(curr_data , select=c(date_col, var_col))		
+        temp<-subset(curr_data , select=c(date_col, var_col))  	
         names(temp)<-c("Date",data_obj$get_station_data(curr_data, station_label))
         if (first) {
           outdata<-temp

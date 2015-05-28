@@ -26,6 +26,7 @@ wind_speed_label="wind_speed"
 wind_direction_label="wind_direction"
 lat_label="lat"
 lon_label="lon"
+alt_label="alt"
 
 rd_label = "rain_day"
 dd_label = "dry_day"
@@ -136,7 +137,7 @@ ident_var <- function (data,variables) {
     }
   }
   if(!(rain_label %in% names(merged))) {
-    for (label in c("Rain","rain","Observed","observed","obs_value", "Prec","prec","Precipitation","Precipitation (mm)","precipitation","precipitation (mm)")){
+    for (label in c("Rain","rain","Observed","observed","obs_value", "Prec","prec","Precipitation","Precipitation (mm)","precipitation","precipitation (mm)", "RR")){
       if (label %in% names(data)){
         merged[[rain_label]]<-label
         break
@@ -192,7 +193,7 @@ ident_var <- function (data,variables) {
     }
   }
   if(!(temp_min_label %in% names(merged))) {
-    for (label in c("Tmin","tmin")){
+    for (label in c("Tmin","tmin","Tn")){
       if (label %in% names(data)){
         merged[[temp_min_label]]<-label
         break
@@ -200,7 +201,7 @@ ident_var <- function (data,variables) {
     }
   }
   if(!(temp_max_label %in% names(merged))) {
-    for (label in c("Tmax","tmax")){
+    for (label in c("Tmax","tmax", "Tx")){
       if (label %in% names(data)){
         merged[[temp_max_label]]<-label
         break
@@ -241,7 +242,14 @@ ident_var <- function (data,variables) {
       } 
     }
   }
-  
+  if(!(alt_label %in% names(merged))) {
+    for (label in c("alt","Alt","Altitude")){
+      if (label %in% names(data)){
+        merged[[alt_label]]<-label
+        break
+      } 
+    }
+  }  
   
   return(merged)    
   

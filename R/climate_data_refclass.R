@@ -126,7 +126,11 @@ climate_data$methods(get_variables = function() {
 
 #TO DO replace all direct calls with this? Or remove this
 climate_data$methods(getvname = function(label) {
-  return(variables[[label]])
+  if (label %in% names(variables)) {
+    return(variables[[label]])
+  } else{
+    return(label)
+  }
 }
 )
 
@@ -149,12 +153,18 @@ climate_data$methods(get_meta = function(label="", overrider="") {
 }
 )
 
-climate_data$methods(Get_Station_Data = function(currdata, label) {
+climate_data$methods(get_station_data = function(currdata, label) {
   
-  if (is_present(label)) {
-    return (as.character(currdata[[getvname(label)]][[1]]))
-  } else{
-    print("TODO!!!")
+  if (.self$is_present_or_meta(label)){
+    if (.self$is_present(label)) {
+      return (as.character(currdata[[getvname(label)]][[1]]))
+    } else if (is_meta(label)){
+      return (as.character(meta_data[[label]]))
+    } else if (is_meta(station_list_label) & is_present(station_label) ) {
+      return (as.character(meta_data[[station_list_label]][station_label==currdata[[station_label =getvname(station_label)]][[1]],label]))
+    } 
+  } else if ((label==station_label)) {
+    return (get_meta(data_name_label))
   }
 }
 )
@@ -436,11 +446,41 @@ climate_data$methods(is_present = function(str, require_all=TRUE) {
       if(var_name %in% names(data)) {
         out = TRUE
       }
+    } else if(str %in% names(data)) {
+      out = TRUE
     }
   }
   else if (is.list(str)){
     for (temp in str){
       out=is_present(temp)
+      if (require_all) if (!out) break
+      if (!require_all) if (out) break
+    }
+  }
+  return(out)
+}
+)
+
+# is_present_or_meta can check if a given variable name (or list of variable names) is in the data.frame or the meta_data or neither.
+# This will be used by other functions particularly related to station level data such as latitude, longditude etc. 
+# TO DO check functionality for missing cols and if there are multiple elements in long format (currently will return true even if there are no instances possibly correct as like returning true when all values are missing?)
+
+climate_data$methods(is_present_or_meta = function(str, require_all=TRUE) {
+  out = FALSE
+  if (is.character(str)){
+    if(is_present(str)) {
+      out = TRUE
+    } else if(str %in% names(meta_data)){
+      out = TRUE
+    } else if(station_list_label %in% names(meta_data)){
+      if(str %in% names(meta_data[[station_list_label]])) {
+        out = TRUE
+      }
+    }
+  }
+  else if (is.list(str)){
+    for (temp in str){
+      out=is_present_or_meta(temp)
       if (require_all) if (!out) break
       if (!require_all) if (out) break
     }
