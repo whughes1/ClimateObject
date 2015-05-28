@@ -624,7 +624,7 @@ climate_data$methods(date_col_check = function(date_format = "%d/%m/%Y", convert
     }
   
     if (.self$is_present(date_label)) {
-      date_col = variables[[date_label]]
+      date_col = getvname(date_label)
       if (!is.Date(data[[date_col]])) {
         if (messages) message("date column is not stored as Date class.")
         if (convert) {
@@ -643,9 +643,17 @@ climate_data$methods(date_col_check = function(date_format = "%d/%m/%Y", convert
     # Else if date string column is there and create == TRUE create date column
     else if (create && is_present(date_asstring_label)) 
     {
-      date_string_col = variables[[date_asstring_label]]
+      date_string_col = getvname(date_asstring_label)
       new_col = as.Date(data[[date_string_col]], format = date_format)
-      .self$append_column_to_data(new_col,variables[[date_label]])
+      .self$append_column_to_data(new_col,getvname(date_label))
+    }
+
+    # Else if date time column is there and create == TRUE create date column
+    else if (create && is_present(date_time_label)) 
+    {
+      date_string_col = getvname(date_time_label)
+      new_col = as.Date(data[[date_string_col]], format = date_format)
+      .self$append_column_to_data(new_col,getvname(date_label))
     }
     
     # If the year, month, day column are there and create == TRUE create date column
@@ -664,14 +672,14 @@ climate_data$methods(date_col_check = function(date_format = "%d/%m/%Y", convert
       }
       
       new_col = as.Date(paste(year_col, month_col, day_col, sep="-"))
-      .self$append_column_to_data(new_col, variables[[date_label]])
+      .self$append_column_to_data(new_col, getvname(date_label))
     }
     
     else if (create && is_present(year_label) && is_present(doy_label)) {
       year_col = data[[getvname(year_label)]]
       doy_col = data[[getvname(doy_label)]]
       new_col = do.call(c,mapply(doy_as_date,as.list(doy_col),as.list(year_col), SIMPLIFY=FALSE))
-      .self$append_column_to_data(new_col,variables[[date_label]])
+      .self$append_column_to_data(new_col,getvname(date_label))
     }
     
     # Else check time period specific cases
