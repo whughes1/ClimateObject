@@ -63,11 +63,11 @@ climate_data$methods(initialize = function(data = data.frame(), data_name = "", 
       .self$date_col_check(date_format=date_format, convert=convert, create = create, messages=messages)
     }
 
+    .self$check_multiple_data()
+
     if (check_missing_dates){
       .self$missing_dates_check(messages)
     }
-
-    .self$check_multiple_data()
     
 
   }
@@ -126,7 +126,11 @@ climate_data$methods(get_variables = function() {
 
 #TO DO replace all direct calls with this? Or remove this
 climate_data$methods(getvname = function(label) {
-  return(variables[[label]])
+  if (label %in% names(variables)) {
+    return(variables[[label]])
+  } else{
+    return(label)
+  }
 }
 )
 
@@ -146,6 +150,22 @@ climate_data$methods(get_meta = function(label="", overrider="") {
   else if ( !(is.na(overrider)||(overrider=="")||missing(overrider) )) return(overrider)
   else if (.self$is_meta_data(label)) return(meta_data[[label]])
   else return (overrider)
+}
+)
+
+climate_data$methods(get_station_data = function(currdata, label) {
+  
+  if (.self$is_present_or_meta(label)){
+    if (.self$is_present(label)) {
+      return (as.character(currdata[[getvname(label)]][[1]]))
+    } else if (is_meta(label)){
+      return (as.character(meta_data[[label]]))
+    } else if (is_meta(station_list_label) & is_present(station_label) ) {
+      return (as.character(meta_data[[station_list_label]][station_label==currdata[[station_label =getvname(station_label)]][[1]],label]))
+    } 
+  } else if ((label==station_label)) {
+    return (get_meta(data_name_label))
+  }
 }
 )
 
@@ -426,11 +446,41 @@ climate_data$methods(is_present = function(str, require_all=TRUE) {
       if(var_name %in% names(data)) {
         out = TRUE
       }
+    } else if(str %in% names(data)) {
+      out = TRUE
     }
   }
   else if (is.list(str)){
     for (temp in str){
       out=is_present(temp)
+      if (require_all) if (!out) break
+      if (!require_all) if (out) break
+    }
+  }
+  return(out)
+}
+)
+
+# is_present_or_meta can check if a given variable name (or list of variable names) is in the data.frame or the meta_data or neither.
+# This will be used by other functions particularly related to station level data such as latitude, longditude etc. 
+# TO DO check functionality for missing cols and if there are multiple elements in long format (currently will return true even if there are no instances possibly correct as like returning true when all values are missing?)
+
+climate_data$methods(is_present_or_meta = function(str, require_all=TRUE) {
+  out = FALSE
+  if (is.character(str)){
+    if(is_present(str)) {
+      out = TRUE
+    } else if(str %in% names(meta_data)){
+      out = TRUE
+    } else if(station_list_label %in% names(meta_data)){
+      if(str %in% names(meta_data[[station_list_label]])) {
+        out = TRUE
+      }
+    }
+  }
+  else if (is.list(str)){
+    for (temp in str){
+      out=is_present_or_meta(temp)
       if (require_all) if (!out) break
       if (!require_all) if (out) break
     }
@@ -530,6 +580,49 @@ climate_data$methods(date_col_check = function(date_format = "%d/%m/%Y", convert
     # Check if the date is in the Date class
     # If convert == TRUE
     # Convert class to date class
+
+    if(data_time_period==subdaily_label) {
+      
+      if (.self$is_present(date_time_label)) {
+        date_time_col = getvname(date_time_label)
+        if (!is.POSIXct(data[[date_time_col]])) {
+          if (messages) message("date-time column is not stored as POSIXct class.")
+          if (convert) {
+            if (messages) message("Attempting to convert date column to POSIXct class.")
+            new_col = as.POSIXct(data[[date_time_col]], format = date_format)
+            .self$replace_column_in_data(date_time_col,new_col)
+          }
+        }
+      }
+      else if(create && is_present(date_label) && is_present(time_label)) {
+        time_col = getvname(time_label)
+        if(grepl(":",data[[time_col]][[1]])) {
+          if(nchar(data[[time_col]][[1]]==5)) time_format = "%H:%M"
+          else if(nchar(data[[time_col]][[1]]==7)) time_format = "%H:%M:%S"
+          else stop("Cannot recognise the format of time column.")
+        }
+        else if(nchar(data[[time_col]][[1]]==4)) time_format = "%H%M"
+        else if(nchar(data[[time_col]][[1]]==6)) time_format = "%H%M%S"
+        else stop("Cannot recognise the format of time column.")
+        date_col = getvname(date_label)
+        new_col = as.POSIXct(paste(data[[date_col]],data[[time_col]]),
+                             format = paste("%Y-%m-%d",time_format))
+        .self$append_column_to_data(new_col, getvname(date_time_label))        
+      }
+      else if (create && is_present(date_asstring_label)) 
+      {
+        date_string_col = getvname(date_asstring_label)
+        new_col = as.POSIXct(data[[date_string_col]], format = date_format)
+        .self$append_column_to_data(new_col,getvname(date_time_label))
+      }
+      else if (create && is_present(date_label)) 
+      {
+        date_col = getvname(date_label)
+        new_col = as.POSIXct(data[[date_col]], format = date_format)
+        .self$append_column_to_data(new_col,getvname(date_time_label))
+      }
+    }
+  
     if (.self$is_present(date_label)) {
       date_col = variables[[date_label]]
       if (!is.Date(data[[date_col]])) {
@@ -623,45 +716,6 @@ climate_data$methods(date_col_check = function(date_format = "%d/%m/%Y", convert
                     data frame to have a date column.")}
     }
     
-    if(data_time_period==subdaily_label) {
-      
-      if (.self$is_present(date_time_label)) {
-        date_time_col = getvname(date_label)
-        if (!is.POSIXct(data[[date_time_col]])) {
-          if (messages) message("date-time column is not stored as POSIXct class.")
-          if (convert) {
-            if (messages) message("Attempting to convert date column to POSIXct class.")
-            new_col = as.POSIXct(data[[date_time_col]], format = date_format)
-            .self$replace_column_in_data(date_time_col,new_col)
-          }
-        }
-      }
-      
-      else if(create && is_present(time_label)) {
-        time_col = getvname(time_label)
-        if(grepl(":",data[[time_col]][[1]])) {
-          if(nchar(data[[time_col]][[1]]==5)) time_format = "%H:%M"
-          else if(nchar(data[[time_col]][[1]]==7)) time_format = "%H:%M:%S"
-          else stop("Cannot recognise the format of time column.")
-        }
-        else if(nchar(data[[time_col]][[1]]==4)) time_format = "%H%M"
-        else if(nchar(data[[time_col]][[1]]==6)) time_format = "%H%M%S"
-        else stop("Cannot recognise the format of time column.")
-        date_col = getvname(date_label)
-        new_col = as.POSIXct(paste(data[[date_col]],data[[time_col]]),
-                             format = paste("%Y-%m-%d",time_format))
-        .self$append_column_to_data(new_col,"Date Time")
-        
-      }
-      
-      else if (create && is_present(date_asstring_label)) 
-      {
-        date_string_col = variables[[date_asstring_label]]
-        new_col = as.POSIXct(data[[date_string_col]], format = date_format)
-        .self$append_column_to_data(new_col,variables[[date_time_label]])
-      }
-      
-    }
   }
 )
 
@@ -689,8 +743,8 @@ climate_data$methods(missing_dates_check = function(messages = TRUE)
   #     append_to_meta_data(data_start_date_label,start_date)
   #     append_to_meta_data(data_end_date_label,end_date)
       full_dates = seq(start_end_dates[[1]], start_end_dates[[2]], by = by)
-      
-      if(length(full_dates) != nrow(data)) {
+      #TODO in missing data check need to get it working for multiple stations!
+      if(length(full_dates) > nrow(data)) {
         dates_table = data.frame(full_dates)
         names(dates_table) <- date_col
         if(is_present(year_label)) {

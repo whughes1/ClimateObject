@@ -197,7 +197,7 @@ climate$methods(get_climate_data_objects = function(data_info= list()) {
     }
     #TO DO think hard whether we should restrict based on stations or not my inclination is not at the data object level.
   }
-
+  #TODO Merge within Time tevels when any is selected.
   if (merge_data_label %in% names(data_info)){
     if (data_info[[merge_data_label]]){
       if (length(climate_data_list)>1){
@@ -315,6 +315,21 @@ climate$methods(append_used_data_objects = function(name, obj) {
 }
 )
 
+# is_present_or_meta can check if a given variable name (or list of variable names) is in the data.frame or the meta_data or neither.
+# This will be used by other functions particularly related to station level data such as latitude, longditude etc. 
+# TO DO check functionality for missing cols and if there are multiple elements in long format (currently will return true even if there are no instances possibly correct as like returning true when all values are missing?)
+
+climate$methods(is_present_or_meta = function(str, require_all=TRUE, require_in_all=TRUE) {
+  out = FALSE
+  for (temp in climate_data_objects) {
+    out=temp$is_present_or_meta(str,require_all)
+    if (require_in_all) if (!out) break
+    if (!require_in_all) if (out) break
+  }
+  return(out)
+}
+)
+
 
 # Other methods
 #############################################################################################
@@ -363,16 +378,9 @@ climate$methods(plot_missing_values_rain = function(data_list=list(), threshold 
     for( curr_data in curr_data_list ) {
       a2<-subset(curr_data, curr_data[[rain_col]] > curr_threshold)
       a3<-subset(curr_data, curr_data[[rain_col]] <= curr_threshold)
-      a1<-curr_data[!complete.cases(curr_data),]
+      a1<-curr_data[is.na(curr_data[[rain_col]]),]
       plot2<-plot.new()
-      
-      #print(unique(curr_data[[season_col]]))
-      #print(curr_data[[dos_col]])
-      #print(c(min(curr_data[[season_col]]),max(curr_data[[season_col]]))
-      # #       
-      #       plot(unique(curr_data[[season_col]]),ylim=c(0,500))
-      
-      # plot(unique(curr_data[[season_col]]),curr_data[[dos_col]], log = "", asp = NA)
+
       plot(curr_data[[season_col]],curr_data[[dos_col]], ylim=c(0,500), log = "", asp = NA, xlab="Year",ylab="Day of Year", main="Rain Present")
       #plot.window(xlim=c(min(curr_data[[season_col]]),max(curr_data[[season_col]])),ylim=c(0,500), log = "", asp = NA) #TO DO Tidy up graphical parameters
       #title(xlab="Year",ylab="Day of Year", main="Rain Present") #TO DO Need to think hard about how display name are stored
