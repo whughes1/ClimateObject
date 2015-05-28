@@ -9,8 +9,13 @@
 #'  
 #' @return It returns a timeseries plot.
 #' 
-#' 
-climate$methods(timeseries = function(data_list = list(),plot_type="normal"){
+climate$methods(gsub2 = function(pattern, replacement, x, ...) {
+  for(i in 1:length(pattern))
+    x <- gsub(pattern[i], replacement[i], x, ...)
+  x
+})
+
+climate$methods(timeseries_ggplot = function(data_list = list(),plot_type="normal"){
   #######################################################################
   # CLIMATE DATA OBJS
   climate_data_objs = get_climate_data_objects(data_list)
@@ -208,86 +213,35 @@ climate$methods(timeseries = function(data_list = list(),plot_type="normal"){
         #######################################################
         # SUBPLOTS WITHIN THE PLOT 
         if (plot_style=="subplots"){
-          time_cases <- table(strftime(format(x3),format="%H:%M:%S"))
           
-        par(mfrow=c(length(time_cases),1)) #to create subplots
-        
-        #  par(mar=c(0.5, 2.5, 0.5, 0.2))
-          par(mfrow=c(length(time_cases),1),oma = c(.5, .5, 5, .5))
+          cars <- data.frame(x3,y3,time=format(x3,"%H:%M:%S"))
+          cars$identifier <- cars$time
+          identifiers <- c(1:length(unique(cars$time)))
+          # Replace the time of the data.frame with the identification number
+          cars$identifier <- gsub2(unique(cars$time),identifiers,cars$identifier)
           
-          #title(main=paste(tit," (",subtit,")",sep=""),cex.main=0.8)
-          for (ii in c(1:length(time_cases))){
-            id1 <- grep(names(time_cases[ii]),x3,invert=TRUE)
-            x4 <- x3
-            y4 <- y3
-            y4[id1] <- NA
-            
-            if (length(which(is.na(y4)==TRUE))==length(y4)){
-            }else{
-              
-              plot(x4,y4,type=plot.type,col=plot.color,
-                   cex.main=.8,
-                   xlab= "",
-                   xlim=c(min(x3),max(x3)),
-                   ylim=c(min(y,na.rm=TRUE),max(y,na.rm=TRUE)),
-                   ylab=var_col,
-                   cex.lab=.8,
-                   cex.axis=.8,
-                   xaxt='n',# to remove the numbering on x-axis
-                   yaxt="n"
-              )
-              # title(main=paste(tit," (",subtit,")",sep=""),cex.main=0.8)
-              usr <- par( "usr" )
-              abline(v=xticks,lty=3,lwd=.4)
-              abline(h=yticks,lty=3,lwd=.4)
-              legend("topleft",inset=c(0,-0.3),
-                     legend=names(time_cases[ii]),
-                     xpd=TRUE,cex=1,bty="n")
-              # legend("topleft",names(time_cases[ii]),bty="n",inset=c(.1,-.1))
-                      #adj = c( 0, 1 )) 
-                      # bg="white")
-              
-              # YTICKS
-              axis(2,yticks,
-                   labels = yticks,
-                   tck=-.01,lwd=.2,# lwd=.2,
-                   cex.axis=1,
-                   mgp=c(0,0.15,0)
-              )
+          # Remove those dataset which have no data
+          for (ii in c(1:length(identifiers))){
+            id <- which(cars$identifier==identifiers[ii])
+            if(length(which(is.na(cars$y3[id])))==length(id)){
+              cars <- cars[-id,]
             }
-          }
+          }    
+          
+          # Plot
+          k <- ggplot(cars, aes(x3,y3,group=time)) + 
+            geom_point(colour=plot.color,na.rm=TRUE) + # Points
+            theme_bw() + # white background
+            facet_wrap(~ time, nrow=length(unique(cars$time))) # Number of subplots
+          # Creating xticks
+          k <- k + scale_x_datetime(breaks = xticks)
+          # Creating title and subtitle
+          k <- k + ggtitle(bquote(atop(.(tit), atop(italic(.(subtit)), ""))))
+          # Adding labels
+          k <- k + xlab(date_col)
+          k <- k +ylab(var_col)
+          print(k)
         }
-        
-        ##############################################################
-        # PLACE TITLE, SUBTITLE AND LEGEND
-        mtext(paste(tit," (",subtit,")",sep=""),outer= TRUE, cex=0.8,line=4)
-        #Write down the legend 
-        mtext(paste(tt.total,"\n",
-                    tt.above,"\n",
-                    tt.below,"\n",
-                    tt.na),
-              cex=.6,
-              side=3,
-              line=0,
-              outer=TRUE)
-        setwd(mainDir)
-        
-        ##############################################################
-        # XTICKS
-        axis(1,xticks,tck=-.01,lwd=.2,#las=2,
-             labels = xticks,
-             cex.axis=1,
-             mgp=c(0,-0.15,0)
-        )
-        
-        ##############################################################
-        # YTICKS
-        axis(2,yticks,
-             labels = yticks,
-             tck=0,lwd=.2,# lwd=.2,
-             cex.axis=1,
-             mgp=c(0,0.15,0)
-        )
       }
     }
   }
