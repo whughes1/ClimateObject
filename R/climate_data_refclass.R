@@ -8,8 +8,7 @@
 
 climate_data <- setRefClass("climate_data", 
                             fields = list(data = "data.frame", meta_data = "list", 
-                                          variables = "list", changes = "list", data_time_period="character")
-) #, split_data = "list", is_data_split = "logical" removed for now this may have speed implications but can be adressed later if thhat is the case
+                                          variables = "list", changes = "list", data_time_period="character"))
 
 
 
@@ -124,9 +123,18 @@ climate_data$methods(get_variables = function() {
 }
 )
 
-#TO DO replace all direct calls with this? Or remove this
-climate_data$methods(getvname = function(label) {
+#TO DO replace all direct calls with this!
+climate_data$methods(getvname = function(label, create=FALSE) {
   if (label %in% names(variables)) {
+    if (create) {
+      if (!is_present(label)){
+        if (label==year_label || label==month_label || label==day_label){
+          add_year_month_day_cols()
+        } else if (label==dos_label || label==season_label || label==doy_label) {
+          add_doy_col()
+        }# TODO Add other columns that could be created on the fly like time!
+      }
+    }
     return(variables[[label]])
   } else{
     return(label)
@@ -783,19 +791,20 @@ climate_data$methods(add_year_month_day_cols = function(date_format="%d/%m/%Y", 
   if (.self$is_present( date_label)){
     date_col = variables[[date_label]]
     if (!.self$is_present(year_label)){
-      #      append_column_to_data (as.numeric(format(as.POSIXlt(strptime(data[[date_col]], date_format)), format = "%Y")), YearLabel) this should not need more than strptime
       .self$append_column_to_data (year(data[[date_col]]), YearLabel) 
       .self$append_to_variables(year_label, YearLabel)
     }
-    if (!.self$is_present(month_label)){
-      #      append_column_to_data (as.numeric(format(as.POSIXlt(strptime(data[[date_col]], date_format)), format = "%m")), MonthLabel) 
-      .self$append_column_to_data (month(data[[date_col]]), MonthLabel) 
-      .self$append_to_variables(month_label, MonthLabel)
-    }    
-    if (!.self$is_present(day_label)){
-      #      append_column_to_data (as.numeric(format(as.POSIXlt(strptime(data[[date_col]], date_format)), format = "%d")), DayLabel) 
-      .self$append_column_to_data (day(data[[date_col]]), DayLabel) 
-      .self$append_to_variables(day_label, DayLabel)
+    if (!data_time_period==yearly_label){      
+      if (!.self$is_present(month_label)){
+        .self$append_column_to_data (month(data[[date_col]]), MonthLabel) 
+        .self$append_to_variables(month_label, MonthLabel)
+      }
+      if (!data_time_period==subyearly_label) {
+        if (!.self$is_present(day_label)){
+          .self$append_column_to_data (day(data[[date_col]]), DayLabel) 
+          .self$append_to_variables(day_label, DayLabel)
+        }
+      }
     }
   }
   else warning("No Date column check that your data has date information and create a date colum using date_col_check.")
