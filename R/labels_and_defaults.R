@@ -128,6 +128,14 @@ ident_var <- function (data,variables) {
       } 
     }
   }
+  if(!(date_time_label %in% names(merged))) {
+    for (label in c("Date time","date time")){
+      if (label %in% names(data)){
+        merged[[date_time_label]]<-label
+        break
+      } 
+    }
+  }
   if(!(date_asstring_label %in% names(merged))){
     for (label in c("recorded_at","Recorded_at")){
       if (label %in% names(data)){
@@ -193,7 +201,7 @@ ident_var <- function (data,variables) {
     }
   }
   if(!(temp_min_label %in% names(merged))) {
-    for (label in c("Tmin","tmin","Tn")){
+    for (label in c("Tmin","tmin","Tn","Temp min")){
       if (label %in% names(data)){
         merged[[temp_min_label]]<-label
         break
@@ -201,7 +209,7 @@ ident_var <- function (data,variables) {
     }
   }
   if(!(temp_max_label %in% names(merged))) {
-    for (label in c("Tmax","tmax", "Tx")){
+    for (label in c("Tmax","tmax", "Tx","Temp max")){
       if (label %in% names(data)){
         merged[[temp_max_label]]<-label
         break
@@ -210,7 +218,7 @@ ident_var <- function (data,variables) {
   }
   # Wind speed 
   if(!(wind_speed_label %in% names(merged))) {
-    for (label in c("Windsp","windsp","wind_speed")){
+    for (label in c("Windsp","windsp", "wind_speed","wind speed")){
       if (label %in% names(data)){
         merged[[wind_speed_label]]<-label
         break
@@ -219,7 +227,7 @@ ident_var <- function (data,variables) {
   }
   # Wind direction
   if(!(wind_direction_label %in% names(merged))) {
-    for (label in c("Winddir","winddir","wind_direction")){
+    for (label in c("Winddir","winddir", "wind_direction","wind direction")){
       if (label %in% names(data)){
         merged[[wind_direction_label]]<-label
         break
@@ -277,6 +285,7 @@ add_defaults <- function (imported_from,user) {
     if(!(station_label %in% names(merged))) merged[[station_label]]<-"Station"
     if(!(date_label %in% names(merged))) merged[[date_label]]<-"Date"
     if(!(date_asstring_label %in% names(merged))) merged[[date_asstring_label]]<-"Date as string"
+    if(!(date_time_label %in% names(merged))) merged[[date_time_label]]<-"Date time"
     if(!(rain_label %in% names(merged))) merged[[rain_label]]<-"Rain"
     if(!(year_label %in% names(merged))) merged[[year_label]]<-"Year"
 #    if(!(season_label %in% names(merged))) merged[[season_label]]<-merged[[year_label]]

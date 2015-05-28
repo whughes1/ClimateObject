@@ -580,6 +580,49 @@ climate_data$methods(date_col_check = function(date_format = "%d/%m/%Y", convert
     # Check if the date is in the Date class
     # If convert == TRUE
     # Convert class to date class
+
+    if(data_time_period==subdaily_label) {
+      
+      if (.self$is_present(date_time_label)) {
+        date_time_col = getvname(date_time_label)
+        if (!is.POSIXct(data[[date_time_col]])) {
+          if (messages) message("date-time column is not stored as POSIXct class.")
+          if (convert) {
+            if (messages) message("Attempting to convert date column to POSIXct class.")
+            new_col = as.POSIXct(data[[date_time_col]], format = date_format)
+            .self$replace_column_in_data(date_time_col,new_col)
+          }
+        }
+      }
+      else if(create && is_present(date_label) && is_present(time_label)) {
+        time_col = getvname(time_label)
+        if(grepl(":",data[[time_col]][[1]])) {
+          if(nchar(data[[time_col]][[1]]==5)) time_format = "%H:%M"
+          else if(nchar(data[[time_col]][[1]]==7)) time_format = "%H:%M:%S"
+          else stop("Cannot recognise the format of time column.")
+        }
+        else if(nchar(data[[time_col]][[1]]==4)) time_format = "%H%M"
+        else if(nchar(data[[time_col]][[1]]==6)) time_format = "%H%M%S"
+        else stop("Cannot recognise the format of time column.")
+        date_col = getvname(date_label)
+        new_col = as.POSIXct(paste(data[[date_col]],data[[time_col]]),
+                             format = paste("%Y-%m-%d",time_format))
+        .self$append_column_to_data(new_col, getvname(date_time_label))        
+      }
+      else if (create && is_present(date_asstring_label)) 
+      {
+        date_string_col = getvname(date_asstring_label)
+        new_col = as.POSIXct(data[[date_string_col]], format = date_format)
+        .self$append_column_to_data(new_col,getvname(date_time_label))
+      }
+      else if (create && is_present(date_label)) 
+      {
+        date_col = getvname(date_label)
+        new_col = as.POSIXct(data[[date_col]], format = date_format)
+        .self$append_column_to_data(new_col,getvname(date_time_label))
+      }
+    }
+  
     if (.self$is_present(date_label)) {
       date_col = variables[[date_label]]
       if (!is.Date(data[[date_col]])) {
@@ -673,45 +716,6 @@ climate_data$methods(date_col_check = function(date_format = "%d/%m/%Y", convert
                     data frame to have a date column.")}
     }
     
-    if(data_time_period==subdaily_label) {
-      
-      if (.self$is_present(date_time_label)) {
-        date_time_col = getvname(date_label)
-        if (!is.POSIXct(data[[date_time_col]])) {
-          if (messages) message("date-time column is not stored as POSIXct class.")
-          if (convert) {
-            if (messages) message("Attempting to convert date column to POSIXct class.")
-            new_col = as.POSIXct(data[[date_time_col]], format = date_format)
-            .self$replace_column_in_data(date_time_col,new_col)
-          }
-        }
-      }
-      
-      else if(create && is_present(time_label)) {
-        time_col = getvname(time_label)
-        if(grepl(":",data[[time_col]][[1]])) {
-          if(nchar(data[[time_col]][[1]]==5)) time_format = "%H:%M"
-          else if(nchar(data[[time_col]][[1]]==7)) time_format = "%H:%M:%S"
-          else stop("Cannot recognise the format of time column.")
-        }
-        else if(nchar(data[[time_col]][[1]]==4)) time_format = "%H%M"
-        else if(nchar(data[[time_col]][[1]]==6)) time_format = "%H%M%S"
-        else stop("Cannot recognise the format of time column.")
-        date_col = getvname(date_label)
-        new_col = as.POSIXct(paste(data[[date_col]],data[[time_col]]),
-                             format = paste("%Y-%m-%d",time_format))
-        .self$append_column_to_data(new_col,"Date Time")
-        
-      }
-      
-      else if (create && is_present(date_asstring_label)) 
-      {
-        date_string_col = variables[[date_asstring_label]]
-        new_col = as.POSIXct(data[[date_string_col]], format = date_format)
-        .self$append_column_to_data(new_col,variables[[date_time_label]])
-      }
-      
-    }
   }
 )
 
